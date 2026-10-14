@@ -18,6 +18,7 @@
       'site-articles': true,
       'site-faq': true,
       'site-testimonials': true,
+      'admin-instructors-section': true,
       'site-preview': true,
       'site-footer': true,
     };
@@ -46,6 +47,7 @@
       'site-articles': { title: 'المقالات التقنية', subtitle: 'إضافة وتعديل المقالات المعروضة في الصفحة الرئيسية' },
       'site-faq': { title: 'الأسئلة الشائعة', subtitle: 'إدارة الأسئلة والأجوبة في الصفحة الرئيسية' },
       'site-testimonials': { title: 'آراء المستخدمين', subtitle: 'إدارة آراء وتقييمات المستخدمين' },
+      'admin-instructors-section': { title: 'مدربونا', subtitle: 'ملفات المدربين الظاهرة في الموقع العام' },
       'site-preview': { title: 'معاينة الموقع', subtitle: 'معاينة الموقع المباشر' },
       'site-footer': { title: 'إدارة موقعي', subtitle: 'Footer Settings — وصف العلامة وروابط التواصل' },
       settings: { title: 'الإعدادات', subtitle: 'إعدادات النظام' },

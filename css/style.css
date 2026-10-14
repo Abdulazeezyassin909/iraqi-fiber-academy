@@ -1058,6 +1058,35 @@ body.article-reader-open {
 .testimonial-card__role { font-size: 0.8rem; color: var(--color-text-muted); }
 .testimonial-card__stars { color: #fbbf24; font-size: 0.85rem; margin-bottom: 1rem; }
 
+/* Public instructors */
+.instructors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+.instructor-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  text-align: center;
+  transition: border-color var(--transition-normal), transform var(--transition-normal);
+}
+.instructor-card:hover { border-color: var(--color-border-hover); transform: translateY(-4px); }
+.instructor-card__photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 1rem;
+  display: block;
+  background: var(--gradient-accent);
+}
+.instructor-card__photo--empty { background: var(--gradient-accent); }
+.instructor-card__name { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+.instructor-card__title { color: var(--color-accent-cyan); font-size: 0.85rem; margin-bottom: 0.75rem; }
+.instructor-card__bio { color: var(--color-text-secondary); font-size: 0.9rem; line-height: 1.7; }
+
 /* FAQ */
 .faq__list { max-width: 750px; margin-inline: auto; }
 

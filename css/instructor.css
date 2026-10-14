@@ -6,14 +6,31 @@
   background: var(--color-bg-primary);
 }
 
-.inst-main {
+#instructorApp {
+  display: flex;
   flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.inst-main {
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
   margin-right: 260px;
   min-width: 0;
 }
 
 .inst-content {
   padding: 2rem;
+  width: 100%;
+  max-width: none;
+}
+
+.inst-content .admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
 }
 
 .inst-section {
@@ -22,6 +39,34 @@
 
 .inst-section.active {
   display: block;
+}
+
+#section-orders.inst-section.active {
+  position: static;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+#section-orders #instructorOrderStatusFilter,
+#section-orders #instructorOrderStatusFilter option,
+#section-orders .inst-receipt-btn,
+#instructor-orders-section #instructorOrderStatusFilter,
+#instructor-orders-section .btn-info,
+#instructor-orders-section .receipt-btn {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  border: 1px solid #cccccc !important;
+}
+
+#section-orders #instructorOrderStatusFilter option,
+#instructor-orders-section #instructorOrderStatusFilter option {
+  background-color: #ffffff;
+  color: #111111;
+}
+
+#section-orders .inst-receipt-btn:hover {
+  background-color: #f8fafc !important;
+  color: #111111 !important;
 }
 
 .inst-panel {

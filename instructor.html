@@ -28,6 +28,7 @@
         <p class="admin-sidebar__label">مساحة المدرب</p>
         <a href="#overview" class="admin-nav__link active" data-inst-section="overview">نظرة عامة</a>
         <a href="#courses" class="admin-nav__link" data-inst-section="courses">كورساتي</a>
+        <a href="#orders" class="admin-nav__link" data-inst-section="orders">طلبات الشراء</a>
         <a href="#qa" class="admin-nav__link" data-inst-section="qa">أسئلة وتعليقات الطلاب</a>
         <a href="#analytics" class="admin-nav__link" data-inst-section="analytics">التقدم والإحصائيات</a>
       </nav>
@@ -89,7 +90,40 @@
               </div>
             </div>
             <div class="inst-panel__body">
-              <form class="admin-form-grid" id="instructorCourseForm">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; flex-wrap: wrap;">
+                <h3 class="inst-panel__title" style="margin: 0;">كورساتي</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <button type="button" id="btnInstructorDraftsToggle" class="admin-btn admin-btn--ghost">مسودة</button>
+                  <button type="button" id="btnOpenCourseBuilder" class="admin-btn admin-btn--primary">+ إضافة كورس</button>
+                </div>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>الكورس</th>
+                      <th>السعر</th>
+                      <th>المدة</th>
+                      <th>الحالة</th>
+                      <th>الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody id="instructorCoursesTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="coursesList" hidden></div>
+        </section>
+
+        <div class="admin-modal" id="instructorCourseModal" hidden>
+          <div class="admin-modal__backdrop" data-close-instructor-course></div>
+          <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="instructorCourseModalTitle">
+            <div class="admin-modal__header">
+              <h3 class="admin-modal__title" id="instructorCourseModalTitle">إضافة / تعديل كورس</h3>
+              <button class="admin-modal__close" type="button" data-close-instructor-course aria-label="إغلاق">×</button>
+            </div>
+            <form class="admin-modal__body admin-modal__body--course" id="instructorCourseForm">
                 <label class="admin-field admin-field--full">
                   <span class="admin-field__label">عنوان الكورس</span>
                   <input class="admin-field__input" type="text" id="instructorCourseTitle" required />
@@ -142,13 +176,52 @@
                   </div>
                   <div id="instructorModulesList" class="admin-lessons-list"></div>
                 </div>
-                <div class="admin-modal__actions admin-field--full">
-                  <button class="admin-btn admin-btn--primary" type="submit">رفع الكورس للمراجعة</button>
+                <div class="admin-modal__actions">
+                  <button class="admin-btn admin-btn--ghost" type="button" id="btnInstructorSaveDraft">حفظ كمسودة</button>
+                  <button class="admin-btn admin-btn--primary" type="button" id="btnInstructorSubmitPending">إرسال للإدارة</button>
                 </div>
               </form>
             </div>
           </div>
-          <div id="coursesList"></div>
+
+        <section class="inst-section" id="section-orders">
+          <div class="inst-panel">
+            <div class="inst-panel__header">
+              <div>
+                <h2 class="inst-panel__title">طلبات الشراء</h2>
+                <p class="inst-panel__desc">متابعة طلبات شراء كورساتك وحالة الدفع والموافقة الإدارية</p>
+              </div>
+            </div>
+            <div class="inst-panel__body">
+              <div class="table-filter-container" style="margin-bottom: 15px;">
+                <label for="instructorOrderStatusFilter" style="margin-left: 10px; color: var(--color-text-muted);">الحالة:</label>
+                <select id="instructorOrderStatusFilter" class="admin-filter__select" style="padding: 8px 12px; background: #fff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px;">
+                  <option value="all">كل الطلبات</option>
+                  <option value="pending" selected>قيد المراجعة</option>
+                  <option value="approved">مقبولة</option>
+                  <option value="rejected">مرفوضة</option>
+                </select>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>الوصل</th>
+                      <th>الطالب</th>
+                      <th>المنتج (الكورس)</th>
+                      <th>المبلغ</th>
+                      <th>طريقة الدفع</th>
+                      <th>التاريخ</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="instructorOrdersTableBody">
+                    <tr><td colspan="7" class="admin-empty-cell">جاري تحميل الطلبات…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Q&A -->
@@ -178,6 +251,21 @@
           </div>
         </section>
       </main>
+    </div>
+  </div>
+
+  <!-- Instructor receipt -->
+  <div class="admin-modal" id="instructorOrderReceiptModal" hidden>
+    <div class="admin-modal__backdrop" data-close-instructor-receipt></div>
+    <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="instructorOrderReceiptTitle">
+      <div class="admin-modal__header">
+        <h3 class="admin-modal__title" id="instructorOrderReceiptTitle">صورة الوصل</h3>
+        <button class="admin-modal__close" type="button" data-close-instructor-receipt aria-label="إغلاق">×</button>
+      </div>
+      <div class="admin-modal__scroll admin-order-receipt-view">
+        <p class="admin-panel__meta" id="instructorOrderReceiptCaption"></p>
+        <img id="instructorOrderReceiptImage" alt="صورة وصل الدفع" />
+      </div>
     </div>
   </div>
 
@@ -225,6 +313,8 @@
   <script src="js/env-access.js?v=20260921"></script>
   <script src="js/instructor-applications.js?v=20261014b"></script>
   <script src="js/platform-courses.js?v=20260921"></script>
+  <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20261014b"></script>
   <script src="js/instructor-dashboard-data.js?v=20261014b"></script>
   <script src="js/instructor-dashboard-ui.js?v=20261014b"></script>
 </body>

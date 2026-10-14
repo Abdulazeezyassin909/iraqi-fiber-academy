@@ -334,10 +334,14 @@
 
   async function applyPurgeCourse(id) {
     if (window.CoursePlanSync && typeof window.CoursePlanSync.deletePlanForCourse === 'function') {
-      await window.CoursePlanSync.deletePlanForCourse(id);
+      try {
+        await window.CoursePlanSync.deletePlanForCourse(id);
+      } catch (err) {
+        console.warn('[AdminCourses] pricing plan delete skipped:', err);
+      }
     }
     var Firestore = window.PlatformCoursesFirestore;
-    if (usesFirestoreCourses() && Firestore && Firestore.purgeCourse) {
+    if (Firestore && typeof Firestore.purgeCourse === 'function') {
       return Firestore.purgeCourse(id);
     }
     return window.PlatformCourses.deleteCourse(id);
@@ -1361,10 +1365,14 @@
               setPct(95);
               return { next: next };
             });
-            renderCoursesTable();
-            if (next === 'published') showToast('تم النشر بنجاح!', 'success');
-            else if (next === 'suspended') showToast('تم تعليق الكورس', 'info');
-            else showToast('تم نقل الكورس إلى المسودة', 'info');
+            if (next === 'published') {
+              setCoursesView('active');
+              showToast('تم النشر بنجاح!', 'success');
+            } else {
+              renderCoursesTable();
+              if (next === 'suspended') showToast('تم تعليق الكورس', 'info');
+              else showToast('تم نقل الكورس إلى المسودة', 'info');
+            }
           } catch (err) {
             alert((err && err.message) || 'تعذر تحديث حالة النشر');
           }
@@ -1386,7 +1394,7 @@
       }
 
       if (purgeBtn) {
-        if (!window.confirm('حذف هذا الكورس نهائياً من المنصة؟ لا يمكن التراجع.')) return;
+        if (!window.confirm('هل أنت متأكد من الحذف النهائي لهذا الكورس؟ لا يمكن التراجع عن هذا الإجراء.')) return;
         (async function () {
           try {
             await applyPurgeCourse(purgeBtn.getAttribute('data-purge-course'));

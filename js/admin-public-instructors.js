@@ -1,0 +1,163 @@
+import { db } from './firebase-config.js';
+import { uploadCmsFile } from './cms-storage.js';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+function esc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+var rows = [];
+
+function formEls() {
+  return {
+    form: document.getElementById('publicInstructorForm'),
+    id: document.getElementById('publicInstructorId'),
+    name: document.getElementById('publicInstructorName'),
+    title: document.getElementById('publicInstructorTitle'),
+    bio: document.getElementById('publicInstructorBio'),
+    photo: document.getElementById('instructorPhotoInput'),
+    preview: document.getElementById('instructorPhotoPreview'),
+    save: document.getElementById('publicInstructorSave'),
+    cancel: document.getElementById('publicInstructorCancel'),
+    body: document.getElementById('publicInstructorsBody'),
+  };
+}
+
+function resetForm() {
+  var el = formEls();
+  if (!el.form) return;
+  el.form.reset();
+  el.id.value = '';
+  el.form.dataset.existingPhoto = '';
+  if (el.preview) el.preview.innerHTML = '';
+  el.save.textContent = 'إضافة مدرب';
+  el.cancel.hidden = true;
+}
+
+function showPreview(src) {
+  var el = formEls();
+  if (!el.preview) return;
+  el.preview.innerHTML = src
+    ? '<img src="' + esc(src) + '" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:50%">'
+    : '';
+}
+
+function render() {
+  var el = formEls();
+  if (!el.body) return;
+  if (!rows.length) {
+    el.body.innerHTML = '<tr><td colspan="5">لا يوجد مدربون بعد</td></tr>';
+    return;
+  }
+  el.body.innerHTML = rows.map(function (row) {
+    var photo = row.photoUrl
+      ? '<img src="' + esc(row.photoUrl) + '" alt="" width="40" height="40" style="width:40px;height:40px;object-fit:cover;border-radius:50%">'
+      : '—';
+    return '<tr><td>' + photo + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.title) + '</td><td>' + esc(row.bio) + '</td><td>' +
+      '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-edit-public-instructor="' + esc(row.id) + '">تعديل</button> ' +
+      '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">حذف</button></td></tr>';
+  }).join('');
+}
+
+function bind() {
+  var el = formEls();
+  if (!el.form || el.form.dataset.bound === '1') return;
+  el.form.dataset.bound = '1';
+
+  onSnapshot(collection(db, 'instructors'), function (snap) {
+    rows = [];
+    snap.forEach(function (docSnap) {
+      rows.push(Object.assign({ id: docSnap.id }, docSnap.data() || {}));
+    });
+    rows.sort(function (a, b) {
+      return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
+    });
+    render();
+  }, function (err) {
+    console.error('[PublicInstructorsAdmin]', err);
+    if (el.body) el.body.innerHTML = '<tr><td colspan="5">تعذر تحميل المدربين</td></tr>';
+  });
+
+  el.photo.addEventListener('change', function () {
+    var file = el.photo.files && el.photo.files[0];
+    if (!file) {
+      showPreview(el.form.dataset.existingPhoto || '');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () { showPreview(String(reader.result || '')); };
+    reader.readAsDataURL(file);
+  });
+
+  el.form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var file = el.photo.files && el.photo.files[0];
+    var existing = el.form.dataset.existingPhoto || '';
+    var upload = file
+      ? uploadCmsFile('cms/instructors/' + Date.now().toString(36) + '-' + file.name.replace(/[^\w.\-]+/g, '_'), file)
+      : Promise.resolve(existing);
+    el.save.disabled = true;
+    upload.then(function (photoUrl) {
+      var payload = {
+        name: el.name.value.trim(),
+        title: el.title.value.trim(),
+        bio: el.bio.value.trim(),
+        photoUrl: photoUrl || '',
+        updatedAt: serverTimestamp(),
+      };
+      var id = el.id.value;
+      return id
+        ? updateDoc(doc(db, 'instructors', id), payload)
+        : addDoc(collection(db, 'instructors'), Object.assign({ createdAt: serverTimestamp() }, payload));
+    }).then(resetForm).catch(function (err) {
+      console.error(err);
+      alert('تعذر حفظ المدرب. تأكد من صلاحيات الإدارة ورفع الصورة.');
+    }).then(function () {
+      el.save.disabled = false;
+    });
+  });
+
+  el.cancel.addEventListener('click', resetForm);
+
+  el.body.addEventListener('click', function (event) {
+    var editBtn = event.target.closest('[data-edit-public-instructor]');
+    var deleteBtn = event.target.closest('[data-delete-public-instructor]');
+    if (editBtn) {
+      var found = rows.find(function (row) { return row.id === editBtn.getAttribute('data-edit-public-instructor'); });
+      if (!found) return;
+      el.id.value = found.id;
+      el.name.value = found.name || '';
+      el.title.value = found.title || '';
+      el.bio.value = found.bio || '';
+      el.photo.value = '';
+      el.form.dataset.existingPhoto = found.photoUrl || '';
+      showPreview(found.photoUrl || '');
+      el.save.textContent = 'حفظ التعديل';
+      el.cancel.hidden = false;
+      return;
+    }
+    if (deleteBtn) {
+      var deleteId = deleteBtn.getAttribute('data-delete-public-instructor');
+      if (!confirm('حذف هذا المدرب من قسم مدربونا؟')) return;
+      deleteDoc(doc(db, 'instructors', deleteId)).catch(function (err) {
+        console.error(err);
+        alert('تعذر حذف المدرب.');
+      });
+    }
+  });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+else bind();

@@ -133,6 +133,11 @@ async function loadProduct(planId, courseId) {
     var plan = planSnap.data() || {};
     var amount = parsePrice(plan.price);
     if (amount <= 0) throw new Error('هذه الباقة مجانية ولا تتطلب دفعاً.');
+    var instructorId = '';
+    if (plan.sourceCourseId) {
+      var sourceSnap = await getDoc(doc(db, 'courses', String(plan.sourceCourseId)));
+      if (sourceSnap.exists()) instructorId = String((sourceSnap.data() || {}).instructorId || '').trim();
+    }
     return {
       type: 'plan',
       id: planId,
@@ -143,6 +148,7 @@ async function loadProduct(planId, courseId) {
       amount: amount,
       currency: String(plan.currency || 'IQD').toUpperCase(),
       period: String(plan.period || '').trim(),
+      instructorId: instructorId,
     };
   }
 
@@ -165,6 +171,7 @@ async function loadProduct(planId, courseId) {
       amount: courseAmount,
       currency: String(course.currency || 'IQD').toUpperCase(),
       period: 'شراء لمرة واحدة',
+      instructorId: String(course.instructorId || '').trim(),
     };
   }
 
@@ -516,6 +523,7 @@ async function handleSubmit() {
       status: 'pending',
       createdAt: serverTimestamp(),
     };
+    if (product.instructorId) orderData.instructorId = product.instructorId;
 
     await setDoc(doc(db, 'orders', orderId), orderData);
 

@@ -94,6 +94,7 @@
           <a href="#site-articles" class="admin-nav__sublink" data-section="site-articles">المقالات التقنية</a>
           <a href="#site-faq" class="admin-nav__sublink" data-section="site-faq">الأسئلة الشائعة</a>
           <a href="#site-testimonials" class="admin-nav__sublink" data-section="site-testimonials">آراء المستخدمين</a>
+          <a href="#" class="admin-nav__sublink admin-sidebar-sublink" data-section="admin-instructors-section">مدربونا</a>
           <a href="#site-preview" class="admin-nav__sublink" data-section="site-preview">معاينة الموقع</a>
           <a href="#site-footer" class="admin-nav__sublink" data-section="site-footer">إعدادات التذييل</a>
         </div>
@@ -1089,6 +1090,41 @@
         </div>
       </section>
 
+      <section class="admin-panel admin-view" id="admin-instructors-section" data-admin-view="admin-instructors-section" aria-labelledby="ourInstructorsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="ourInstructorsHeading">إدارة مدربينا</h2>
+            <p class="admin-panel__desc">ملفات المدربين الظاهرة في قسم «مدربونا» على الموقع العام</p>
+          </div>
+        </div>
+        <form class="admin-form" id="publicInstructorForm">
+          <input type="hidden" id="publicInstructorId" value="" />
+          <label class="admin-field"><span class="admin-field__label">الاسم</span>
+            <input class="admin-field__input" id="publicInstructorName" type="text" required />
+          </label>
+          <label class="admin-field"><span class="admin-field__label">الاختصاص / المسمى الوظيفي</span>
+            <input class="admin-field__input" id="publicInstructorTitle" type="text" required />
+          </label>
+          <label class="admin-field"><span class="admin-field__label">نبذة مختصرة</span>
+            <textarea class="admin-field__input" id="publicInstructorBio" rows="3" required></textarea>
+          </label>
+          <label class="admin-field" for="instructorPhotoInput"><span class="admin-field__label">صورة المدرب الشخصية</span>
+            <input type="file" id="instructorPhotoInput" accept="image/*" class="admin-input-file">
+            <div id="instructorPhotoPreview" style="margin-top: 10px;"></div>
+          </label>
+          <div class="admin-panel__actions">
+            <button class="admin-btn admin-btn--primary" type="submit" id="publicInstructorSave">إضافة مدرب</button>
+            <button class="admin-btn admin-btn--ghost" type="button" id="publicInstructorCancel" hidden>إلغاء التعديل</button>
+          </div>
+        </form>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>الصورة</th><th>الاسم</th><th>الاختصاص</th><th>النبذة</th><th></th></tr></thead>
+            <tbody id="publicInstructorsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="admin-panel admin-view" id="site-faq" data-admin-view="site-faq" aria-labelledby="siteFaqHeading" hidden>
         <div class="admin-panel__header">
           <div>
@@ -1523,6 +1559,7 @@
   <script src="js/admin-core.js?v=20260925"></script>
   <script src="js/admin-users-ui.js?v=20260921"></script>
   <script src="js/admin-instructors-ui.js?v=20261014g"></script>
+  <script type="module" src="js/admin-public-instructors.js?v=20261014h"></script>
   <script type="module" src="js/platform-simulators-firestore-sync.js?v=20260921"></script>
   <script src="js/admin-site-cms.js?v=20260921"></script>
   <script type="module" src="js/admin-orders-ui.js?v=20260921"></script>

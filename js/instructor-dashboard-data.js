@@ -116,9 +116,26 @@
     return pc();
   }
 
+  function currentAuthUser() {
+    var authApi = global.IFAAuth;
+    if (!authApi) return null;
+    var fromGetter = authApi.getCurrentUser ? authApi.getCurrentUser() : null;
+    if (fromGetter && (fromGetter.uid || fromGetter.id)) return fromGetter;
+    if (authApi.auth && authApi.auth.currentUser) return authApi.auth.currentUser;
+    return fromGetter || null;
+  }
+
   function assertOwns(course, email) {
     var key = normalizeEmail(email);
-    if (!course || normalizeEmail(course.instructorEmail) !== key) {
+    var authUser = currentAuthUser();
+    var uid = authUser ? (authUser.uid || authUser.id || '') : '';
+    var authEmail = normalizeEmail((authUser && authUser.email) || '');
+    var emailOk = course && (
+      normalizeEmail(course.instructorEmail) === key ||
+      (authEmail && normalizeEmail(course.instructorEmail) === authEmail)
+    );
+    var idOk = !!(course && uid && course.instructorId === uid);
+    if (!course || (!emailOk && !idOk)) {
       throw new Error('غير مصرح');
     }
     if (course.status === 'suspended') {
@@ -127,16 +144,23 @@
   }
 
   function getCourses(email) {
-    var key = normalizeEmail(email || currentInstructorEmail());
     if (!pc()) return [];
-    return pc()
-      .getByInstructor(key)
-      .filter(function (c) {
-        return c.status !== 'suspended';
-      })
-      .map(function (c) {
-        return pc().toInstructorShape(c);
-      });
+    var authUser = currentAuthUser();
+    var uid = authUser ? (authUser.uid || authUser.id || '') : '';
+    var emails = {};
+    [email, currentInstructorEmail(), authUser && authUser.email].forEach(function (value) {
+      var key = normalizeEmail(value);
+      if (key) emails[key] = true;
+    });
+    return pc().getCourses().filter(function (c) {
+      if (!c || c.softDeleted || c.status === 'suspended') return false;
+      if (uid && c.instructorId === uid) return true;
+      var courseEmail = normalizeEmail(c.instructorEmail);
+      if (courseEmail && emails[courseEmail]) return true;
+      return false;
+    }).map(function (c) {
+      return pc().toInstructorShape(c);
+    });
   }
 
   function findCourse(courses, courseId) {
@@ -162,19 +186,19 @@
       if (inst && inst.fullName) name = inst.fullName;
     }
     var authUser = (typeof IFAAuth !== 'undefined' && IFAAuth.getCurrentUser) ? IFAAuth.getCurrentUser() : null;
-    return requirePlatform().addCourse({
+    var record = {
       title: payload.title,
       description: payload.description,
       enrolledCount: payload.enrolledCount,
       views: payload.views,
-      instructorEmail: key,
+      instructorEmail: payload.instructorEmail || key,
       instructorName: payload.instructorName || name,
       instructorId: payload.instructorId || (authUser && authUser.uid) || '',
       thumbnailUrl: '',
       category: 'individual',
       price: payload.price,
       currency: payload.currency || 'IQD',
-      status: 'pending',
+      status: payload.status === 'draft' ? 'draft' : 'pending',
       source: 'instructor',
       durationHours: payload.durationHours,
       durationWeeks: payload.durationWeeks,
@@ -182,21 +206,36 @@
       lessons: payload.lessons || [],
       allowedSimulators: payload.simulators || payload.allowedSimulators || [],
       simulators: payload.simulators || payload.allowedSimulators || [],
-    });
+    };
+    var FS = global.PlatformCoursesFirestore;
+    if (requirePlatform().usesFirestore && requirePlatform().usesFirestore() && FS && typeof FS.addCourse === 'function') {
+      return FS.addCourse(record);
+    }
+    return requirePlatform().addCourse(record);
   }
 
   function updateCourse(email, courseId, patch) {
     var key = normalizeEmail(email || currentInstructorEmail());
     var course = requirePlatform().findCourse(courseId);
     assertOwns(course, key);
-    return requirePlatform().updateCourse(courseId, {
-      title: patch.title,
-      description: patch.description,
-      enrolledCount: patch.enrolledCount,
-      durationHours: patch.durationHours,
-      durationWeeks: patch.durationWeeks,
-      weeklySchedule: patch.weeklySchedule,
-    });
+    var next = {};
+    if (patch.title != null) next.title = patch.title;
+    if (patch.description != null) next.description = patch.description;
+    if (patch.price != null) next.price = patch.price;
+    if (patch.currency != null) next.currency = patch.currency;
+    if (patch.durationHours != null) next.durationHours = patch.durationHours;
+    if (patch.durationWeeks != null) next.durationWeeks = patch.durationWeeks;
+    if (patch.weeklySchedule != null) next.weeklySchedule = patch.weeklySchedule;
+    if (patch.lessons != null) next.lessons = patch.lessons;
+    if (patch.simulators || patch.allowedSimulators) {
+      next.allowedSimulators = patch.simulators || patch.allowedSimulators;
+    }
+    if (patch.status === 'draft' || patch.status === 'pending') next.status = patch.status;
+    var FS = global.PlatformCoursesFirestore;
+    if (requirePlatform().usesFirestore && requirePlatform().usesFirestore() && FS && typeof FS.updateCourse === 'function') {
+      return FS.updateCourse(courseId, next);
+    }
+    return requirePlatform().updateCourse(courseId, next);
   }
 
   function deleteCourse(email, courseId) {

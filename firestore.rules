@@ -66,7 +66,10 @@ service cloud.firestore {
     // Public courses catalog — world-readable; admin-only writes.
     match /courses/{courseId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin()
+        || (isSignedIn() && request.resource.data.instructorId == request.auth.uid);
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.instructorId == request.auth.uid);
     }
 
     // Checkout payment details — authenticated read; admin write only.
@@ -103,6 +106,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /instructors/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
     function validReceiptBase64(value) {
       return value is string
         && value.size() > 0
@@ -117,7 +125,8 @@ service cloud.firestore {
     // Manual checkout orders — students create/read own; admins manage all.
     match /orders/{orderId} {
       allow read: if isAdmin()
-        || (isSignedIn() && resource.data.userId == request.auth.uid);
+        || (isSignedIn() && resource.data.userId == request.auth.uid)
+        || (isSignedIn() && resource.data.instructorId == request.auth.uid);
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'pending'
