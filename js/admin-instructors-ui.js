@@ -29,7 +29,7 @@
     function cvCell(app) {
       var parts = [];
       if (app.cvLink) {
-        parts.push('<a href="' + escapeHtml(app.cvLink) + '" target="_blank" rel="noopener noreferrer" class="admin-cv-link">رابط CV</a>');
+        parts.push('<a href="' + escapeHtml(app.cvLink) + '" target="_blank" rel="noopener noreferrer" class="admin-cv-link">عرض السيرة الذاتية</a>');
       }
       if (app.cvFileName) {
         parts.push('<span class="admin-cv-file">' + escapeHtml(app.cvFileName) + '</span>');
@@ -419,9 +419,14 @@
             (archiveCount ? ' · الأرشيف: ' + archiveCount : '');
         }
         if (!filteredRoster.length) {
+          var loadError = window.InstructorApps.getInstructorsLoadError
+            ? window.InstructorApps.getInstructorsLoadError()
+            : '';
           body.innerHTML =
             '<tr><td colspan="7" class="admin-empty-cell">' +
-            (instructors.length
+            (loadError
+              ? escapeHtml(loadError)
+              : instructors.length
               ? 'لا يوجد مدربون ضمن التصفية المحددة.'
               : 'لا يوجد مدربون معتمدون بعد. وافق على طلب من تبويب «طلبات الانضمام».') +
             '</td></tr>';
@@ -674,43 +679,32 @@
       var purgeBtn = e.target.closest ? e.target.closest('[data-purge-instructor]') : null;
 
       if (approveBtn) {
-        try {
-          var approved = window.InstructorApps.approveApplication(
-            approveBtn.getAttribute('data-approve-instructor')
-          );
-          if (approved && approved.email) {
-            window.InstructorApps.setInstructorApprovedFlag(approved.email, true);
-            window.InstructorApps.setSessionEmail(approved.email);
-          }
-          closeAllRowMenus();
-          document.dispatchEvent(
-            new CustomEvent('ifa:instructor-status-changed', { detail: approved || null })
-          );
-          setInstructorTab('roster');
-          var unlockUrl = window.InstructorApps.buildIndexUnlockUrl(approved.email);
-          if (
-            window.confirm(
-              'تمت الموافقة وإضافة المدرب إلى قائمة المدربين.\n\nلفتح الموقع وتفعيل «لوحة المدرب»، اضغط موافق.'
-            )
-          ) {
-            window.location.href = unlockUrl;
-          }
-        } catch (err) {
-          alert((err && err.message) || 'تعذر تنفيذ الموافقة');
-        }
+        var approveId = approveBtn.getAttribute('data-approve-instructor');
+        Promise.resolve(window.InstructorApps.approveApplication(approveId))
+          .then(function (approved) {
+            closeAllRowMenus();
+            document.dispatchEvent(
+              new CustomEvent('ifa:instructor-status-changed', { detail: approved || null })
+            );
+            alert('تمت الموافقة ومنح صلاحية المدرب.');
+            renderInstructorPanel();
+          })
+          .catch(function (err) {
+            alert((err && err.message) || 'تعذر تنفيذ الموافقة');
+          });
         return;
       }
 
       if (rejectBtn) {
-        try {
-          var rejected = window.InstructorApps.rejectApplication(
-            rejectBtn.getAttribute('data-reject-instructor')
-          );
-          closeAllRowMenus();
-          refreshAfterAction(rejected);
-        } catch (err) {
-          alert((err && err.message) || 'تعذر تنفيذ الرفض');
-        }
+        var rejectId = rejectBtn.getAttribute('data-reject-instructor');
+        Promise.resolve(window.InstructorApps.rejectApplication(rejectId))
+          .then(function (rejected) {
+            closeAllRowMenus();
+            refreshAfterAction(rejected);
+          })
+          .catch(function (err) {
+            alert((err && err.message) || 'تعذر تنفيذ الرفض');
+          });
         return;
       }
 
@@ -923,6 +917,17 @@
         renderInstructorPanel();
       }
     });
+
+    if (window.InstructorApps && typeof window.InstructorApps.watchPendingApplications === 'function') {
+      window.InstructorApps.watchPendingApplications(function () {
+        renderInstructorPanel();
+      });
+    }
+    if (window.InstructorApps && typeof window.InstructorApps.watchActiveInstructors === 'function') {
+      window.InstructorApps.watchActiveInstructors(function () {
+        renderInstructorPanel();
+      });
+    }
 
     renderInstructorPanel();
   }

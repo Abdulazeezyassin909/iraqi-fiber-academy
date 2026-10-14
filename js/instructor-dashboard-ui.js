@@ -383,6 +383,23 @@
   function init() {
     if (Apps && Apps.absorbApprovalFromUrl) Apps.absorbApprovalFromUrl();
 
+    var access = Dash && typeof Dash.ensureInstructorAccess === 'function'
+      ? Dash.ensureInstructorAccess()
+      : Promise.resolve(Dash && Dash.isInstructorAllowed ? Dash.isInstructorAllowed() : true);
+
+    access.then(function (allowed) {
+      if (!allowed) {
+        alert('لوحة المدرب متاحة بعد موافقة الإدارة على طلب الانضمام.');
+        window.location.href = 'index.html';
+        return;
+      }
+      startDashboard();
+    });
+  }
+
+  function startDashboard() {
+    if (Apps && Apps.absorbApprovalFromUrl) Apps.absorbApprovalFromUrl();
+
     var app = document.getElementById('instructorApp');
     if (app) app.hidden = false;
 

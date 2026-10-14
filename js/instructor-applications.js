@@ -66,6 +66,7 @@
   }
 
   function getApplications() {
+    if (remotePending) return remotePending.slice();
     var list = readJson(APPS_KEY, []);
     return Array.isArray(list) ? list : [];
   }
@@ -100,12 +101,6 @@
 
   function getApprovedInstructorEmail() {
     return normalizeEmail(storageGet(FLAG_EMAIL) || '');
-  }
-
-  function getPendingApplications() {
-    return getApplications().filter(function (a) {
-      return a && a.status === 'pending';
-    });
   }
 
   function findByEmail(email) {
@@ -145,43 +140,130 @@
     return !!(app && app.status === 'pending');
   }
 
-  function submitApplication(payload) {
-    var email = normalizeEmail(payload.email);
-    if (!email) throw new Error('البريد الإلكتروني مطلوب');
+  var remotePending = null;
+  var pendingUnsub = null;
 
-    var existing = findByEmail(email);
-    if (existing && existing.status === 'pending') {
-      throw new Error('لديك طلب قيد المراجعة بالفعل.');
-    }
-    if (isApprovedInstructor(email)) {
-      throw new Error('هذا البريد معتمد بالفعل كمدرب.');
-    }
+  function loadFirestore() {
+    return Promise.all([
+      import('./firebase-config.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
+    ]).then(function (mods) {
+      return { db: mods[0].db, auth: mods[0].auth, fs: mods[1] };
+    });
+  }
 
-    var app = {
-      id: uid(),
-      fullName: String(payload.fullName || '').trim(),
-      email: email,
-      bio: String(payload.bio || '').trim(),
-      cvLink: String(payload.cvLink || '').trim(),
-      cvFileName: String(payload.cvFileName || '').trim(),
-      courses: String(payload.courses || '').trim(),
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      reviewedAt: null,
+  function stampToIso(value) {
+    if (!value) return null;
+    if (typeof value.toDate === 'function') {
+      try {
+        return value.toDate().toISOString();
+      } catch (err) {
+        return null;
+      }
+    }
+    if (typeof value === 'string') return value;
+    return null;
+  }
+
+  function mapApplicationDoc(id, data) {
+    data = data || {};
+    return {
+      id: id,
+      uid: data.uid || id,
+      fullName: data.fullName || '',
+      email: data.email || '',
+      bio: data.bio || '',
+      specialization: data.specialization || data.courses || '',
+      courses: data.specialization || data.courses || '',
+      cvLink: data.cvUrl || data.cvLink || '',
+      cvFileName: '',
+      status: data.status || 'pending',
+      createdAt: stampToIso(data.createdAt),
+      reviewedAt: stampToIso(data.reviewedAt),
+      reviewedBy: data.reviewedBy || null,
     };
+  }
 
-    if (!app.fullName) throw new Error('الاسم الكامل مطلوب');
-    if (!app.bio) throw new Error('نبذة تعريفية مطلوبة');
-    if (!app.courses) throw new Error('الكورسات المقترحة مطلوبة');
-    if (!app.cvLink && !app.cvFileName) {
-      throw new Error('يرجى إرفاق السيرة الذاتية أو إضافة رابط لها');
+  function uploadInstructorCv(uid, file) {
+    if (!file) return Promise.resolve('');
+    return Promise.all([
+      import('./firebase-config.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js'),
+    ]).then(function (mods) {
+      var storage = mods[0].storage;
+      var st = mods[1];
+      var storageRef = st.ref;
+      var uploadBytes = st.uploadBytes;
+      var getDownloadURL = st.getDownloadURL;
+      if (typeof storageRef !== 'function' || typeof uploadBytes !== 'function' || typeof getDownloadURL !== 'function') {
+        throw new Error('تعذر تحميل مكتبات Firebase Storage.');
+      }
+      var safeName = String(file.name || 'cv').replace(/[^\w.\-]+/g, '_');
+      var fileRef = storageRef(storage, 'instructor_cvs/' + uid + '/' + safeName);
+      return uploadBytes(fileRef, file).then(function () {
+        return getDownloadURL(fileRef);
+      });
+    }).catch(function (err) {
+      console.error('[InstructorApps] CV upload failed:', err);
+      throw err;
+    });
+  }
+
+  function submitApplication(payload) {
+    var authApi = global.IFAAuth;
+    var user = authApi && typeof authApi.getCurrentUser === 'function' ? authApi.getCurrentUser() : null;
+    if (!user || !user.uid) {
+      return Promise.reject(new Error('سجّل الدخول أولاً لتقديم طلب الانضمام كمدرب.'));
     }
+    var email = normalizeEmail(user.email || payload.email);
+    var fullName = String(payload.fullName || user.displayName || '').trim();
+    var bio = String(payload.bio || '').trim();
+    var specialization = String(payload.specialization || payload.courses || '').trim();
+    var cvFile = payload.cvFile || null;
+    if (!fullName) return Promise.reject(new Error('الاسم الكامل مطلوب'));
+    if (!bio) return Promise.reject(new Error('نبذة تعريفية مطلوبة'));
+    if (!specialization) return Promise.reject(new Error('التخصص مطلوب'));
 
-    var list = getApplications();
-    list.unshift(app);
-    saveApplications(list);
-    setSessionEmail(email);
-    return app;
+    return loadFirestore().then(function (api) {
+      var ref = api.fs.doc(api.db, 'instructor_applications', user.uid);
+      return api.fs.getDoc(ref).then(function (snap) {
+        if (snap.exists() && snap.data() && snap.data().status === 'pending') {
+          throw new Error('لديك طلب قيد المراجعة بالفعل.');
+        }
+        if (snap.exists() && snap.data() && snap.data().status === 'approved') {
+          throw new Error('هذا الحساب معتمد بالفعل كمدرب.');
+        }
+        return uploadInstructorCv(user.uid, cvFile).then(function (cvUrl) {
+          var payloadDoc = {
+            uid: user.uid,
+            email: email,
+            fullName: fullName,
+            bio: bio,
+            specialization: specialization,
+            cvUrl: cvUrl || '',
+            status: 'pending',
+            createdAt: api.fs.serverTimestamp(),
+            reviewedAt: null,
+            reviewedBy: null,
+          };
+          if (snap.exists()) return api.fs.setDoc(ref, payloadDoc, { merge: true });
+          return api.fs.setDoc(ref, payloadDoc);
+        });
+      }).then(function () {
+        return mapApplicationDoc(user.uid, {
+          uid: user.uid,
+          email: email,
+          fullName: fullName,
+          bio: bio,
+          specialization: specialization,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        });
+      });
+    }).catch(function (err) {
+      console.error('[InstructorApps] submitApplication failed:', err);
+      throw err;
+    });
   }
 
   function updateStatus(id, status) {
@@ -274,12 +356,90 @@
     }
   }
 
-  function approveApplication(id) {
-    return updateStatus(id, 'approved');
+  function currentAdminUid(api) {
+    var user = api.auth && api.auth.currentUser;
+    if (user && user.uid) return user.uid;
+    var fallback = global.IFAAuth && global.IFAAuth.getCurrentUser ? global.IFAAuth.getCurrentUser() : null;
+    if (fallback && fallback.uid) return fallback.uid;
+    throw new Error('تعذر تحديد حساب المشرف.');
   }
 
-  function rejectApplication(id) {
-    return updateStatus(id, 'rejected');
+  function approveApplication(uid) {
+    if (!uid) return Promise.reject(new Error('معرّف الطلب مطلوب'));
+    return loadFirestore().then(function (api) {
+      var adminUid = currentAdminUid(api);
+      var appRef = api.fs.doc(api.db, 'instructor_applications', uid);
+      var userRef = api.fs.doc(api.db, 'users', uid);
+      return api.fs.getDoc(userRef).then(function (userSnap) {
+        var existing = userSnap.exists() ? userSnap.data() || {} : {};
+        var nextRole = existing.role === 'admin' ? 'admin' : 'instructor';
+        return api.fs.updateDoc(appRef, {
+          status: 'approved',
+          reviewedAt: api.fs.serverTimestamp(),
+          reviewedBy: adminUid,
+        }).then(function () {
+          return api.fs.setDoc(userRef, {
+            isInstructor: true,
+            role: nextRole,
+            updatedAt: api.fs.serverTimestamp(),
+          }, { merge: true });
+        }).then(function () {
+          return { id: uid, uid: uid, email: existing.email || '', status: 'approved' };
+        });
+      });
+    });
+  }
+
+  function rejectApplication(uid) {
+    if (!uid) return Promise.reject(new Error('معرّف الطلب مطلوب'));
+    return loadFirestore().then(function (api) {
+      var adminUid = currentAdminUid(api);
+      var appRef = api.fs.doc(api.db, 'instructor_applications', uid);
+      return api.fs.updateDoc(appRef, {
+        status: 'rejected',
+        reviewedAt: api.fs.serverTimestamp(),
+        reviewedBy: adminUid,
+      }).then(function () {
+        return { id: uid, uid: uid, status: 'rejected' };
+      });
+    });
+  }
+
+  function watchPendingApplications(onChange) {
+    if (pendingUnsub) {
+      pendingUnsub();
+      pendingUnsub = null;
+    }
+    return loadFirestore().then(function (api) {
+      var q = api.fs.query(
+        api.fs.collection(api.db, 'instructor_applications'),
+        api.fs.where('status', '==', 'pending')
+      );
+      pendingUnsub = api.fs.onSnapshot(q, function (snap) {
+        remotePending = [];
+        snap.forEach(function (docSnap) {
+          remotePending.push(mapApplicationDoc(docSnap.id, docSnap.data()));
+        });
+        remotePending.sort(function (a, b) {
+          return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+        });
+        if (typeof onChange === 'function') onChange(remotePending.slice());
+      }, function (err) {
+        console.error('[InstructorApps] pending snapshot failed:', err);
+      });
+      return pendingUnsub;
+    });
+  }
+
+  function getPendingApplications() {
+    if (remotePending) {
+      return remotePending.filter(function (a) {
+        return a && a.status === 'pending';
+      });
+    }
+    return getApplications().filter(function (a) {
+      return a && a.status === 'pending';
+    });
   }
 
   /** Pause/hold a request without archiving it. */
@@ -494,8 +654,49 @@
     return null;
   }
 
+  var remoteInstructors = null;
+  var instructorsUnsub = null;
+  var instructorsLoadError = '';
+
+  function watchActiveInstructors(onChange) {
+    if (instructorsUnsub) {
+      instructorsUnsub();
+      instructorsUnsub = null;
+    }
+    return loadFirestore().then(function (api) {
+      var q = api.fs.query(
+        api.fs.collection(api.db, 'users'),
+        api.fs.where('isInstructor', '==', true)
+      );
+      instructorsUnsub = api.fs.onSnapshot(q, function (snap) {
+        instructorsLoadError = '';
+        remoteInstructors = [];
+        snap.forEach(function (docSnap) {
+          var data = docSnap.data() || {};
+          remoteInstructors.push({
+            id: docSnap.id,
+            email: data.email || '',
+            fullName: data.name || data.fullName || data.email || docSnap.id,
+            bio: data.bio || '',
+            courses: data.specialization || '',
+            approvedAt: stampToIso(data.updatedAt) || stampToIso(data.createdAt),
+            accountStatus: data.instructorStatus === 'suspended' ? 'suspended' : 'active',
+            isInstructor: true,
+          });
+        });
+        if (typeof onChange === 'function') onChange(remoteInstructors.slice());
+      }, function (err) {
+        instructorsLoadError = (err && err.message) || 'تعذر تحميل قائمة المدربين';
+        console.error('[InstructorApps] instructors snapshot failed:', err);
+        if (typeof onChange === 'function') onChange([]);
+      });
+      return instructorsUnsub;
+    });
+  }
+
   /** Active instructors derived from the approved map (+ linked application data). */
   function getActiveInstructors() {
+    if (remoteInstructors) return remoteInstructors.slice();
     var map = getApprovedMap();
     var apps = getApplications();
     var list = [];
@@ -650,6 +851,11 @@
   global.InstructorApps = {
     getApplications: getApplications,
     getPendingApplications: getPendingApplications,
+    watchPendingApplications: watchPendingApplications,
+    watchActiveInstructors: watchActiveInstructors,
+    getInstructorsLoadError: function () {
+      return instructorsLoadError;
+    },
     submitApplication: submitApplication,
     approveApplication: approveApplication,
     rejectApplication: rejectApplication,

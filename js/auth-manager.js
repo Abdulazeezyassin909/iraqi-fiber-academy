@@ -6,7 +6,7 @@
  * Authenticated: profile dropdown with email + "تسجيل خروج".
  * Local session mirror in localStorage (`ifa_auth_user`) for profile fields / route guards.
  */
-import { auth, provider } from './firebase-config.js';
+import { auth, db, provider } from './firebase-config.js';
 import {
   signInWithPopup,
   getRedirectResult,
@@ -15,6 +15,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import {
   syncUserProfile,
   createUserProfileOnSignUp,
@@ -1330,7 +1331,9 @@ function userMenuHtml(options) {
   if (showDashboards) menuClasses += ' is-admin is-instructor';
   if (shouldBypassAccessControl()) menuClasses += ' is-file-local is-local-dev';
 
-  var instructorItem = showDashboards
+  var instructor = isInstructorUser(options.profile, options.email);
+
+  var instructorItem = instructor
     ? '<a href="instructor.html" id="instructor-dashboard" class="user-menu__item user-menu__item--instructor" role="menuitem">لوحة المدرب</a>'
     : '';
 
@@ -1338,11 +1341,11 @@ function userMenuHtml(options) {
     ? '<a href="admin.html" id="admin-dashboard" class="user-menu__item user-menu__item--admin" role="menuitem" data-admin-only>لوحة الإدارة</a>'
     : '';
 
-  /* Always shown when logged in (per account-menu workflow) */
-  var joinItem =
-    '<a href="#" class="user-menu__item user-menu__item--join" role="menuitem" data-join-instructor>' +
-    'انضم إلينا كمدرب' +
-    '</a>';
+  var joinItem = instructor
+    ? ''
+    : '<a href="#" class="user-menu__item user-menu__item--join" role="menuitem" data-join-instructor>' +
+      'انضم إلينا كمدرب' +
+      '</a>';
 
   var midItems = instructorItem + adminItem + joinItem;
 
@@ -1401,6 +1404,7 @@ function loggedInHtml(user, variant, profile) {
   return userMenuHtml({
     fullName: getFullName(user, profile),
     email: email,
+    profile: profile,
     avatarHtml: avatarHtml(user, firstName),
     showDashboards: shouldShowDashboardLinks(email, profile),
   });
@@ -1623,9 +1627,45 @@ export async function loginWithGoogle() {
   }
 }
 
+var userDocUnsub = null;
+
+function stopUserDocListener() {
+  if (typeof userDocUnsub === 'function') {
+    userDocUnsub();
+    userDocUnsub = null;
+  }
+}
+
+function startUserDocListener(uid) {
+  stopUserDocListener();
+  if (!uid) return;
+  userDocUnsub = onSnapshot(doc(db, 'users', uid), function (snap) {
+    if (!snap.exists()) return;
+    var data = snap.data() || {};
+    if (data.isInstructor !== true) return;
+    var local = getLocalAuthUser() || {};
+    var nextRole = data.role === 'admin' ? 'admin' : 'instructor';
+    if (!lastProfile || typeof lastProfile !== 'object') lastProfile = {};
+    lastProfile.isInstructor = true;
+    lastProfile.role = nextRole;
+    setLocalAuthUser(
+      Object.assign({}, local, {
+        isInstructor: true,
+        role: nextRole,
+        email: local.email || data.email || '',
+        name: local.name || data.name || '',
+      })
+    );
+    refreshSlots();
+  }, function (err) {
+    console.warn('[Auth] user profile listener failed:', err);
+  });
+}
+
 export async function logoutUser() {
   closeUserMenuDropdown();
   closeAuthModal();
+  stopUserDocListener();
   stopPlatformNotifications();
   try {
     if (auth.currentUser) {
@@ -1779,6 +1819,7 @@ function applySessionFromProfileAndEntitlements(user, profile, orderEntitlements
   );
   dispatchSubscriptionChanged(user, orderEntitlements, email);
   profileSynced = true;
+  if (user && user.uid) startUserDocListener(user.uid);
   refreshSlots();
   startPlatformNotifications(user, profileForSession);
   notifyLocalAuthChanged({ type: 'profile-sync', email: email });

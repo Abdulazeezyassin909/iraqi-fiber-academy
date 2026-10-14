@@ -358,7 +358,37 @@
       }
     }
 
+    function signedInApplicant() {
+      var authApi = window.IFAAuth;
+      var user = authApi && typeof authApi.getCurrentUser === 'function' ? authApi.getCurrentUser() : null;
+      if (!user || !user.uid) return null;
+      return user;
+    }
+
+    function prefillInstructorIdentity(user) {
+      var nameInput = document.getElementById('instructorFullName');
+      var emailInput = document.getElementById('instructorEmail');
+      var profile = window.IFAAuth && window.IFAAuth.getAuthState ? window.IFAAuth.getAuthState() : null;
+      var profileName = profile && profile.profile && profile.profile.name ? profile.profile.name : '';
+      if (nameInput) {
+        nameInput.value = profileName || user.displayName || nameInput.value || '';
+        nameInput.readOnly = true;
+      }
+      if (emailInput) {
+        emailInput.value = user.email || '';
+        emailInput.readOnly = true;
+      }
+    }
+
     function openInstructorModal() {
+      var user = signedInApplicant();
+      if (!user) {
+        alert('سجّل الدخول أولاً لتقديم طلب الانضمام كمدرب.');
+        if (window.IFAAuth && typeof window.IFAAuth.openAuthModal === 'function') {
+          window.IFAAuth.openAuthModal();
+        }
+        return;
+      }
       if (!modal) return;
       modal.hidden = false;
       modal.setAttribute('aria-hidden', 'false');
@@ -371,8 +401,9 @@
         successEl.hidden = true;
         successEl.textContent = '';
       }
-      var nameInput = document.getElementById('instructorFullName');
-      if (nameInput) nameInput.focus();
+      prefillInstructorIdentity(user);
+      var bioInput = document.getElementById('instructorBio');
+      if (bioInput) bioInput.focus();
     }
 
     function closeInstructorModal() {
@@ -477,28 +508,30 @@
           successEl.textContent = '';
         }
 
-        try {
-          var app = window.InstructorApps.submitApplication({
-            fullName: document.getElementById('instructorFullName').value,
-            email: document.getElementById('instructorEmail').value,
-            bio: document.getElementById('instructorBio').value,
-            cvLink: document.getElementById('instructorCvLink').value,
-            cvFileName: selectedCvName,
-            courses: document.getElementById('instructorCourses').value,
-          });
-
+        var submitBtn = document.getElementById('instructorSubmitBtn');
+        if (submitBtn) submitBtn.disabled = true;
+        window.InstructorApps.submitApplication({
+          fullName: document.getElementById('instructorFullName').value,
+          email: document.getElementById('instructorEmail').value,
+          bio: document.getElementById('instructorBio').value,
+          specialization: document.getElementById('instructorCourses').value,
+          courses: document.getElementById('instructorCourses').value,
+          cvFile: (document.getElementById('instructorCvFile') && document.getElementById('instructorCvFile').files[0]) || null,
+        }).then(function (app) {
           document.dispatchEvent(
             new CustomEvent('ifa:instructor-application-submitted', { detail: app })
           );
-
           closeInstructorModal();
           openSuccessAlert();
-        } catch (err) {
+        }).catch(function (err) {
+          console.error('[InstructorApps] submit failed:', err);
           if (errorEl) {
             errorEl.textContent = (err && err.message) || 'تعذر إرسال الطلب.';
             errorEl.hidden = false;
           }
-        }
+        }).then(function () {
+          if (submitBtn) submitBtn.disabled = false;
+        });
       });
     }
 

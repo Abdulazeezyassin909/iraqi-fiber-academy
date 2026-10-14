@@ -15,22 +15,39 @@
     return (prefix || 'id') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
   }
 
+  function localAuthProfile() {
+    try {
+      var raw = localStorage.getItem('ifa_auth_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function currentInstructorEmail() {
+    var local = localAuthProfile();
     if (APPS) {
       return normalizeEmail(
         APPS.getApprovedInstructorEmail() ||
           APPS.getSessionEmail() ||
+          (local && local.email) ||
           ''
       );
     }
-    try {
-      return normalizeEmail(localStorage.getItem('approvedInstructorEmail') || '');
-    } catch (e) {
-      return '';
-    }
+    return normalizeEmail((local && local.email) || '');
   }
 
   function isInstructorAllowed() {
+    var local = localAuthProfile();
+    if (local && (local.isInstructor === true || String(local.role || '').toLowerCase() === 'instructor' || String(local.role || '').toLowerCase() === 'admin')) {
+      return true;
+    }
+    if (global.IFAAuth && typeof global.IFAAuth.isInstructorUser === 'function') {
+      var state = typeof global.IFAAuth.getAuthState === 'function' ? global.IFAAuth.getAuthState() : null;
+      var profile = (state && state.profile) || local;
+      var email = (state && state.user && state.user.email) || (local && local.email) || '';
+      if (global.IFAAuth.isInstructorUser(profile, email)) return true;
+    }
     try {
       if (localStorage.getItem('isInstructorApproved') === 'true') return true;
     } catch (e) {
@@ -40,6 +57,54 @@
       return !!APPS.getInstructorApprovedFlag();
     }
     return false;
+  }
+
+  function ensureInstructorAccess() {
+    if (isInstructorAllowed()) return Promise.resolve(true);
+    return Promise.all([
+      import('./firebase-config.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
+    ]).then(function (mods) {
+      var auth = mods[0].auth;
+      var db = mods[0].db;
+      var onAuthStateChanged = mods[1].onAuthStateChanged;
+      var fs = mods[2];
+      return new Promise(function (resolve) {
+        var unsub = onAuthStateChanged(auth, function (user) {
+          unsub();
+          if (!user) {
+            resolve(false);
+            return;
+          }
+          fs.getDoc(fs.doc(db, 'users', user.uid)).then(function (snap) {
+            var data = snap.exists() ? snap.data() || {} : {};
+            var allowed = data.isInstructor === true || String(data.role || '') === 'instructor' || String(data.role || '') === 'admin';
+            if (allowed) {
+              try {
+                var prev = localAuthProfile() || {};
+                localStorage.setItem('ifa_auth_user', JSON.stringify(Object.assign({}, prev, {
+                  email: data.email || user.email || prev.email || '',
+                  name: data.name || prev.name || user.displayName || '',
+                  isInstructor: true,
+                  role: data.role === 'admin' ? 'admin' : 'instructor',
+                })));
+                localStorage.setItem('isInstructorApproved', 'true');
+              } catch (err) {
+                /* ignore */
+              }
+            }
+            resolve(allowed);
+          }).catch(function (err) {
+            console.error('[InstructorDash] access check failed:', err);
+            resolve(false);
+          });
+        });
+      });
+    }).catch(function (err) {
+      console.error('[InstructorDash] access check failed:', err);
+      return false;
+    });
   }
 
   function pc() {
@@ -318,6 +383,7 @@
 
   global.InstructorDash = {
     currentInstructorEmail: currentInstructorEmail,
+    ensureInstructorAccess: ensureInstructorAccess,
     isInstructorAllowed: isInstructorAllowed,
     getCourses: getCourses,
     addCourse: addCourse,
