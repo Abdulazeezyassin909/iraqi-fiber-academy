@@ -1335,7 +1335,7 @@ function userMenuHtml(options) {
   if (shouldBypassAccessControl()) menuClasses += ' is-file-local is-local-dev';
 
   var instructorItem = instructor
-    ? '<a href="instructor.html" id="instructor-dashboard" class="user-menu__item user-menu__item--instructor" role="menuitem">لوحة المدرب</a>'
+    ? '<a href="instructor.html" id="instructor-dashboard" class="user-menu__item" role="menuitem" style="display: flex !important;">لوحة المدرب</a>'
     : '';
 
   var adminItem = showDashboards
