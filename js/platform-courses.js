@@ -16,7 +16,7 @@
   var ACADEMY_EMAIL = '';
   var ACADEMY_NAME = 'مسار المهندس ‎°360';
 
-  var VALID_STATUS = { draft: true, published: true, suspended: true };
+  var VALID_STATUS = { draft: true, published: true, suspended: true, pending: true };
   var VALID_CATEGORY = { individual: true, program: true, master: true };
 
   var INDIVIDUAL_MODULE_TITLES = [
@@ -470,6 +470,8 @@
       category: normalizeCategory(raw.category),
       instructorEmail: email,
       instructorName: name,
+      instructorId: String(raw.instructorId || '').trim(),
+      thumbnailUrl: String(raw.thumbnailUrl || raw.thumbnail || '').trim(),
       isAcademy: academy,
       durationHours: Number(raw.durationHours) || 0,
       durationWeeks: Number(raw.durationWeeks) || 0,

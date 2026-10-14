@@ -27,8 +27,7 @@
       <nav class="admin-sidebar__nav">
         <p class="admin-sidebar__label">مساحة المدرب</p>
         <a href="#overview" class="admin-nav__link active" data-inst-section="overview">نظرة عامة</a>
-        <a href="#courses" class="admin-nav__link" data-inst-section="courses">كورساتي وحلقاتي</a>
-        <a href="#quizzes" class="admin-nav__link" data-inst-section="quizzes">امتحانات الحلقات</a>
+        <a href="#courses" class="admin-nav__link" data-inst-section="courses">كورساتي</a>
         <a href="#qa" class="admin-nav__link" data-inst-section="qa">أسئلة وتعليقات الطلاب</a>
         <a href="#analytics" class="admin-nav__link" data-inst-section="analytics">التقدم والإحصائيات</a>
       </nav>
@@ -74,7 +73,6 @@
             <div class="inst-panel__body">
               <div class="inst-actions">
                 <button type="button" class="admin-btn admin-btn--primary" data-goto="courses">إدارة الكورسات</button>
-                <button type="button" class="admin-btn admin-btn--ghost" data-goto="quizzes">بناء امتحان</button>
                 <button type="button" class="admin-btn admin-btn--ghost" data-goto="qa">الرد على الأسئلة</button>
               </div>
             </div>
@@ -86,82 +84,71 @@
           <div class="inst-panel">
             <div class="inst-panel__header">
               <div>
-                <h2 class="inst-panel__title">كورساتي وحلقاتي</h2>
+                <h2 class="inst-panel__title">كورساتي</h2>
                 <p class="inst-panel__desc">إدارة كورساتك فقط — أضف فيديوهات وقوالب لكل حلقة</p>
               </div>
             </div>
             <div class="inst-panel__body">
-              <form id="courseForm" class="inst-form-grid">
-                <div class="inst-field">
-                  <label class="inst-label" for="courseTitle">عنوان الكورس</label>
-                  <input class="inst-input" id="courseTitle" required placeholder="مثال: لحام الألياف الضوئية" />
+              <form class="admin-form-grid" id="instructorCourseForm">
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">عنوان الكورس</span>
+                  <input class="admin-field__input" type="text" id="instructorCourseTitle" required />
+                </label>
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">الوصف</span>
+                  <textarea class="admin-field__input admin-field__textarea" id="instructorCourseDescription" rows="3"></textarea>
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">سعر الكورس</span>
+                  <input class="admin-field__input admin-field__input--price" type="text" inputmode="numeric" id="instructorCoursePrice" placeholder="مثال: 150,000" autocomplete="off" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">العملة</span>
+                  <select class="admin-field__input" id="instructorCourseCurrency">
+                    <option value="IQD" selected>د.ع</option>
+                    <option value="USD">$</option>
+                  </select>
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">المدة بالساعات</span>
+                  <input class="admin-field__input" type="number" min="0" step="1" id="instructorCourseHours" placeholder="مثال: 24" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">المدة بالأسابيع</span>
+                  <input class="admin-field__input" type="number" min="0" step="1" id="instructorCourseWeeks" placeholder="مثال: 3" />
+                </label>
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">الجدول الأسبوعي</span>
+                  <input class="admin-field__input" type="text" id="instructorCourseSchedule" placeholder="مثال: سبت وثلاثاء — ساعتان لكل جلسة" />
+                </label>
+                <fieldset class="admin-field admin-field--full admin-field--fieldset" id="instructorCourseSimulators">
+                  <legend class="admin-field__label">المحاكيات المطلوبة للكورس (تخضع لموافقة الإدارة)</legend>
+                  <div class="admin-simulator-checklist">
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="ftth-simulator" /><span>محاكي FTTH متكامل</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="otdr-simulator" /><span>محاكي OTDR افتراضي</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="power-meter" /><span>قياس القدرة البصرية</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="fusion-splicer" /><span>مختبر لحام الألياف الضوئية</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="fiber-anatomy" /><span>تشريح الألياف 3D / 2D</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="patch-panel-lab" /><span>محاكي FTTH Network &amp; Patch Panel</span></label>
+                  </div>
+                </fieldset>
+                <div class="admin-lessons-panel admin-field--full">
+                  <div class="admin-lessons-panel__header">
+                    <div>
+                      <h4 class="admin-lessons-panel__title">محتوى الدروس والفيديوهات</h4>
+                      <p class="admin-lessons-panel__hint">أضف دروساً مع رابط فيديو. يُرسل الكورس للمراجعة قبل النشر.</p>
+                    </div>
+                    <button class="admin-btn admin-btn--ghost admin-btn--sm" type="button" id="instructorAddLessonBtn">+ إضافة درس</button>
+                  </div>
+                  <div id="instructorModulesList" class="admin-lessons-list"></div>
                 </div>
-                <div class="inst-field">
-                  <label class="inst-label" for="courseEnrolled">عدد المسجّلين (اختياري)</label>
-                  <input class="inst-input" id="courseEnrolled" type="number" min="0" value="0" />
-                </div>
-                <div class="inst-field inst-field--full">
-                  <label class="inst-label" for="courseDesc">وصف مختصر</label>
-                  <textarea class="inst-textarea" id="courseDesc" placeholder="نبذة عن محتوى الكورس..."></textarea>
-                </div>
-                <div class="inst-field inst-field--full">
-                  <button type="submit" class="admin-btn admin-btn--primary">إضافة كورس</button>
+                <div class="admin-modal__actions admin-field--full">
+                  <button class="admin-btn admin-btn--primary" type="submit">رفع الكورس للمراجعة</button>
                 </div>
               </form>
             </div>
           </div>
           <div id="coursesList"></div>
-        </section>
-
-        <!-- Quizzes -->
-        <section class="inst-section" id="section-quizzes">
-          <div class="inst-panel">
-            <div class="inst-panel__header">
-              <div>
-                <h2 class="inst-panel__title">امتحان بعد كل حلقة</h2>
-                <p class="inst-panel__desc">أنشئ أسئلة اختيار من متعدد (MCQ) لكل حلقة</p>
-              </div>
-            </div>
-            <div class="inst-panel__body">
-              <div class="inst-form-grid">
-                <div class="inst-field">
-                  <label class="inst-label" for="quizCourseSelect">الكورس</label>
-                  <select class="inst-select" id="quizCourseSelect"></select>
-                </div>
-                <div class="inst-field">
-                  <label class="inst-label" for="quizLessonSelect">الحلقة</label>
-                  <select class="inst-select" id="quizLessonSelect"></select>
-                </div>
-              </div>
-
-              <form id="quizForm" style="margin-top:1rem;">
-                <div class="inst-field">
-                  <label class="inst-label" for="quizQuestion">نص السؤال</label>
-                  <input class="inst-input" id="quizQuestion" required placeholder="اكتب السؤال هنا..." />
-                </div>
-                <div class="inst-form-grid" style="margin-top:0.75rem;">
-                  <div class="inst-field"><label class="inst-label">خيار أ</label><input class="inst-input" id="quizOpt0" required /></div>
-                  <div class="inst-field"><label class="inst-label">خيار ب</label><input class="inst-input" id="quizOpt1" required /></div>
-                  <div class="inst-field"><label class="inst-label">خيار ج</label><input class="inst-input" id="quizOpt2" required /></div>
-                  <div class="inst-field"><label class="inst-label">خيار د</label><input class="inst-input" id="quizOpt3" required /></div>
-                </div>
-                <div class="inst-field" style="margin-top:0.75rem;max-width:220px;">
-                  <label class="inst-label" for="quizCorrect">الإجابة الصحيحة</label>
-                  <select class="inst-select" id="quizCorrect">
-                    <option value="0">أ</option>
-                    <option value="1">ب</option>
-                    <option value="2">ج</option>
-                    <option value="3">د</option>
-                  </select>
-                </div>
-                <div class="inst-actions">
-                  <button type="submit" class="admin-btn admin-btn--primary">إضافة السؤال للامتحان</button>
-                </div>
-              </form>
-
-              <div id="quizQuestionsList" style="margin-top:1.25rem;"></div>
-            </div>
-          </div>
         </section>
 
         <!-- Q&A -->

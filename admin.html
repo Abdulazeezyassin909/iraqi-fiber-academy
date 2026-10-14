@@ -499,13 +499,10 @@
             <h2 class="admin-panel__title" id="coursesHeading">الكورسات</h2>
             <p class="admin-panel__desc" id="coursesDesc">إنشاء وإدارة الكورسات وربطها بالمدربين ونشرها على المنصة</p>
           </div>
-          <div class="admin-panel__tools">
-            <label class="admin-search" id="courseSearchWrap">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-              </svg>
-              <input class="admin-search__input" type="search" id="courseSearch" placeholder="بحث بالعنوان أو المدرب..." aria-label="بحث عن كورس" />
-            </label>
+          <div class="admin-panel__tools" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-start; margin-bottom: 16px;">
+            <select id="adminCourseInstructorFilter" class="admin-filter__select" aria-label="تصفية حسب المدرب">
+              <option value="all">كل المدربين</option>
+            </select>
             <label class="admin-filter" id="coursesFilterWrap">
               <span class="admin-filter__label">تصفية</span>
               <select class="admin-filter__select" id="coursesStatusFilter" aria-label="تصفية الكورسات">
@@ -513,6 +510,7 @@
                 <option value="published">منشور</option>
                 <option value="suspended">معلّق</option>
                 <option value="draft">مسودة</option>
+                <option value="pending">قيد المراجعة</option>
                 <option value="all">الكل</option>
               </select>
             </label>
@@ -526,13 +524,12 @@
           </div>
         </div>
 
-        <div class="admin-courses-tabs" role="tablist" aria-label="عرض الكورسات">
+        <div class="admin-courses-tabs" role="tablist" aria-label="عرض الكورسات" style="display: flex; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; width: 100%;">
           <button type="button" class="admin-courses-tab is-active" role="tab" aria-selected="true" data-courses-tab="active" id="coursesTabActive">
             الكورسات النشطة
           </button>
-          <button type="button" class="admin-courses-tab" role="tab" aria-selected="false" data-courses-tab="draft" id="coursesTabDraft">
-            مسودة
-            <span class="admin-courses-tab__count" id="coursesDraftCount">0</span>
+          <button type="button" id="btnPendingCourses" class="admin-courses-tab" data-courses-tab="pending">
+            طلبات الكورسات <span id="pendingCoursesCount" class="admin-nav__badge" style="display: none; margin-inline-start: 8px;">0</span>
           </button>
         </div>
 

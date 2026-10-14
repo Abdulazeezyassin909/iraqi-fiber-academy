@@ -121,6 +121,8 @@ function preparePayload(payload, existing) {
     category: normalized.category,
     instructorEmail: normalized.instructorEmail,
     instructorName: normalized.instructorName,
+    instructorId: normalized.instructorId || '',
+    thumbnailUrl: normalized.thumbnailUrl || '',
     isAcademy: normalized.isAcademy,
     durationHours: normalized.durationHours,
     durationWeeks: normalized.durationWeeks,

@@ -7,6 +7,7 @@
 
   var searchQuery = '';
   var statusFilter = 'active';
+  var instructorFilter = 'all';
   var lessonDrafts = [];
   var uploadTimer = null;
   var toastTimer = null;
@@ -515,6 +516,9 @@
     if (course.status === 'suspended') {
       return '<span class="admin-badge admin-badge--suspended">معلّق</span>';
     }
+    if (course.status === 'pending') {
+      return '<span class="admin-badge admin-badge--pending">قيد المراجعة</span>';
+    }
     return '<span class="admin-badge admin-badge--pending">مسودة</span>';
   }
 
@@ -772,6 +776,24 @@
     if (countEl && window.PlatformCourses) {
       countEl.textContent = String(window.PlatformCourses.getDraftCount());
     }
+
+    var pendingBtn = document.getElementById('btnPendingCourses');
+    if (pendingBtn) {
+      pendingBtn.classList.toggle('is-active', statusFilter === 'pending');
+      pendingBtn.setAttribute('aria-selected', statusFilter === 'pending' ? 'true' : 'false');
+    }
+    var pendingCountEl = document.getElementById('pendingCoursesCount');
+    if (pendingCountEl && window.PlatformCourses) {
+      var pendingCount = window.PlatformCourses.getCourses().filter(function (c) {
+        return c && c.status === 'pending' && !c.softDeleted;
+      }).length;
+      pendingCountEl.textContent = pendingCount;
+      if (pendingCount > 0) {
+        pendingCountEl.style.display = 'inline-block';
+      } else {
+        pendingCountEl.style.display = 'none';
+      }
+    }
   }
 
   function setCoursesView(view) {
@@ -923,15 +945,38 @@
       list.sort(window.PlatformCourses.sortByDisplayOrder);
     }
 
+    var instructorSelect = document.getElementById('adminCourseInstructorFilter');
+    if (instructorSelect) {
+      var names = {};
+      list.forEach(function (c) {
+        var name = String((c && c.instructorName) || '').trim();
+        if (name) names[name] = true;
+      });
+      var selected = instructorFilter || 'all';
+      var options = '<option value="all">كل المدربين</option>';
+      Object.keys(names).sort().forEach(function (name) {
+        options += '<option value="' + name.replace(/"/g, '&quot;') + '">' + name.replace(/</g, '&lt;') + '</option>';
+      });
+      instructorSelect.innerHTML = options;
+      instructorSelect.value = names[selected] || selected === 'all' ? selected : 'all';
+      instructorFilter = instructorSelect.value || 'all';
+    }
+
     var filtered = list.filter(function (c) {
       if (statusFilter === 'active') {
-        if (c.softDeleted || c.status === 'draft') return false;
+        if (c.softDeleted || c.status === 'draft' || c.status === 'pending') return false;
       } else if (statusFilter === 'draft') {
         if (!(c.status === 'draft' || c.softDeleted)) return false;
+      } else if (statusFilter === 'pending') {
+        if (c.status !== 'pending' || c.softDeleted) return false;
       } else if (statusFilter === 'published') {
         if (c.status !== 'published' || c.softDeleted) return false;
       } else if (statusFilter === 'suspended') {
         if (c.status !== 'suspended' || c.softDeleted) return false;
+      }
+
+      if (instructorFilter && instructorFilter !== 'all') {
+        if (String(c.instructorName || '') !== instructorFilter) return false;
       }
 
       if (!searchQuery) return true;
@@ -1131,6 +1176,14 @@
     if (filter) {
       filter.addEventListener('change', function () {
         setCoursesView(filter.value || 'active');
+      });
+    }
+
+    var instructorSelect = document.getElementById('adminCourseInstructorFilter');
+    if (instructorSelect) {
+      instructorSelect.addEventListener('change', function () {
+        instructorFilter = instructorSelect.value || 'all';
+        renderCoursesTable();
       });
     }
 

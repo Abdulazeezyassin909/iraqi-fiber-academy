@@ -161,19 +161,27 @@
       var inst = APPS.findActiveInstructor(key);
       if (inst && inst.fullName) name = inst.fullName;
     }
+    var authUser = (typeof IFAAuth !== 'undefined' && IFAAuth.getCurrentUser) ? IFAAuth.getCurrentUser() : null;
     return requirePlatform().addCourse({
       title: payload.title,
       description: payload.description,
       enrolledCount: payload.enrolledCount,
       views: payload.views,
       instructorEmail: key,
-      instructorName: name,
-      status: 'draft',
+      instructorName: payload.instructorName || name,
+      instructorId: payload.instructorId || (authUser && authUser.uid) || '',
+      thumbnailUrl: '',
+      category: 'individual',
+      price: payload.price,
+      currency: payload.currency || 'IQD',
+      status: 'pending',
       source: 'instructor',
       durationHours: payload.durationHours,
       durationWeeks: payload.durationWeeks,
       weeklySchedule: payload.weeklySchedule,
       lessons: payload.lessons || [],
+      allowedSimulators: payload.simulators || payload.allowedSimulators || [],
+      simulators: payload.simulators || payload.allowedSimulators || [],
     });
   }
 
