@@ -340,14 +340,9 @@
     var errorEl = document.getElementById('instructorFormError');
     var successEl = document.getElementById('instructorFormSuccess');
     var successAlert = document.getElementById('instructorSuccessAlert');
-    var cvFileInput = document.getElementById('instructorCvFile');
-    var cvFileNameEl = document.getElementById('instructorCvFileName');
-    var selectedCvName = '';
 
     function resetInstructorForm() {
       if (form) form.reset();
-      selectedCvName = '';
-      if (cvFileNameEl) cvFileNameEl.textContent = 'لم يتم اختيار ملف';
       if (errorEl) {
         errorEl.hidden = true;
         errorEl.textContent = '';
@@ -407,6 +402,7 @@
     }
 
     function closeInstructorModal() {
+      resetInstructorForm();
       if (!modal) return;
       modal.hidden = true;
       modal.setAttribute('aria-hidden', 'true');
@@ -435,13 +431,6 @@
 
     window.openInstructorModal = openInstructorModal;
     window.closeInstructorModal = closeInstructorModal;
-
-    if (cvFileInput && cvFileNameEl) {
-      cvFileInput.addEventListener('change', function () {
-        selectedCvName = cvFileInput.files && cvFileInput.files[0] ? cvFileInput.files[0].name : '';
-        cvFileNameEl.textContent = selectedCvName || 'لم يتم اختيار ملف';
-      });
-    }
 
     document.addEventListener('click', function (e) {
       if (e.target.closest && e.target.closest('[data-instructor-success-ok]')) {
@@ -494,6 +483,10 @@
     if (form) {
       form.addEventListener('submit', function (e) {
         e.preventDefault();
+        if (!e.target.checkValidity()) {
+          e.target.reportValidity();
+          return; // Stop submission if required fields (like CV Link) are empty
+        }
         if (!window.InstructorApps) {
           alert('تعذر حفظ الطلب. أعد تحميل الصفحة.');
           return;
@@ -516,7 +509,7 @@
           bio: document.getElementById('instructorBio').value,
           specialization: document.getElementById('instructorCourses').value,
           courses: document.getElementById('instructorCourses').value,
-          cvFile: (document.getElementById('instructorCvFile') && document.getElementById('instructorCvFile').files[0]) || null,
+          cvLink: document.getElementById('instructorCvLink').value,
         }).then(function (app) {
           document.dispatchEvent(
             new CustomEvent('ifa:instructor-application-submitted', { detail: app })

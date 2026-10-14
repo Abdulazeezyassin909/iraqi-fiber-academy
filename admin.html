@@ -410,8 +410,6 @@
                   <input type="checkbox" id="instructorSelectAll" aria-label="تحديد الكل" />
                 </th>
                 <th scope="col">المتقدم</th>
-                <th scope="col">النبذة</th>
-                <th scope="col">الكورسات المقترحة</th>
                 <th scope="col">السيرة الذاتية</th>
                 <th scope="col">التاريخ</th>
                 <th scope="col">الحالة</th>
@@ -420,7 +418,7 @@
             </thead>
             <tbody id="instructorRequestsBody">
               <tr>
-                <td colspan="8" class="admin-empty-cell">لا توجد طلبات حالياً</td>
+                <td colspan="6" class="admin-empty-cell">لا توجد طلبات حالياً</td>
               </tr>
             </tbody>
           </table>
@@ -461,6 +459,37 @@
               <button class="admin-btn admin-btn--primary" type="submit">حفظ</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <div class="admin-modal" id="appDetailsModal" hidden>
+        <div class="admin-modal__backdrop" data-close-app-details></div>
+        <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="appDetailsTitle" style="width:min(800px,96vw);max-width:800px;">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="appDetailsTitle">تفاصيل الطلب</h3>
+            <button class="admin-modal__close" type="button" data-close-app-details aria-label="إغلاق">×</button>
+          </div>
+          <div class="admin-modal__body">
+            <p id="appDetailsName"></p>
+            <p id="appDetailsEmail" dir="ltr"></p>
+            <label class="admin-field">
+              <span class="admin-field__label">النبذة</span>
+              <p id="appDetailsBio" style="white-space:pre-wrap;word-break:break-word;background:rgba(148,163,184,0.12);border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:0.85rem 1rem;margin:0.35rem 0 0;"></p>
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">الكورسات المقترحة</span>
+              <p id="appDetailsCourses" style="white-space:pre-wrap;word-break:break-word;background:rgba(148,163,184,0.12);border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:0.85rem 1rem;margin:0.35rem 0 0;"></p>
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">رابط السيرة الذاتية</span>
+              <p id="appDetailsCv">لا يوجد</p>
+            </label>
+            <div class="admin-modal__actions">
+              <button type="button" id="modalApproveBtn" class="admin-btn admin-btn--primary">موافقة</button>
+              <button type="button" id="modalRejectBtn" class="admin-btn admin-btn--danger">رفض</button>
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-app-details>إغلاق</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1484,7 +1513,7 @@
   <script src="js/platform-hero-slideshow.js?v=20260921"></script>
   <script src="js/admin-users.js?v=20260921"></script>
   <script type="module" src="js/admin-users-firestore-sync.js?v=20260921"></script>
-  <script src="js/instructor-applications.js?v=20261014b"></script>
+  <script src="js/instructor-applications.js?v=20261014c"></script>
   <script src="js/platform-courses.js?v=20260921"></script>
   <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
   <script src="js/platform-plans.js?v=20260921"></script>
@@ -1496,7 +1525,7 @@
   <script src="js/ftth-lab-settings-cms.js?v=20260921"></script>
   <script src="js/admin-core.js?v=20260925"></script>
   <script src="js/admin-users-ui.js?v=20260921"></script>
-  <script src="js/admin-instructors-ui.js?v=20261014b"></script>
+  <script src="js/admin-instructors-ui.js?v=20261014g"></script>
   <script type="module" src="js/platform-simulators-firestore-sync.js?v=20260921"></script>
   <script src="js/admin-site-cms.js?v=20260921"></script>
   <script type="module" src="js/admin-orders-ui.js?v=20260921"></script>

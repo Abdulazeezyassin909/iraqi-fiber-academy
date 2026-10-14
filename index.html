@@ -399,7 +399,7 @@
         <div class="footer__column">
           <h4 class="footer__column-title" data-i18n="footer.dashboards">لوحات التحكم</h4>
           <ul class="footer__links">
-            <li><a href="#" data-join-instructor data-i18n="footer.joinInstructor">انضم إلينا كمدرب</a></li>
+            <li><a href="#" id="footerInstructorLink" data-join-instructor data-i18n="footer.joinInstructor">انضم إلينا كمدرب</a></li>
           </ul>
         </div>
       </div>
@@ -441,18 +441,8 @@
         </div>
 
         <div class="instructor-form__field">
-          <label class="instructor-form__label" for="instructorCvLink">رابط السيرة الذاتية</label>
-          <input class="instructor-form__input" type="url" id="instructorCvLink" name="cvLink" placeholder="https://..." dir="ltr" />
-          <p class="instructor-form__hint">أو ارفع ملفاً أدناه (يُحفظ اسم الملف محلياً لأغراض الاختبار)</p>
-        </div>
-
-        <div class="instructor-form__field instructor-form__file">
-          <label class="instructor-form__label">رفع السيرة الذاتية (PDF / DOC)</label>
-          <label class="instructor-form__file-btn">
-            اختيار ملف
-            <input type="file" id="instructorCvFile" name="cvFile" accept=".pdf,.doc,.docx,application/pdf" />
-          </label>
-          <span class="instructor-form__file-name" id="instructorCvFileName">لم يتم اختيار ملف</span>
+          <label class="instructor-form__label" for="instructorCvLink">رابط السيرة الذاتية <span>*</span></label>
+          <input class="instructor-form__input" type="url" id="instructorCvLink" name="cvLink" required placeholder="https://..." dir="ltr" />
         </div>
 
         <div class="instructor-form__field">
@@ -569,7 +559,7 @@
       window.addEventListener('load', run);
     })();
   </script>
-  <script src="js/instructor-applications.js?v=20261014b"></script>
+  <script src="js/instructor-applications.js?v=20261014d"></script>
   <script src="js/platform-courses.js?v=20260921"></script>
   <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
   <script src="js/platform-courses-public.js?v=20260921"></script>
@@ -871,7 +861,7 @@
   </script>
   <script src="js/navigation.js?v=20260921"></script>
   <script src="js/animations.js?v=20260921"></script>
-  <script src="js/main.js?v=20261014b"></script>
+  <script src="js/main.js?v=20261014d"></script>
   <script src="js/platform-notifications.js?v=20260921"></script>
   <script type="module" src="js/platform-notifications-firestore-sync.js?v=20260921"></script>
   <script type="module" src="js/auth-manager.js?v=20261014b"></script>

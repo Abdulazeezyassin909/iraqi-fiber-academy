@@ -1327,11 +1327,12 @@ function userMenuHtml(options) {
       escapeHtml((options.fullName || 'م').charAt(0)) +
       '</span>';
 
-  var menuClasses = 'user-menu';
-  if (showDashboards) menuClasses += ' is-admin is-instructor';
-  if (shouldBypassAccessControl()) menuClasses += ' is-file-local is-local-dev';
-
   var instructor = isInstructorUser(options.profile, options.email);
+
+  var menuClasses = 'user-menu';
+  if (instructor) menuClasses += ' is-instructor';
+  if (showDashboards) menuClasses += ' is-admin';
+  if (shouldBypassAccessControl()) menuClasses += ' is-file-local is-local-dev';
 
   var instructorItem = instructor
     ? '<a href="instructor.html" id="instructor-dashboard" class="user-menu__item user-menu__item--instructor" role="menuitem">لوحة المدرب</a>'
@@ -1972,6 +1973,22 @@ function initAuthUI() {
     slots.forEach(function (slot) {
       renderAuthSlot(slot);
     });
+
+    var footerLink = document.getElementById('footerInstructorLink');
+    if (footerLink) {
+      var profile = getLocalAuthUser();
+      if (profile && isInstructorUser(profile)) {
+        footerLink.textContent = 'لوحة المدرب';
+        footerLink.href = 'instructor.html';
+        footerLink.removeAttribute('data-join-instructor');
+        footerLink.removeAttribute('data-i18n');
+      } else {
+        footerLink.textContent = 'انضم إلينا كمدرب';
+        footerLink.href = '#';
+        footerLink.setAttribute('data-join-instructor', '');
+        footerLink.setAttribute('data-i18n', 'footer.joinInstructor');
+      }
+    }
   };
 
   if (shouldBypassAccessControl()) {

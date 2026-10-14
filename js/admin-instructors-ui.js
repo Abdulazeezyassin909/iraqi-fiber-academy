@@ -336,8 +336,6 @@
           '<tr>' +
           '<th scope="col" class="admin-th-check"><input type="checkbox" id="instructorSelectAll" aria-label="تحديد الكل" /></th>' +
           '<th scope="col">المتقدم</th>' +
-          '<th scope="col">النبذة</th>' +
-          '<th scope="col">الكورسات المقترحة</th>' +
           '<th scope="col">السيرة الذاتية</th>' +
           '<th scope="col">التاريخ</th>' +
           '<th scope="col">الحالة</th>' +
@@ -393,7 +391,7 @@
         });
         if (meta) meta.textContent = archiveCount + ' عنصر في الأرشيف · عرض ' + archived.length;
         if (!archived.length) {
-          body.innerHTML = '<tr><td colspan="8" class="admin-empty-cell">الأرشيف فارغ.</td></tr>';
+          body.innerHTML = '<tr><td colspan="6" class="admin-empty-cell">الأرشيف فارغ.</td></tr>';
           syncSelectionUi();
           return;
         }
@@ -463,7 +461,7 @@
 
       if (!filtered.length) {
         body.innerHTML =
-          '<tr><td colspan="8" class="admin-empty-cell">' +
+          '<tr><td colspan="6" class="admin-empty-cell">' +
           (apps.length
             ? 'لا توجد طلبات ضمن التصفية المحددة.'
             : 'لا توجد طلبات حالياً. ستظهر هنا بعد الإرسال من صفحة الموقع.') +
@@ -483,7 +481,6 @@
     function renderRequestRow(app, showingArchive) {
       var initial = escapeHtml((app.fullName || '?').charAt(0));
       var id = escapeHtml(app.id);
-      var canDecide = !showingArchive && app.status === 'pending';
       var dateLabel = showingArchive
         ? window.InstructorApps.formatDate(app.archivedAt || app.createdAt)
         : window.InstructorApps.formatDate(app.createdAt);
@@ -497,25 +494,9 @@
             '<button class="admin-btn admin-btn--danger admin-btn--sm" type="button" data-purge-instructor="' +
             id +
             '">حذف نهائي</button>'
-          : (canDecide
-              ? '<button class="admin-btn admin-btn--primary admin-btn--sm" type="button" data-approve-instructor="' +
-                id +
-                '">موافقة</button>' +
-                '<button class="admin-btn admin-btn--danger admin-btn--sm" type="button" data-reject-instructor="' +
-                id +
-                '">رفض</button>'
-              : '<span class="admin-row-status-note">' +
-                (app.status === 'on_hold'
-                  ? 'معلّق'
-                  : app.status === 'rejected'
-                    ? 'مرفوض'
-                    : 'تمت المراجعة') +
-                '</span>') +
-            '<div class="admin-row-more">' +
-            '<button class="admin-row-more__toggle" type="button" aria-label="المزيد" aria-haspopup="true" data-row-more="' +
+          : '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-app-details="' +
             id +
-            '">⋯</button>' +
-            '</div>') +
+            '">التفاصيل</button>') +
         '</div>';
 
       return (
@@ -528,7 +509,9 @@
         '" aria-label="تحديد الطلب" />' +
         '</td>' +
         '<td>' +
-        '<div class="admin-user-cell">' +
+        '<button type="button" class="admin-user-cell" data-app-details="' +
+        id +
+        '" style="background:none;border:0;padding:0;cursor:pointer;text-align:inherit;color:inherit;">' +
         '<div class="admin-user-cell__avatar">' +
         initial +
         '</div>' +
@@ -540,14 +523,8 @@
         escapeHtml(app.email) +
         '</div>' +
         '</div>' +
-        '</div>' +
+        '</button>' +
         '</td>' +
-        '<td><div class="admin-cell-clamp">' +
-        escapeHtml(app.bio) +
-        '</div></td>' +
-        '<td><div class="admin-cell-clamp">' +
-        escapeHtml(app.courses) +
-        '</div></td>' +
         '<td>' +
         cvCell(app) +
         '</td>' +
@@ -585,6 +562,9 @@
         '">' +
         suspendLabel +
         '</button>' +
+        '<button class="admin-btn admin-btn--danger admin-btn--sm" type="button" onclick="window.AdminInstructors.revokeInstructor(\'' +
+        id +
+        '\')">حذف</button>' +
         '<div class="admin-row-more">' +
         '<button class="admin-row-more__toggle" type="button" aria-label="المزيد" data-row-more="' +
         id +
@@ -635,12 +615,93 @@
       );
     }
 
+    function closeAppDetailsModal() {
+      var modal = document.getElementById('appDetailsModal');
+      if (!modal) return;
+      modal.hidden = true;
+    }
+
+    function openAppDetails(uid) {
+      var list = window.InstructorApps && window.InstructorApps.getApplications
+        ? window.InstructorApps.getApplications()
+        : [];
+      var app = null;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && (list[i].id === uid || list[i].uid === uid)) {
+          app = list[i];
+          break;
+        }
+      }
+      if (!app) return;
+      var nameEl = document.getElementById('appDetailsName');
+      var emailEl = document.getElementById('appDetailsEmail');
+      var bioEl = document.getElementById('appDetailsBio');
+      var coursesEl = document.getElementById('appDetailsCourses');
+      var cvEl = document.getElementById('appDetailsCv');
+      if (nameEl) nameEl.textContent = app.fullName || '—';
+      if (emailEl) emailEl.textContent = app.email || '—';
+      if (bioEl) bioEl.textContent = app.bio || '—';
+      if (coursesEl) coursesEl.textContent = app.specialization || app.courses || '—';
+      if (cvEl) {
+        if (app.cvLink) {
+          cvEl.innerHTML = '<a href="' + escapeHtml(app.cvLink) + '" target="_blank" rel="noopener noreferrer" style="color:#0ea5e9;text-decoration:underline;font-weight:bold;">اضغط هنا لعرض السيرة الذاتية</a>';
+        } else {
+          cvEl.innerHTML = '<span style="color:#ef4444;font-weight:bold;">لا توجد سيرة ذاتية</span>';
+        }
+      }
+      var approveBtn = document.getElementById('modalApproveBtn');
+      var rejectBtn = document.getElementById('modalRejectBtn');
+      var pending = app.status === 'pending';
+      if (approveBtn) {
+        approveBtn.hidden = !pending;
+        approveBtn.onclick = function () {
+          Promise.resolve(window.InstructorApps.approveApplication(uid))
+            .then(function () {
+              closeAppDetailsModal();
+              renderInstructorPanel();
+            })
+            .catch(function (err) {
+              alert((err && err.message) || 'تعذر تنفيذ الموافقة');
+            });
+        };
+      }
+      if (rejectBtn) {
+        rejectBtn.hidden = !pending;
+        rejectBtn.onclick = function () {
+          Promise.resolve(window.InstructorApps.rejectApplication(uid))
+            .then(function () {
+              closeAppDetailsModal();
+              renderInstructorPanel();
+            })
+            .catch(function (err) {
+              alert((err && err.message) || 'تعذر تنفيذ الرفض');
+            });
+        };
+      }
+      var modal = document.getElementById('appDetailsModal');
+      if (modal) modal.hidden = false;
+    }
+
+    window.AdminInstructors = {
+      openAppDetails: openAppDetails,
+      closeAppDetailsModal: closeAppDetailsModal,
+      revokeInstructor: function (uid) {
+        if (window.InstructorApps && window.InstructorApps.revokeInstructor) {
+          window.InstructorApps.revokeInstructor(uid);
+        }
+      },
+    };
+
     function refreshAfterAction(detail) {
       document.dispatchEvent(new CustomEvent('ifa:instructor-status-changed', { detail: detail || null }));
       renderInstructorPanel();
     }
 
     document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('[data-close-app-details]')) {
+        closeAppDetailsModal();
+      }
+
       if (e.target.closest && e.target.closest('[data-close-instructor-modal]')) {
         closeInstructorEditor();
       }
@@ -665,6 +726,12 @@
 
       if (floatingMenu && !e.target.closest('.admin-row-more__menu') && !e.target.closest('[data-row-more]')) {
         closeAllRowMenus();
+      }
+
+      var detailsBtn = e.target.closest ? e.target.closest('[data-app-details]') : null;
+      if (detailsBtn) {
+        openAppDetails(detailsBtn.getAttribute('data-app-details'));
+        return;
       }
 
       var approveBtn = e.target.closest ? e.target.closest('[data-approve-instructor]') : null;

@@ -184,31 +184,6 @@
     };
   }
 
-  function uploadInstructorCv(uid, file) {
-    if (!file) return Promise.resolve('');
-    return Promise.all([
-      import('./firebase-config.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js'),
-    ]).then(function (mods) {
-      var storage = mods[0].storage;
-      var st = mods[1];
-      var storageRef = st.ref;
-      var uploadBytes = st.uploadBytes;
-      var getDownloadURL = st.getDownloadURL;
-      if (typeof storageRef !== 'function' || typeof uploadBytes !== 'function' || typeof getDownloadURL !== 'function') {
-        throw new Error('تعذر تحميل مكتبات Firebase Storage.');
-      }
-      var safeName = String(file.name || 'cv').replace(/[^\w.\-]+/g, '_');
-      var fileRef = storageRef(storage, 'instructor_cvs/' + uid + '/' + safeName);
-      return uploadBytes(fileRef, file).then(function () {
-        return getDownloadURL(fileRef);
-      });
-    }).catch(function (err) {
-      console.error('[InstructorApps] CV upload failed:', err);
-      throw err;
-    });
-  }
-
   function submitApplication(payload) {
     var authApi = global.IFAAuth;
     var user = authApi && typeof authApi.getCurrentUser === 'function' ? authApi.getCurrentUser() : null;
@@ -219,7 +194,10 @@
     var fullName = String(payload.fullName || user.displayName || '').trim();
     var bio = String(payload.bio || '').trim();
     var specialization = String(payload.specialization || payload.courses || '').trim();
-    var cvFile = payload.cvFile || null;
+    var cvLink = String(payload.cvLink || '').trim();
+    if (!cvLink) {
+      return Promise.reject(new Error('يرجى إرفاق رابط السيرة الذاتية قبل إرسال الطلب.'));
+    }
     if (!fullName) return Promise.reject(new Error('الاسم الكامل مطلوب'));
     if (!bio) return Promise.reject(new Error('نبذة تعريفية مطلوبة'));
     if (!specialization) return Promise.reject(new Error('التخصص مطلوب'));
@@ -233,22 +211,20 @@
         if (snap.exists() && snap.data() && snap.data().status === 'approved') {
           throw new Error('هذا الحساب معتمد بالفعل كمدرب.');
         }
-        return uploadInstructorCv(user.uid, cvFile).then(function (cvUrl) {
-          var payloadDoc = {
-            uid: user.uid,
-            email: email,
-            fullName: fullName,
-            bio: bio,
-            specialization: specialization,
-            cvUrl: cvUrl || '',
-            status: 'pending',
-            createdAt: api.fs.serverTimestamp(),
-            reviewedAt: null,
-            reviewedBy: null,
-          };
-          if (snap.exists()) return api.fs.setDoc(ref, payloadDoc, { merge: true });
-          return api.fs.setDoc(ref, payloadDoc);
-        });
+        var payloadDoc = {
+          uid: user.uid,
+          email: email,
+          fullName: fullName,
+          bio: bio,
+          specialization: specialization,
+          cvLink: cvLink,
+          status: 'pending',
+          createdAt: api.fs.serverTimestamp(),
+          reviewedAt: null,
+          reviewedBy: null,
+        };
+        if (snap.exists()) return api.fs.setDoc(ref, payloadDoc, { merge: true });
+        return api.fs.setDoc(ref, payloadDoc);
       }).then(function () {
         return mapApplicationDoc(user.uid, {
           uid: user.uid,
@@ -256,6 +232,7 @@
           fullName: fullName,
           bio: bio,
           specialization: specialization,
+          cvLink: cvLink,
           status: 'pending',
           createdAt: new Date().toISOString(),
         });
@@ -387,6 +364,31 @@
           return { id: uid, uid: uid, email: existing.email || '', status: 'approved' };
         });
       });
+    });
+  }
+
+  function revokeInstructor(uid) {
+    if (!uid) return Promise.resolve();
+    if (!confirm('هل أنت متأكد من سحب صلاحية المدرب؟')) return Promise.resolve();
+    return loadFirestore().then(function (api) {
+      var db = api.db;
+      var userRef = api.fs.doc(db, 'users', uid);
+      var appRef = api.fs.doc(db, 'instructor_applications', uid);
+
+      return api.fs.setDoc(userRef, {
+        isInstructor: false,
+        role: 'user',
+        updatedAt: api.fs.serverTimestamp(),
+      }, { merge: true }).then(function () {
+        return api.fs.getDoc(appRef).then(function (docSnap) {
+          if (docSnap.exists()) {
+            return api.fs.updateDoc(appRef, { status: 'revoked' });
+          }
+        });
+      });
+    }).catch(function (err) {
+      console.error('[InstructorApps] Revoke error:', err);
+      throw err;
     });
   }
 
@@ -858,6 +860,7 @@
     },
     submitApplication: submitApplication,
     approveApplication: approveApplication,
+    revokeInstructor: revokeInstructor,
     rejectApplication: rejectApplication,
     holdApplication: holdApplication,
     resetApplication: resetApplication,
