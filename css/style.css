@@ -1756,6 +1756,7 @@ body.admin-body.has-announcement-bar .admin-content {
   right: 0;
   width: 8.5rem;
   height: 3.5rem;
+  pointer-events: none;
 }
 
 .course-details__player--youtube .plyr__controls {

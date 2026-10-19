@@ -25,7 +25,7 @@
   ];
 
   var PLYR_YOUTUBE_OPTIONS = {
-    noCookie: true,
+    noCookie: false,
     rel: 0,
     showinfo: 0,
     iv_load_policy: 3,
@@ -505,10 +505,94 @@
       controls: PLYR_YOUTUBE_CONTROLS,
       settings: ['quality', 'speed'],
       quality: {
-        default: 0,
+        default: 1080,
         options: [1080, 720, 480, 360],
       },
       fullscreen: { iosNative: true },
+    });
+
+    // YouTube getAvailableQualityLevels() is empty at onReady (before playback).
+    // Plyr 3.7.8 reads it once then, so the Quality row is omitted. Speed is local.
+    var ytQualityFromLabel = { hd2160: 2160, hd1440: 1440, hd1080: 1080, hd720: 720, large: 480, medium: 360, small: 240, tiny: 144 };
+    var ytLabelFromQuality = { 2160: 'hd2160', 1440: 'hd1440', 1080: 'hd1080', 720: 'hd720', 480: 'large', 360: 'medium', 240: 'small', 144: 'tiny' };
+
+    function injectYouTubeQualityMenu(player, sizes) {
+      var menu = player.elements.container.querySelector('[data-plyr="settings"] .plyr__menu__container [role="menu"], [data-plyr="settings"] .plyr__menu__container');
+      if (!menu || menu.querySelector('[data-plyr="quality"]')) return;
+      var speedBtn = menu.querySelector('[data-plyr="speed"]');
+      if (!speedBtn || !speedBtn.parentNode) return;
+
+      var home = document.createElement('div');
+      var forward = document.createElement('button');
+      forward.type = 'button';
+      forward.className = speedBtn.className;
+      forward.setAttribute('data-plyr', 'quality');
+      forward.innerHTML = '<span>Quality</span>';
+      home.appendChild(forward);
+
+      var panel = document.createElement('div');
+      panel.hidden = true;
+      var back = document.createElement('button');
+      back.type = 'button';
+      back.className = speedBtn.className.replace('plyr__control--forward', 'plyr__control--back');
+      back.textContent = 'Quality';
+      var list = document.createElement('div');
+      list.setAttribute('role', 'menu');
+      sizes.forEach(function (size) {
+        var item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'plyr__control';
+        item.setAttribute('role', 'menuitemradio');
+        item.setAttribute('value', String(size));
+        item.innerHTML = '<span>' + size + 'p</span>';
+        item.addEventListener('click', function () {
+          var embed = player.embed;
+          if (embed && typeof embed.setPlaybackQuality === 'function') {
+            embed.setPlaybackQuality(ytLabelFromQuality[size] || 'auto');
+          }
+          var buttons = list.querySelectorAll('button');
+          for (var i = 0; i < buttons.length; i++) buttons[i].setAttribute('aria-checked', buttons[i] === item ? 'true' : 'false');
+        });
+        list.appendChild(item);
+      });
+      panel.appendChild(back);
+      panel.appendChild(list);
+
+      forward.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        home.hidden = true;
+        panel.hidden = false;
+      });
+      back.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        panel.hidden = true;
+        home.hidden = false;
+      });
+
+      speedBtn.parentNode.parentNode.insertBefore(home, speedBtn.parentNode);
+      speedBtn.parentNode.parentNode.insertBefore(panel, speedBtn.parentNode);
+    }
+
+    coursePlyrPlayer.on('ready', function () {
+      var tries = 0;
+      var timer = window.setInterval(function () {
+        tries += 1;
+        var embed = coursePlyrPlayer && coursePlyrPlayer.embed;
+        var labels = embed && typeof embed.getAvailableQualityLevels === 'function' ? embed.getAvailableQualityLevels() : [];
+        var sizes = [];
+        for (var i = 0; i < labels.length; i++) {
+          var size = ytQualityFromLabel[labels[i]];
+          if (size) sizes.push(size);
+        }
+        if (sizes.length) {
+          window.clearInterval(timer);
+          injectYouTubeQualityMenu(coursePlyrPlayer, sizes);
+          return;
+        }
+        if (tries > 40) window.clearInterval(timer);
+      }, 500);
     });
 
     bindCoursePlayerProtection(container);
