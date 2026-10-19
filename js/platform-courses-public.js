@@ -576,20 +576,35 @@
     }
 
     coursePlyrPlayer.on('playing', function () {
-      var embed = coursePlyrPlayer && coursePlyrPlayer.embed;
-      if (!embed || typeof embed.getAvailableQualityLevels !== 'function') return;
+      // Prevent running multiple intervals if the user pauses and plays again
+      if (coursePlyrPlayer.__qualityPollingStarted) return;
+      coursePlyrPlayer.__qualityPollingStarted = true;
 
-      var labels = embed.getAvailableQualityLevels() || [];
-      var sizes = [];
-      for (var i = 0; i < labels.length; i++) {
-        var size = ytQualityFromLabel[labels[i]];
-        if (size) sizes.push(size);
-      }
+      var tries = 0;
+      var timer = window.setInterval(function () {
+        tries += 1;
+        var embed = coursePlyrPlayer && coursePlyrPlayer.embed;
+        var labels = embed && typeof embed.getAvailableQualityLevels === 'function' ? embed.getAvailableQualityLevels() : [];
 
-      // Inject the menu once sizes are available
-      if (sizes.length > 0) {
-        injectYouTubeQualityMenu(coursePlyrPlayer, sizes);
-      }
+        var sizes = [];
+        for (var i = 0; i < labels.length; i++) {
+          var size = ytQualityFromLabel[labels[i]];
+          if (size) sizes.push(size);
+        }
+
+        // Once YouTube returns the sizes, inject and stop polling
+        if (sizes.length > 0) {
+          window.clearInterval(timer);
+          injectYouTubeQualityMenu(coursePlyrPlayer, sizes);
+          return;
+        }
+
+        // Stop checking after 15 seconds to prevent infinite loops (30 tries * 500ms)
+        if (tries > 30) {
+          window.clearInterval(timer);
+          coursePlyrPlayer.__qualityPollingStarted = false; // Allow retrying later if needed
+        }
+      }, 500);
     });
 
     bindCoursePlayerProtection(container);
