@@ -1,5 +1,4 @@
 import { db } from './firebase-config.js';
-import { uploadCmsFile } from './cms-storage.js';
 import {
   collection,
   addDoc,
@@ -46,6 +45,15 @@ function resetForm() {
   el.cancel.hidden = true;
 }
 
+function readAsDataURL(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function () { resolve(String(reader.result || '')); };
+    reader.onerror = function () { reject(reader.error || new Error('تعذر قراءة الصورة')); };
+    reader.readAsDataURL(file);
+  });
+}
+
 function showPreview(src) {
   var el = formEls();
   if (!el.preview) return;
@@ -90,43 +98,57 @@ function bind() {
     if (el.body) el.body.innerHTML = '<tr><td colspan="5">تعذر تحميل المدربين</td></tr>';
   });
 
-  el.photo.addEventListener('change', function () {
-    var file = el.photo.files && el.photo.files[0];
-    if (!file) {
-      showPreview(el.form.dataset.existingPhoto || '');
-      return;
-    }
-    var reader = new FileReader();
-    reader.onload = function () { showPreview(String(reader.result || '')); };
-    reader.readAsDataURL(file);
-  });
+  if (el.photo) {
+    el.photo.addEventListener('change', function () {
+      var file = el.photo.files && el.photo.files[0];
+      if (!file) {
+        showPreview(el.form.dataset.existingPhoto || '');
+        return;
+      }
+      readAsDataURL(file).then(showPreview).catch(function () {
+        showPreview(el.form.dataset.existingPhoto || '');
+      });
+    });
+  }
 
   el.form.addEventListener('submit', function (event) {
     event.preventDefault();
-    var file = el.photo.files && el.photo.files[0];
-    var existing = el.form.dataset.existingPhoto || '';
-    var upload = file
-      ? uploadCmsFile('cms/instructors/' + Date.now().toString(36) + '-' + file.name.replace(/[^\w.\-]+/g, '_'), file)
-      : Promise.resolve(existing);
-    el.save.disabled = true;
-    upload.then(function (photoUrl) {
-      var payload = {
-        name: el.name.value.trim(),
-        title: el.title.value.trim(),
-        bio: el.bio.value.trim(),
-        photoUrl: photoUrl || '',
-        updatedAt: serverTimestamp(),
-      };
-      var id = el.id.value;
-      return id
-        ? updateDoc(doc(db, 'instructors', id), payload)
-        : addDoc(collection(db, 'instructors'), Object.assign({ createdAt: serverTimestamp() }, payload));
-    }).then(resetForm).catch(function (err) {
-      console.error(err);
-      alert('تعذر حفظ المدرب. تأكد من صلاحيات الإدارة ورفع الصورة.');
-    }).then(function () {
-      el.save.disabled = false;
-    });
+    var submitBtn = el.save;
+    var editing = !!el.id.value;
+    submitBtn.textContent = 'جاري الحفظ...';
+    submitBtn.disabled = true;
+
+    (async function () {
+      try {
+        var photoUrl = el.form.dataset.existingPhoto || '';
+        var file = el.photo && el.photo.files && el.photo.files.length ? el.photo.files[0] : null;
+        if (file) {
+          photoUrl = await readAsDataURL(file);
+        }
+        var payload = {
+          name: el.name.value.trim(),
+          title: el.title.value.trim(),
+          bio: el.bio.value.trim(),
+          photoUrl: photoUrl,
+          updatedAt: serverTimestamp(),
+        };
+        var id = el.id.value;
+        if (id) await updateDoc(doc(db, 'instructors', id), payload);
+        else await addDoc(collection(db, 'instructors'), Object.assign({ createdAt: serverTimestamp() }, payload));
+
+        submitBtn.textContent = 'تم النشر بنجاح!';
+        alert('تم النشر بنجاح');
+        setTimeout(function () {
+          resetForm();
+          submitBtn.disabled = false;
+        }, 1500);
+      } catch (error) {
+        console.error('Error saving instructor:', error);
+        alert('حدث خطأ أثناء الحفظ: ' + (error && error.message ? error.message : ''));
+        submitBtn.textContent = editing ? 'حفظ التعديل' : 'إضافة مدرب';
+        submitBtn.disabled = false;
+      }
+    })();
   });
 
   el.cancel.addEventListener('click', resetForm);

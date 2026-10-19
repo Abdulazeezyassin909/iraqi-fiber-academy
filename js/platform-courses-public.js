@@ -20,6 +20,7 @@
     'duration',
     'mute',
     'volume',
+    'settings',
     'fullscreen',
   ];
 
@@ -502,6 +503,11 @@
     coursePlyrPlayer = new window.Plyr(el, {
       youtube: PLYR_YOUTUBE_OPTIONS,
       controls: PLYR_YOUTUBE_CONTROLS,
+      settings: ['quality', 'speed'],
+      quality: {
+        default: 0,
+        options: [1080, 720, 480, 360],
+      },
       fullscreen: { iosNative: true },
     });
 

@@ -233,25 +233,23 @@
       '<article class="testimonial-card fade-in visible" data-testimonial-id="' +
       escapeHtml(item.id) +
       '">' +
-      '<span class="testimonial-card__quote">"</span>' +
-      '<div class="testimonial-card__stars">' +
-      stars(item.rating) +
-      '</div>' +
-      '<p class="testimonial-card__text">' +
-      escapeHtml(item.text) +
-      '</p>' +
-      '<div class="testimonial-card__author">' +
       '<div class="testimonial-card__avatar">' +
       avatar +
       '</div>' +
-      '<div>' +
+      '<div class="testimonial-card__author">' +
       '<div class="testimonial-card__name">' +
       escapeHtml(item.name) +
       '</div>' +
       '<div class="testimonial-card__role">' +
       escapeHtml(item.role) +
       '</div>' +
-      '</div></div></article>'
+      '</div>' +
+      '<div class="testimonial-card__stars">' +
+      stars(item.rating) +
+      '</div>' +
+      '<p class="testimonial-card__text">' +
+      escapeHtml(item.text) +
+      '</p></article>'
     );
   }
 

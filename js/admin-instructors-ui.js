@@ -317,6 +317,19 @@
       if (nameEl) nameEl.focus();
     }
 
+    window.editInstructor = function (instructorId) {
+      if (!window.InstructorApps || typeof window.InstructorApps.findActiveInstructor !== 'function') {
+        alert('تعذر فتح التعديل.');
+        return;
+      }
+      var instructor = window.InstructorApps.findActiveInstructor(instructorId);
+      if (!instructor) {
+        alert('تعذر العثور على بيانات هذا المدرب.');
+        return;
+      }
+      openInstructorEditor(instructor);
+    };
+
     function setTableHead(mode) {
       var head = document.getElementById('instructorTableHead');
       if (!head) return;
@@ -554,7 +567,9 @@
         '<div class="admin-table__actions admin-table__actions--row">' +
         '<button class="admin-btn admin-btn--ghost admin-btn--sm" type="button" data-edit-instructor="' +
         id +
-        '">تعديل</button>' +
+        '" onclick="editInstructor(\'' +
+        id +
+        '\')">تعديل</button>' +
         '<button class="' +
         suspendCls +
         '" type="button" data-toggle-instructor="' +
@@ -814,10 +829,7 @@
       }
 
       if (editInstBtn) {
-        var editTarget = window.InstructorApps.findActiveInstructor(
-          editInstBtn.getAttribute('data-edit-instructor')
-        );
-        if (editTarget) openInstructorEditor(editTarget);
+        window.editInstructor(editInstBtn.getAttribute('data-edit-instructor'));
         return;
       }
 
