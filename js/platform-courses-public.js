@@ -575,24 +575,21 @@
       speedBtn.parentNode.parentNode.insertBefore(panel, speedBtn.parentNode);
     }
 
-    coursePlyrPlayer.on('ready', function () {
-      var tries = 0;
-      var timer = window.setInterval(function () {
-        tries += 1;
-        var embed = coursePlyrPlayer && coursePlyrPlayer.embed;
-        var labels = embed && typeof embed.getAvailableQualityLevels === 'function' ? embed.getAvailableQualityLevels() : [];
-        var sizes = [];
-        for (var i = 0; i < labels.length; i++) {
-          var size = ytQualityFromLabel[labels[i]];
-          if (size) sizes.push(size);
-        }
-        if (sizes.length) {
-          window.clearInterval(timer);
-          injectYouTubeQualityMenu(coursePlyrPlayer, sizes);
-          return;
-        }
-        if (tries > 40) window.clearInterval(timer);
-      }, 500);
+    coursePlyrPlayer.on('playing', function () {
+      var embed = coursePlyrPlayer && coursePlyrPlayer.embed;
+      if (!embed || typeof embed.getAvailableQualityLevels !== 'function') return;
+
+      var labels = embed.getAvailableQualityLevels() || [];
+      var sizes = [];
+      for (var i = 0; i < labels.length; i++) {
+        var size = ytQualityFromLabel[labels[i]];
+        if (size) sizes.push(size);
+      }
+
+      // Inject the menu once sizes are available
+      if (sizes.length > 0) {
+        injectYouTubeQualityMenu(coursePlyrPlayer, sizes);
+      }
     });
 
     bindCoursePlayerProtection(container);
