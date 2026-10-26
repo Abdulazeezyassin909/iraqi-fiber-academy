@@ -1092,8 +1092,8 @@ body.article-reader-open {
 /* Public instructors */
 .instructors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
 }
 .instructor-card {
   background: var(--color-bg-card);
@@ -1105,18 +1105,38 @@ body.article-reader-open {
 }
 .instructor-card:hover { border-color: var(--color-border-hover); transform: translateY(-4px); }
 .instructor-card__photo {
-  width: 96px;
-  height: 96px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  margin: 0 auto 1rem;
+  border: 3px solid #00d2ff;
+  padding: 4px;
+  margin: 0 auto 1rem auto;
   display: block;
-  background: var(--gradient-accent);
+  box-sizing: border-box;
+  background: var(--color-bg-card);
 }
 .instructor-card__photo--empty { background: var(--gradient-accent); }
-.instructor-card__name { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
-.instructor-card__title { color: var(--color-accent-cyan); font-size: 0.85rem; margin-bottom: 0.75rem; }
-.instructor-card__bio { color: var(--color-text-secondary); font-size: 0.9rem; line-height: 1.7; }
+.instructor-card__name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.35rem;
+}
+.instructor-card__title {
+  color: #00d2ff;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+.instructor-card__bio {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
 
 /* FAQ */
 .faq__list { max-width: 750px; margin-inline: auto; }
