@@ -1663,6 +1663,31 @@ body.admin-body.has-announcement-bar .admin-content {
   padding: 1rem;
 }
 
+.course-details__back {
+  display: flex;
+  width: 100%;
+}
+
+.course-back-btn {
+  display: inline-flex;
+  align-items: center;
+  background-color: #00d2ff;
+  color: #0f172a !important;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.course-back-btn:hover {
+  background-color: #00b8e6;
+  transform: translateY(-2px);
+}
+
 .curriculum-number {
   font-weight: bold;
   color: #00d2ff;

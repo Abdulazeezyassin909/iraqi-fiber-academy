@@ -898,7 +898,7 @@
       }
       pageHtml =
         '<header class="course-details__header">' +
-        '<p class="course-details__back"><a href="index.html#courses">← العودة للكورسات</a></p>' +
+        '<p class="course-details__back"><a href="index.html#courses" class="course-back-btn">← العودة للكورسات</a></p>' +
         '<h1 class="course-details__title">' +
         escapeHtml(course.title || '') +
         '</h1>' +
