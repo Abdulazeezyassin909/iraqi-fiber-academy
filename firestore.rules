@@ -108,7 +108,15 @@ service cloud.firestore {
 
     match /instructors/{id} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin()
+        || (isSignedIn()
+          && request.auth.uid == id
+          && request.resource.data.status == 'pending');
+      allow update: if isAdmin()
+        || (isSignedIn()
+          && request.auth.uid == id
+          && request.resource.data.status == 'pending');
+      allow delete: if isAdmin();
     }
 
     function validReceiptBase64(value) {

@@ -34,6 +34,9 @@ if (grid) {
     snap.forEach(function (docSnap) {
       rows.push(Object.assign({ id: docSnap.id }, docSnap.data() || {}));
     });
+    rows = rows.filter(function (row) {
+      return !row.status || row.status === 'approved';
+    });
     rows.sort(function (a, b) {
       return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
     });

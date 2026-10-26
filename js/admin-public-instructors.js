@@ -31,6 +31,7 @@ function formEls() {
     save: document.getElementById('publicInstructorSave'),
     cancel: document.getElementById('publicInstructorCancel'),
     body: document.getElementById('publicInstructorsBody'),
+    pending: document.getElementById('pendingInstructorsBody'),
   };
 }
 
@@ -62,21 +63,39 @@ function showPreview(src) {
     : '';
 }
 
+function instructorRow(row, actions) {
+  var photo = row.photoUrl
+    ? '<img src="' + esc(row.photoUrl) + '" alt="" width="40" height="40" style="width:40px;height:40px;object-fit:cover;border-radius:50%">'
+    : '—';
+  return '<tr><td>' + photo + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.title) + '</td><td>' + esc(row.bio) + '</td><td>' + actions + '</td></tr>';
+}
+
 function render() {
   var el = formEls();
-  if (!el.body) return;
-  if (!rows.length) {
-    el.body.innerHTML = '<tr><td colspan="5">لا يوجد مدربون بعد</td></tr>';
-    return;
+  var active = rows.filter(function (row) { return !row.status || row.status === 'approved'; });
+  var pending = rows.filter(function (row) { return row.status === 'pending'; });
+  if (el.body) {
+    el.body.innerHTML = active.length
+      ? active.map(function (row) {
+          return instructorRow(
+            row,
+            '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-edit-public-instructor="' + esc(row.id) + '">تعديل</button> ' +
+            '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">حذف</button>'
+          );
+        }).join('')
+      : '<tr><td colspan="5">لا يوجد مدربون حاليون</td></tr>';
   }
-  el.body.innerHTML = rows.map(function (row) {
-    var photo = row.photoUrl
-      ? '<img src="' + esc(row.photoUrl) + '" alt="" width="40" height="40" style="width:40px;height:40px;object-fit:cover;border-radius:50%">'
-      : '—';
-    return '<tr><td>' + photo + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.title) + '</td><td>' + esc(row.bio) + '</td><td>' +
-      '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-edit-public-instructor="' + esc(row.id) + '">تعديل</button> ' +
-      '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">حذف</button></td></tr>';
-  }).join('');
+  if (el.pending) {
+    el.pending.innerHTML = pending.length
+      ? pending.map(function (row) {
+          return instructorRow(
+            row,
+            '<button type="button" class="admin-btn admin-btn--primary admin-btn--sm" data-approve-public-instructor="' + esc(row.id) + '">موافقة</button> ' +
+            '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">رفض</button>'
+          );
+        }).join('')
+      : '<tr><td colspan="5">لا توجد طلبات بانتظار الموافقة</td></tr>';
+  }
 }
 
 function bind() {
@@ -153,9 +172,18 @@ function bind() {
 
   el.cancel.addEventListener('click', resetForm);
 
-  el.body.addEventListener('click', function (event) {
+  function onTableClick(event) {
     var editBtn = event.target.closest('[data-edit-public-instructor]');
     var deleteBtn = event.target.closest('[data-delete-public-instructor]');
+    var approveBtn = event.target.closest('[data-approve-public-instructor]');
+    if (approveBtn) {
+      var approveId = approveBtn.getAttribute('data-approve-public-instructor');
+      updateDoc(doc(db, 'instructors', approveId), { status: 'approved' }).catch(function (err) {
+        console.error(err);
+        alert('تعذر قبول الطلب.');
+      });
+      return;
+    }
     if (editBtn) {
       var found = rows.find(function (row) { return row.id === editBtn.getAttribute('data-edit-public-instructor'); });
       if (!found) return;
@@ -178,7 +206,9 @@ function bind() {
         alert('تعذر حذف المدرب.');
       });
     }
-  });
+  }
+  if (el.body) el.body.addEventListener('click', onTableClick);
+  if (el.pending) el.pending.addEventListener('click', onTableClick);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);

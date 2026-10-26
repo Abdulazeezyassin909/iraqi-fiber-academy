@@ -164,6 +164,141 @@
     if (id === 'qa') renderQA();
     if (id === 'analytics') renderAnalytics();
     if (id === 'overview') renderOverview();
+    if (id === 'profile') loadInstructorPublicProfile();
+  }
+
+  var instProfilePhotoUrl = '';
+
+  function instructorAuthUid() {
+    var authUser =
+      (window.IFAAuth && window.IFAAuth.auth && window.IFAAuth.auth.currentUser) || null;
+    return authUser ? (authUser.uid || authUser.id || '') : '';
+  }
+
+  function setProfileBadge(status) {
+    var badge = document.getElementById('instProfileStatus');
+    if (!badge) return;
+    badge.className = 'admin-badge';
+    if (status === 'approved') {
+      badge.classList.add('admin-badge--active');
+      badge.textContent = 'موافق عليه';
+    } else if (status === 'pending') {
+      badge.classList.add('admin-badge--pending');
+      badge.textContent = 'قيد الموافقة';
+    } else if (status === 'rejected') {
+      badge.classList.add('admin-badge--suspended');
+      badge.textContent = 'مرفوض';
+    } else {
+      badge.classList.add('admin-badge--pending');
+      badge.textContent = 'لم يُرسل بعد';
+    }
+  }
+
+  function showProfilePhoto(src) {
+    var preview = document.getElementById('instProfilePhotoPreview');
+    if (!preview) return;
+    preview.innerHTML = src
+      ? '<img src="' + esc(src) + '" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:50%">'
+      : '';
+  }
+
+  function readProfileFile(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || '')); };
+      reader.onerror = function () { reject(reader.error || new Error('تعذر قراءة الصورة')); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function loadInstructorPublicProfile() {
+    var uid = instructorAuthUid();
+    if (!uid) {
+      setProfileBadge('');
+      return;
+    }
+    import('./firebase-config.js').then(function (firebase) {
+      return import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js').then(function (fs) {
+        return fs.getDoc(fs.doc(firebase.db, 'instructors', uid)).then(function (snap) {
+          if (!snap.exists()) {
+            setProfileBadge('');
+            return;
+          }
+          var data = snap.data() || {};
+          var name = document.getElementById('instProfileName');
+          var title = document.getElementById('instProfileTitle');
+          var bio = document.getElementById('instProfileBio');
+          if (name) name.value = data.name || '';
+          if (title) title.value = data.title || '';
+          if (bio) bio.value = data.bio || '';
+          instProfilePhotoUrl = data.photoUrl || '';
+          showProfilePhoto(instProfilePhotoUrl);
+          setProfileBadge(data.status || '');
+        });
+      });
+    }).catch(function (err) {
+      console.error('[InstructorProfile] load failed', err);
+    });
+  }
+
+  function bindInstructorPublicProfile() {
+    var form = document.getElementById('instProfileForm');
+    var photo = document.getElementById('instProfilePhoto');
+    if (photo && photo.dataset.bound !== '1') {
+      photo.dataset.bound = '1';
+      photo.addEventListener('change', function () {
+        var file = photo.files && photo.files[0];
+        if (!file) {
+          showProfilePhoto(instProfilePhotoUrl);
+          return;
+        }
+        readProfileFile(file).then(showProfilePhoto).catch(function () {
+          showProfilePhoto(instProfilePhotoUrl);
+        });
+      });
+    }
+    if (!form || form.dataset.bound === '1') return;
+    form.dataset.bound = '1';
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var uid = instructorAuthUid();
+      var submitBtn = document.getElementById('instProfileSubmit');
+      if (!uid) {
+        alert('يجب تسجيل الدخول لإرسال الملف.');
+        return;
+      }
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري الإرسال...';
+      }
+      var file = photo && photo.files && photo.files[0];
+      var photoPromise = file ? readProfileFile(file) : Promise.resolve(instProfilePhotoUrl);
+      photoPromise.then(function (photoUrl) {
+        return import('./firebase-config.js').then(function (firebase) {
+          return import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js').then(function (fs) {
+            return fs.setDoc(fs.doc(firebase.db, 'instructors', uid), {
+              name: document.getElementById('instProfileName').value.trim(),
+              title: document.getElementById('instProfileTitle').value.trim(),
+              bio: document.getElementById('instProfileBio').value.trim(),
+              photoUrl: photoUrl || '',
+              email: email,
+              status: 'pending',
+              updatedAt: fs.serverTimestamp(),
+            }, { merge: true });
+          });
+        }).then(function () {
+          instProfilePhotoUrl = photoUrl || '';
+          setProfileBadge('pending');
+          if (submitBtn) submitBtn.textContent = 'تم الإرسال';
+        });
+      }).catch(function (err) {
+        console.error('[InstructorProfile] save failed', err);
+        alert('تعذر إرسال الملف. تأكد من نشر قواعد Firestore.');
+        if (submitBtn) submitBtn.textContent = 'إرسال للموافقة';
+      }).then(function () {
+        if (submitBtn) submitBtn.disabled = false;
+      });
+    });
   }
 
   function renderStatCards(targetId, stats) {
@@ -624,6 +759,8 @@
     if (subtitle) subtitle.textContent = 'إدارة كورساتك وحلقاتك وامتحاناتك — ' + email;
 
     renderOverview();
+    bindInstructorPublicProfile();
+    loadInstructorPublicProfile();
 
     /* Sidebar */
     document.querySelectorAll('[data-inst-section]').forEach(function (link) {
