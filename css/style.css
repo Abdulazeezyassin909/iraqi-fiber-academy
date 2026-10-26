@@ -1663,6 +1663,12 @@ body.admin-body.has-announcement-bar .admin-content {
   padding: 1rem;
 }
 
+.curriculum-number {
+  font-weight: bold;
+  color: #00d2ff;
+  margin-left: 6px;
+}
+
 .course-details__curriculum h2 {
   font-size: 1rem;
   margin-bottom: 0.75rem;

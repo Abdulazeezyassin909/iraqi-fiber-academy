@@ -832,7 +832,7 @@
 
     var listHtml = lessons.length
       ? lessons
-          .map(function (lesson) {
+          .map(function (lesson, i) {
             var free = !!lesson.isFreePreview;
             var canPlay = lessonCanPlay(lesson, course);
             var isActive = active && String(active.id) === String(lesson.id);
@@ -854,6 +854,7 @@
                 href +
                 '">' +
                 '<span class="course-lesson__title">' +
+                '<span class="curriculum-number">' + (i + 1) + '- </span>' +
                 escapeHtml(lesson.title || 'حلقة') +
                 '</span>' +
                 badge +
@@ -863,6 +864,7 @@
             return (
               '<div class="course-lesson course-lesson--locked">' +
               '<span class="course-lesson__title">' +
+              '<span class="curriculum-number">' + (i + 1) + '- </span>' +
               escapeHtml(lesson.title || 'حلقة') +
               '</span>' +
               badge +
