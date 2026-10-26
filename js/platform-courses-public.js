@@ -503,111 +503,27 @@
     coursePlyrPlayer = new window.Plyr(el, {
       youtube: PLYR_YOUTUBE_OPTIONS,
       controls: PLYR_YOUTUBE_CONTROLS,
-      settings: ['quality', 'speed'],
-      quality: {
-        default: 1080,
-        options: [1080, 720, 480, 360],
-      },
+      settings: ['speed'],
+      speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
       fullscreen: { iosNative: true },
     });
 
-    // YouTube getAvailableQualityLevels() is empty at onReady (before playback).
-    // Plyr 3.7.8 reads it once then, so the Quality row is omitted. Speed is local.
-    var ytQualityFromLabel = { hd2160: 2160, hd1440: 1440, hd1080: 1080, hd720: 720, large: 480, medium: 360, small: 240, tiny: 144 };
-    var ytLabelFromQuality = { 2160: 'hd2160', 1440: 'hd1440', 1080: 'hd1080', 720: 'hd720', 480: 'large', 360: 'medium', 240: 'small', 144: 'tiny' };
-
-    function injectYouTubeQualityMenu(player, sizes) {
-      var menu = player.elements.container.querySelector('[data-plyr="settings"] .plyr__menu__container [role="menu"], [data-plyr="settings"] .plyr__menu__container');
-      if (!menu || menu.querySelector('[data-plyr="quality"]')) return;
-      var speedBtn = menu.querySelector('[data-plyr="speed"]');
-      if (!speedBtn || !speedBtn.parentNode) return;
-
-      var home = document.createElement('div');
-      var forward = document.createElement('button');
-      forward.type = 'button';
-      forward.className = speedBtn.className;
-      forward.setAttribute('data-plyr', 'quality');
-      forward.innerHTML = '<span>Quality</span>';
-      home.appendChild(forward);
-
-      var panel = document.createElement('div');
-      panel.hidden = true;
-      var back = document.createElement('button');
-      back.type = 'button';
-      back.className = speedBtn.className.replace('plyr__control--forward', 'plyr__control--back');
-      back.textContent = 'Quality';
-      var list = document.createElement('div');
-      list.setAttribute('role', 'menu');
-      sizes.forEach(function (size) {
-        var item = document.createElement('button');
-        item.type = 'button';
-        item.className = 'plyr__control';
-        item.setAttribute('role', 'menuitemradio');
-        item.setAttribute('value', String(size));
-        item.innerHTML = '<span>' + size + 'p</span>';
-        item.addEventListener('click', function () {
-          var embed = player.embed;
-          if (embed && typeof embed.setPlaybackQuality === 'function') {
-            embed.setPlaybackQuality(ytLabelFromQuality[size] || 'auto');
-          }
-          var buttons = list.querySelectorAll('button');
-          for (var i = 0; i < buttons.length; i++) buttons[i].setAttribute('aria-checked', buttons[i] === item ? 'true' : 'false');
-        });
-        list.appendChild(item);
-      });
-      panel.appendChild(back);
-      panel.appendChild(list);
-
-      forward.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        home.hidden = true;
-        panel.hidden = false;
-      });
-      back.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        panel.hidden = true;
-        home.hidden = false;
-      });
-
-      speedBtn.parentNode.parentNode.insertBefore(home, speedBtn.parentNode);
-      speedBtn.parentNode.parentNode.insertBefore(panel, speedBtn.parentNode);
-    }
-
-    coursePlyrPlayer.on('playing', function () {
-      // Prevent running multiple intervals if the user pauses and plays again
-      if (coursePlyrPlayer.__qualityPollingStarted) return;
-      coursePlyrPlayer.__qualityPollingStarted = true;
-
-      var tries = 0;
-      var timer = window.setInterval(function () {
-        tries += 1;
-        var embed = coursePlyrPlayer && coursePlyrPlayer.embed;
-        var labels = embed && typeof embed.getAvailableQualityLevels === 'function' ? embed.getAvailableQualityLevels() : [];
-
-        var sizes = [];
-        for (var i = 0; i < labels.length; i++) {
-          var size = ytQualityFromLabel[labels[i]];
-          if (size) sizes.push(size);
-        }
-
-        // Once YouTube returns the sizes, inject and stop polling
-        if (sizes.length > 0) {
-          window.clearInterval(timer);
-          injectYouTubeQualityMenu(coursePlyrPlayer, sizes);
-          return;
-        }
-
-        // Stop checking after 15 seconds to prevent infinite loops (30 tries * 500ms)
-        if (tries > 30) {
-          window.clearInterval(timer);
-          coursePlyrPlayer.__qualityPollingStarted = false; // Allow retrying later if needed
-        }
-      }, 500);
-    });
-
+    coursePlyrPlayer.on('ended', revealLessonQuiz);
     bindCoursePlayerProtection(container);
+  }
+
+  function revealLessonQuiz() {
+    var quiz = document.getElementById('course-lesson-quiz');
+    if (!quiz) return;
+    quiz.hidden = false;
+    quiz.classList.remove('is-hidden');
+  }
+
+  function bindNativeVideoEnded(container) {
+    var video = container && container.querySelector('.course-details__player video');
+    if (!video || video.dataset.quizBound === '1') return;
+    video.dataset.quizBound = '1';
+    video.addEventListener('ended', revealLessonQuiz);
   }
 
   function resolveLessonYouTubeId(lesson) {
@@ -642,6 +558,34 @@
       );
     }
     return '<p class="course-details__no-video">لا يوجد فيديو مرفوع لهذه الحلقة بعد.</p>';
+  }
+
+  function renderStudentLessonQuiz(lesson) {
+    var questions = (lesson.quiz && lesson.quiz.questions) || [];
+    if (!questions.length) return '';
+    var letters = ['أ', 'ب', 'ج', 'د'];
+    var items = questions.map(function (q, qIdx) {
+      var opts = (q.options || []).map(function (o, i) {
+        return (
+          '<label class="course-quiz__option">' +
+          '<input type="radio" name="q-' + escapeHtml(q.id || qIdx) + '" value="' + i + '">' +
+          '<span>' + escapeHtml((letters[i] || i + 1) + ') ' + o) + '</span>' +
+          '</label>'
+        );
+      }).join('');
+      return (
+        '<fieldset class="course-quiz__item">' +
+        '<legend>س' + (qIdx + 1) + ': ' + escapeHtml(q.text || '') + '</legend>' +
+        opts +
+        '</fieldset>'
+      );
+    }).join('');
+    return (
+      '<section class="course-quiz is-hidden" id="course-lesson-quiz" hidden>' +
+      '<h3 class="course-quiz__title">امتحان الحلقة / الاختبار</h3>' +
+      items +
+      '</section>'
+    );
   }
 
   function getCourseIdFromUrl() {
@@ -810,7 +754,8 @@
         (active.isFreePreview ? ' <span class="course-lesson__badge course-lesson__badge--free">معاينة مجانية</span>' : '') +
         '</h2>' +
         (active.description ? '<p class="course-details__lesson-desc">' + escapeHtml(active.description) + '</p>' : '') +
-        renderLessonPlayer(active);
+        renderLessonPlayer(active) +
+        renderStudentLessonQuiz(active);
     } else if (active) {
       playerHtml =
         '<div class="course-details__locked-panel">' +
@@ -846,6 +791,7 @@
     window.requestAnimationFrame(function () {
       if (seq !== detailsRenderSeq) return;
       initCoursePlyrPlayer(root);
+      bindNativeVideoEnded(root);
     });
   }
 

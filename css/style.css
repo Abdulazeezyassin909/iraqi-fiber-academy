@@ -1763,6 +1763,16 @@ body.admin-body.has-announcement-bar .admin-content {
   z-index: 5;
 }
 
+.course-quiz.is-hidden { display: none; }
+.course-quiz {
+  margin-top: 1.25rem;
+  animation: course-quiz-in 0.35s ease;
+}
+@keyframes course-quiz-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
 .course-details__locked-panel {
   border: 1px dashed var(--color-border);
   border-radius: 14px;
