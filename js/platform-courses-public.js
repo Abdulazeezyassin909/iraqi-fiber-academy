@@ -689,21 +689,14 @@
       activeId = '';
     }
     var active = null;
-    for (var j = 0; j < lessons.length; j++) {
-      if (String(lessons[j].id) === activeId) {
-        active = lessons[j];
-        break;
-      }
-    }
-    if (!active) {
-      for (var k = 0; k < lessons.length; k++) {
-        if (lessonCanPlay(lessons[k], course)) {
-          active = lessons[k];
+    if (activeId) {
+      for (var j = 0; j < lessons.length; j++) {
+        if (String(lessons[j].id) === activeId) {
+          active = lessons[j];
           break;
         }
       }
     }
-    if (!active && lessons.length) active = lessons[0];
 
     var listHtml = lessons.length
       ? lessons
@@ -748,53 +741,93 @@
           .join('')
       : '<p class="course-details__empty">لا توجد حلقات بعد.</p>';
 
-    var playerHtml = '';
-    if (active && lessonCanPlay(active, course)) {
-      playerHtml =
-        '<h2 class="course-details__lesson-title">' +
-        escapeHtml(active.title || '') +
-        (active.isFreePreview ? ' <span class="course-lesson__badge course-lesson__badge--free">معاينة مجانية</span>' : '') +
-        '</h2>' +
-        (active.description ? '<p class="course-details__lesson-desc">' + escapeHtml(active.description) + '</p>' : '') +
-        renderLessonPlayer(active) +
-        renderStudentLessonQuiz(active);
-    } else if (active) {
-      playerHtml =
-        '<div class="course-details__locked-panel">' +
-        '<p>🔒 يتطلب الاشتراك بالباقة</p>' +
-        '<a class="btn btn--primary" href="index.html#plans">عرض الباقات</a>' +
+    var overviewUrl = 'course-details.html?id=' + encodeURIComponent(course.id);
+    var pageHtml = '';
+
+    if (!active) {
+      var targetLesson = null;
+      for (var t = 0; t < lessons.length; t++) {
+        if (lessonCanPlay(lessons[t], course)) {
+          targetLesson = lessons[t];
+          break;
+        }
+      }
+      if (!targetLesson && lessons.length) targetLesson = lessons[0];
+      var ctaHtml = '';
+      if (targetLesson) {
+        var ctaHref =
+          overviewUrl + '&lesson=' + encodeURIComponent(targetLesson.id);
+        ctaHtml =
+          '<p class="course-details__cta"><a class="btn btn--primary" href="' +
+          ctaHref +
+          '">ابدأ التعلم</a></p>';
+      }
+      pageHtml =
+        '<header class="course-details__header">' +
+        '<p class="course-details__back"><a href="index.html#courses">← العودة للكورسات</a></p>' +
+        '<h1 class="course-details__title">' +
+        escapeHtml(course.title || '') +
+        '</h1>' +
+        '<p class="course-details__desc">' +
+        escapeHtml(course.description || '') +
+        '</p>' +
+        ctaHtml +
+        (subscribed ? '' : '<p class="course-details__hint">يمكنك مشاهدة الحلقات المحددة كمعاينة مجانية. بقية المحتوى يتطلب الاشتراك.</p>') +
+        (!isCoursePublished(course) && isCoursePreviewMode()
+          ? '<p class="course-details__hint">معاينة إدارية — الكورس غير منشور للجمهور.</p>'
+          : '') +
+        '</header>' +
+        '<aside class="course-details__curriculum">' +
+        '<h2>المنهج</h2>' +
+        listHtml +
+        '</aside>';
+    } else {
+      var playerHtml = '';
+      if (lessonCanPlay(active, course)) {
+        playerHtml =
+          '<h2 class="course-details__lesson-title">' +
+          escapeHtml(active.title || '') +
+          (active.isFreePreview ? ' <span class="course-lesson__badge course-lesson__badge--free">معاينة مجانية</span>' : '') +
+          '</h2>' +
+          (active.description ? '<p class="course-details__lesson-desc">' + escapeHtml(active.description) + '</p>' : '') +
+          renderLessonPlayer(active) +
+          renderStudentLessonQuiz(active);
+      } else {
+        playerHtml =
+          '<div class="course-details__locked-panel">' +
+          '<p>🔒 يتطلب الاشتراك بالباقة</p>' +
+          '<a class="btn btn--primary" href="index.html#plans">عرض الباقات</a>' +
+          '</div>';
+      }
+      pageHtml =
+        '<header class="course-details__header">' +
+        '<p class="course-details__back"><a href="' +
+        overviewUrl +
+        '">← العودة للكورس</a></p>' +
+        '<h1 class="course-details__title">' +
+        escapeHtml(course.title || '') +
+        '</h1>' +
+        '</header>' +
+        '<div class="course-details__layout">' +
+        '<aside class="course-details__curriculum">' +
+        '<h2>المنهج</h2>' +
+        listHtml +
+        '</aside>' +
+        '<section class="course-details__stage">' +
+        playerHtml +
+        '</section>' +
         '</div>';
     }
 
-    root.innerHTML =
-      '<header class="course-details__header">' +
-      '<p class="course-details__back"><a href="index.html#courses">← العودة للكورسات</a></p>' +
-      '<h1 class="course-details__title">' +
-      escapeHtml(course.title || '') +
-      '</h1>' +
-      '<p class="course-details__desc">' +
-      escapeHtml(course.description || '') +
-      '</p>' +
-      (subscribed ? '' : '<p class="course-details__hint">يمكنك مشاهدة الحلقات المحددة كمعاينة مجانية. بقية المحتوى يتطلب الاشتراك.</p>') +
-      (!isCoursePublished(course) && isCoursePreviewMode()
-        ? '<p class="course-details__hint">معاينة إدارية — الكورس غير منشور للجمهور.</p>'
-        : '') +
-      '</header>' +
-      '<div class="course-details__layout">' +
-      '<aside class="course-details__curriculum">' +
-      '<h2>المنهج</h2>' +
-      listHtml +
-      '</aside>' +
-      '<section class="course-details__stage">' +
-      playerHtml +
-      '</section>' +
-      '</div>';
+    root.innerHTML = pageHtml;
 
-    window.requestAnimationFrame(function () {
-      if (seq !== detailsRenderSeq) return;
-      initCoursePlyrPlayer(root);
-      bindNativeVideoEnded(root);
-    });
+    if (active && lessonCanPlay(active, course)) {
+      window.requestAnimationFrame(function () {
+        if (seq !== detailsRenderSeq) return;
+        initCoursePlyrPlayer(root);
+        bindNativeVideoEnded(root);
+      });
+    }
   }
 
   if (document.readyState === 'loading') {
