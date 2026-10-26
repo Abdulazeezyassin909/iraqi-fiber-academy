@@ -1107,17 +1107,19 @@ body.article-reader-open {
   border-radius: 12px;
   border: 1px solid #2d3748;
   gap: 24px;
-  transition: transform 0.2s ease;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .instructor-horizontal-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 210, 255, 0.15);
 }
 
 .instructor-image-wrapper img,
 .instructor-image-wrapper__empty {
-  width: 120px;
-  height: 120px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #00d2ff;
@@ -1167,6 +1169,97 @@ body.article-reader-open {
   .instructor-info {
     text-align: center;
   }
+}
+
+.instructor-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.instructor-modal-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.instructor-modal-content {
+  background-color: #1a202c;
+  border: 1px solid #2d3748;
+  border-radius: 16px;
+  padding: 32px;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  text-align: center;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.instructor-modal-overlay.is-active .instructor-modal-content {
+  transform: translateY(0);
+}
+
+.instructor-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.instructor-modal-close:hover {
+  color: #ef4444;
+}
+
+.instructor-modal-img {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #00d2ff;
+  padding: 6px;
+  margin: 0 auto 20px auto;
+  display: block;
+  box-sizing: border-box;
+}
+
+.instructor-modal-name {
+  color: #fff;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+
+.instructor-modal-title {
+  color: #00d2ff;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.instructor-modal-bio {
+  color: #cbd5e1;
+  font-size: 1rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  text-align: right;
 }
 
 /* FAQ */
