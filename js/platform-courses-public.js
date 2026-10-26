@@ -11,6 +11,7 @@
   var lastSignature = '';
   var detailsRenderSeq = 0;
   var coursePlyrPlayer = null;
+  var activeLessonContext = null;
 
   var PLYR_YOUTUBE_CONTROLS = [
     'play-large',
@@ -29,6 +30,7 @@
     rel: 0,
     showinfo: 0,
     iv_load_policy: 3,
+    cc_load_policy: 0,
     modestbranding: 1,
   };
 
@@ -468,9 +470,84 @@
     );
   }
 
+  function lessonPassedKey(courseId, lessonId) {
+    return 'passed_' + courseId + '_' + lessonId;
+  }
+
+  function isLessonPassed(course, lesson) {
+    if (!course || !lesson) return false;
+    try {
+      return localStorage.getItem(lessonPassedKey(course.id, lesson.id)) === 'true';
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function markLessonPassed(course, lesson) {
+    if (!course || !lesson) return;
+    try {
+      localStorage.setItem(lessonPassedKey(course.id, lesson.id), 'true');
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  function orderedCourseLessons(course) {
+    var lessons = Array.isArray(course && course.lessons) ? course.lessons.slice() : [];
+    lessons.sort(function (a, b) {
+      return (Number(a.order) || 0) - (Number(b.order) || 0);
+    });
+    return lessons;
+  }
+
   function lessonCanPlay(lesson, course) {
-    if (lesson && lesson.isFreePreview) return true;
-    return viewerHasCourseAccess(course);
+    var allowed = !!((lesson && lesson.isFreePreview) || viewerHasCourseAccess(course));
+    if (!allowed || !lesson || !course) return false;
+    var lessons = orderedCourseLessons(course);
+    var idx = -1;
+    for (var i = 0; i < lessons.length; i++) {
+      if (String(lessons[i].id) === String(lesson.id)) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx <= 0) return true;
+    for (var p = 0; p < idx; p++) {
+      if (!isLessonPassed(course, lessons[p])) return false;
+    }
+    return true;
+  }
+
+  function nextLessonHref(course, lesson) {
+    var lessons = orderedCourseLessons(course);
+    var idx = -1;
+    for (var i = 0; i < lessons.length; i++) {
+      if (String(lessons[i].id) === String(lesson.id)) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx < 0 || idx >= lessons.length - 1) return '';
+    return (
+      'course-details.html?id=' +
+      encodeURIComponent(course.id) +
+      '&lesson=' +
+      encodeURIComponent(lessons[idx + 1].id)
+    );
+  }
+
+  function showNextLessonAction(course, lesson) {
+    var box = document.getElementById('course-lesson-next');
+    if (!box) return;
+    var href = nextLessonHref(course, lesson);
+    if (!href) {
+      box.innerHTML = '<p class="course-quiz__result">أكملت هذه الحلقة.</p>';
+      return;
+    }
+    box.innerHTML =
+      '<p class="course-details__cta"><a class="btn btn--primary" href="' +
+      href +
+      '">الدرس التالي</a></p>';
   }
 
   function destroyCoursePlyrPlayer() {
@@ -513,10 +590,63 @@
   }
 
   function revealLessonQuiz() {
+    var ctx = activeLessonContext;
+    var questions = ctx && ctx.lesson && ctx.lesson.quiz && ctx.lesson.quiz.questions;
+    if (!questions || !questions.length) {
+      if (ctx) {
+        markLessonPassed(ctx.course, ctx.lesson);
+        showNextLessonAction(ctx.course, ctx.lesson);
+      }
+      return;
+    }
     var quiz = document.getElementById('course-lesson-quiz');
     if (!quiz) return;
     quiz.hidden = false;
     quiz.classList.remove('is-hidden');
+  }
+
+  function bindQuizSubmit(container) {
+    var button = container && container.querySelector('#submit-quiz');
+    if (!button || button.dataset.bound === '1') return;
+    button.dataset.bound = '1';
+    button.addEventListener('click', function () {
+      var ctx = activeLessonContext;
+      if (!ctx) return;
+      var questions = (ctx.lesson.quiz && ctx.lesson.quiz.questions) || [];
+      if (!questions.length) return;
+      var correct = 0;
+      questions.forEach(function (q, qIdx) {
+        var selected = container.querySelector(
+          'input[name="q-' + String(q.id || qIdx) + '"]:checked'
+        );
+        if (selected && Number(selected.value) === Number(q.correctIndex)) correct += 1;
+      });
+      var score = Math.round((correct / questions.length) * 100);
+      var result = document.getElementById('quiz-result');
+      var bar =
+        '<div class="quiz-score" style="margin:16px 0;background:#2d3748;border-radius:999px;overflow:hidden;height:12px;">' +
+        '<div style="width:' +
+        score +
+        '%;height:100%;background:' +
+        (score >= 50 ? '#38a169' : '#e53e3e') +
+        ';"></div></div>' +
+        '<p class="course-quiz__result">' +
+        score +
+        '%</p>';
+      if (score >= 50) {
+        markLessonPassed(ctx.course, ctx.lesson);
+        if (result) {
+          result.innerHTML = bar + '<p class="course-quiz__result">أحسنت، لقد اجتزت الاختبار.</p>';
+        }
+        showNextLessonAction(ctx.course, ctx.lesson);
+      } else {
+        var next = document.getElementById('course-lesson-next');
+        if (next) next.innerHTML = '';
+        if (result) {
+          result.innerHTML = bar + '<p class="course-quiz__result">حاول مرة أخرى</p>';
+        }
+      }
+    });
   }
 
   function bindNativeVideoEnded(container) {
@@ -583,9 +713,11 @@
       );
     }).join('');
     return (
-      '<section class="course-quiz" id="course-lesson-quiz">' +
+      '<section class="course-quiz is-hidden" id="course-lesson-quiz" hidden>' +
       '<h3 class="course-quiz__title">امتحان الحلقة / الاختبار</h3>' +
       items +
+      '<div id="quiz-result"></div>' +
+      '<button type="button" class="btn btn--primary" id="submit-quiz">تسليم الاختبار</button>' +
       '</section>'
     );
   }
@@ -791,7 +923,8 @@
           '</h2>' +
           (active.description ? '<p class="course-details__lesson-desc">' + escapeHtml(active.description) + '</p>' : '') +
           renderLessonPlayer(active) +
-          renderStudentLessonQuiz(active);
+          renderStudentLessonQuiz(active) +
+          '<div id="course-lesson-next"></div>';
       } else {
         playerHtml =
           '<div class="course-details__locked-panel">' +
@@ -808,25 +941,23 @@
         escapeHtml(course.title || '') +
         '</h1>' +
         '</header>' +
-        '<div class="course-details__layout">' +
-        '<aside class="course-details__curriculum">' +
-        '<h2>المنهج</h2>' +
-        listHtml +
-        '</aside>' +
         '<section class="course-details__stage">' +
         playerHtml +
-        '</section>' +
-        '</div>';
+        '</section>';
     }
 
     root.innerHTML = pageHtml;
 
     if (active && lessonCanPlay(active, course)) {
+      activeLessonContext = { course: course, lesson: active };
       window.requestAnimationFrame(function () {
         if (seq !== detailsRenderSeq) return;
         initCoursePlyrPlayer(root);
         bindNativeVideoEnded(root);
+        bindQuizSubmit(root);
       });
+    } else {
+      activeLessonContext = null;
     }
   }
 
