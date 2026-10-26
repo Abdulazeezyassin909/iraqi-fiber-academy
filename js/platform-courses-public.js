@@ -581,7 +581,7 @@
       );
     }).join('');
     return (
-      '<section class="course-quiz is-hidden" id="course-lesson-quiz" hidden>' +
+      '<section class="course-quiz" id="course-lesson-quiz">' +
       '<h3 class="course-quiz__title">امتحان الحلقة / الاختبار</h3>' +
       items +
       '</section>'
