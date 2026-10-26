@@ -567,17 +567,19 @@
     var items = questions.map(function (q, qIdx) {
       var opts = (q.options || []).map(function (o, i) {
         return (
-          '<label class="course-quiz__option">' +
+          '<label class="quiz-option-item">' +
           '<input type="radio" name="q-' + escapeHtml(q.id || qIdx) + '" value="' + i + '">' +
           '<span>' + escapeHtml((letters[i] || i + 1) + ') ' + o) + '</span>' +
           '</label>'
         );
       }).join('');
       return (
-        '<fieldset class="course-quiz__item">' +
-        '<legend>س' + (qIdx + 1) + ': ' + escapeHtml(q.text || '') + '</legend>' +
+        '<div class="quiz-question-block">' +
+        '<h4 class="quiz-question-title">س' + (qIdx + 1) + ': ' + escapeHtml(q.text || '') + '</h4>' +
+        '<div class="quiz-options-list">' +
         opts +
-        '</fieldset>'
+        '</div>' +
+        '</div>'
       );
     }).join('');
     return (
