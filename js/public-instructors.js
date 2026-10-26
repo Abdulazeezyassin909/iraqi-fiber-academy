@@ -18,12 +18,15 @@ function render(rows) {
   }
   grid.innerHTML = rows.map(function (row) {
     var photo = row.photoUrl
-      ? '<img class="instructor-card__photo" src="' + esc(row.photoUrl) + '" alt="">'
-      : '<span class="instructor-card__photo instructor-card__photo--empty" aria-hidden="true"></span>';
-    return '<article class="instructor-card">' + photo +
-      '<h3 class="instructor-card__name">' + esc(row.name) + '</h3>' +
-      '<p class="instructor-card__title">' + esc(row.title) + '</p>' +
-      '<p class="instructor-card__bio">' + esc(row.bio) + '</p></article>';
+      ? '<img src="' + esc(row.photoUrl) + '" alt="' + esc(row.name || '') + '">'
+      : '<span class="instructor-image-wrapper__empty" aria-hidden="true"></span>';
+    return '<div class="instructor-horizontal-card">' +
+      '<div class="instructor-image-wrapper">' + photo + '</div>' +
+      '<div class="instructor-info">' +
+      '<h3>' + esc(row.name || '') + '</h3>' +
+      '<p class="instructor-title">' + esc(row.title || '') + '</p>' +
+      '<p class="instructor-bio">' + esc(row.bio || '') + '</p>' +
+      '</div></div>';
   }).join('');
 }
 

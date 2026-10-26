@@ -1090,52 +1090,83 @@ body.article-reader-open {
 .ifa-toast.is-leaving { opacity: 0; transform: translateY(-6px); transition: opacity 0.25s, transform 0.25s; }
 
 /* Public instructors */
-.instructors-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+.instructors-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
 }
-.instructor-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  padding: 1.5rem;
-  text-align: center;
-  transition: border-color var(--transition-normal), transform var(--transition-normal);
+
+.instructor-horizontal-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  background-color: #1a202c;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #2d3748;
+  gap: 24px;
+  transition: transform 0.2s ease;
 }
-.instructor-card:hover { border-color: var(--color-border-hover); transform: translateY(-4px); }
-.instructor-card__photo {
+
+.instructor-horizontal-card:hover {
+  transform: translateY(-3px);
+}
+
+.instructor-image-wrapper img,
+.instructor-image-wrapper__empty {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #00d2ff;
   padding: 4px;
-  margin: 0 auto 1rem auto;
-  display: block;
+  flex-shrink: 0;
   box-sizing: border-box;
-  background: var(--color-bg-card);
+  display: block;
 }
-.instructor-card__photo--empty { background: var(--gradient-accent); }
-.instructor-card__name {
-  font-size: 1.25rem;
-  font-weight: 700;
+
+.instructor-image-wrapper__empty {
+  background: var(--gradient-accent);
+}
+
+.instructor-info {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.instructor-info h3 {
   color: #fff;
-  margin-bottom: 0.35rem;
+  font-size: 1.3rem;
+  margin: 0 0 8px 0;
 }
-.instructor-card__title {
+
+.instructor-title {
   color: #00d2ff;
-  font-size: 0.95rem;
-  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  margin: 0 0 12px 0;
+  font-weight: bold;
 }
-.instructor-card__bio {
-  color: #94a3b8;
-  font-size: 0.9rem;
+
+.instructor-bio {
+  color: #cbd5e1;
+  font-size: 0.95rem;
   line-height: 1.6;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .instructor-horizontal-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .instructor-info {
+    text-align: center;
+  }
 }
 
 /* FAQ */
