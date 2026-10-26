@@ -290,6 +290,7 @@
           instProfilePhotoUrl = photoUrl || '';
           setProfileBadge('pending');
           if (submitBtn) submitBtn.textContent = 'تم الإرسال';
+          alert('تم إرسال الملف بنجاح وهو بانتظار موافقة الإدارة.');
         });
       }).catch(function (err) {
         console.error('[InstructorProfile] save failed', err);
