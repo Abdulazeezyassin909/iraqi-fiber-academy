@@ -19,6 +19,27 @@
       .replace(/"/g, '&quot;');
   }
 
+  function courseThumbHtml(url) {
+    if (!url) return '<span class="course-thumb course-thumb--empty" aria-hidden="true"></span>';
+    return '<img class="course-thumb" src="' + esc(url) + '" alt="" />';
+  }
+
+  function setInstructorCourseImage(url) {
+    var hidden = document.getElementById('instructorCourseImageUrl');
+    var preview = document.getElementById('instructor-course-image-preview');
+    var file = document.getElementById('instructor-course-image-input');
+    if (hidden) hidden.value = url || '';
+    if (file) file.value = '';
+    if (!preview) return;
+    if (url) {
+      preview.src = url;
+      preview.hidden = false;
+    } else {
+      preview.removeAttribute('src');
+      preview.hidden = true;
+    }
+  }
+
   var instructorOrdersCache = [];
 
   function renderInstructorOrdersTable() {
@@ -987,6 +1008,7 @@
       if (modulesList) modulesList.innerHTML = '';
       instructorQuizzes = {};
       editingCourseId = '';
+      setInstructorCourseImage('');
       var submitBtn = form && form.querySelector('[type="submit"]');
       if (submitBtn) submitBtn.textContent = 'رفع الكورس للمراجعة';
     }
@@ -1008,6 +1030,7 @@
       editingCourseId = course.id;
       document.getElementById('instructorCourseTitle').value = course.title || '';
       document.getElementById('instructorCourseDescription').value = course.description || '';
+      setInstructorCourseImage(course.imageUrl || course.thumbnailUrl || '');
       document.getElementById('instructorCoursePrice').value = course.price != null ? String(course.price) : '';
       var currency = document.getElementById('instructorCourseCurrency');
       if (currency) currency.value = course.currency || 'IQD';
@@ -1064,7 +1087,7 @@
         if (c.durationWeeks) duration.push(c.durationWeeks + ' أسبوع');
         var price = c.price ? String(c.price) + ' ' + (c.currency || '') : '—';
         return '<tr>' +
-          '<td>' + esc(c.title) + '</td>' +
+          '<td><div class="course-title-cell">' + courseThumbHtml(c.imageUrl || c.thumbnailUrl) + '<span>' + esc(c.title) + '</span></div></td>' +
           '<td>' + esc(price) + '</td>' +
           '<td>' + esc(duration.join(' / ') || '—') + '</td>' +
           '<td>' + courseStatusLabel(c.status) + '</td>' +
@@ -1187,7 +1210,8 @@
         title: title,
         description: document.getElementById('instructorCourseDescription').value,
         category: 'individual',
-        thumbnailUrl: '',
+        thumbnailUrl: document.getElementById('instructorCourseImageUrl').value || '',
+        imageUrl: document.getElementById('instructorCourseImageUrl').value || '',
         price: document.getElementById('instructorCoursePrice').value,
         currency: document.getElementById('instructorCourseCurrency').value,
         durationHours: document.getElementById('instructorCourseHours').value,
@@ -1231,6 +1255,30 @@
       e.preventDefault();
       saveInstructorCourse('pending');
     });
+    var instructorImageInput = document.getElementById('instructor-course-image-input');
+    if (instructorImageInput) {
+      instructorImageInput.addEventListener('change', function () {
+        var file = instructorImageInput.files && instructorImageInput.files[0];
+        if (!file) return;
+        if (file.size > 1200000) {
+          instructorImageInput.value = '';
+          alert('حجم الصورة كبير. اختر صورة أصغر من 1.2 ميغابايت.');
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          var hidden = document.getElementById('instructorCourseImageUrl');
+          var preview = document.getElementById('instructor-course-image-preview');
+          var url = String(reader.result || '');
+          if (hidden) hidden.value = url;
+          if (preview) {
+            preview.src = url;
+            preview.hidden = false;
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
     document.getElementById('btnInstructorSaveDraft').addEventListener('click', function () {
       saveInstructorCourse('draft');
     });

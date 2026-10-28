@@ -1885,6 +1885,15 @@ body.admin-body.has-announcement-bar .admin-content {
   padding-bottom: 4rem;
 }
 
+.course-details__cover {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 0.75rem 0 0.4rem;
+}
+
 .course-details__title {
   font-size: clamp(1.4rem, 3vw, 2rem);
   margin: 0.35rem 0 0.6rem;

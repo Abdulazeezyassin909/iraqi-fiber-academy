@@ -582,6 +582,12 @@
                 <span class="admin-field__label">الوصف</span>
                 <textarea class="admin-field__input admin-field__textarea" id="courseEditorDescription" rows="3"></textarea>
               </label>
+              <div class="admin-field admin-field--full">
+                <span class="admin-field__label">صورة الكورس</span>
+                <input type="file" id="course-image-input" accept="image/*" />
+                <input type="hidden" id="courseEditorImageUrl" value="" />
+                <img id="course-image-preview" class="course-image-preview" alt="" hidden />
+              </div>
               <label class="admin-field">
                 <span class="admin-field__label">المدرب المسؤول</span>
                 <select class="admin-field__input" id="courseEditorInstructor"></select>

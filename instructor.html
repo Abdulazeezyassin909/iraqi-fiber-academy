@@ -133,6 +133,12 @@
                   <span class="admin-field__label">الوصف</span>
                   <textarea class="admin-field__input admin-field__textarea" id="instructorCourseDescription" rows="3"></textarea>
                 </label>
+                <div class="admin-field admin-field--full">
+                  <span class="admin-field__label">صورة الكورس</span>
+                  <input type="file" id="instructor-course-image-input" accept="image/*" />
+                  <input type="hidden" id="instructorCourseImageUrl" value="" />
+                  <img id="instructor-course-image-preview" class="course-image-preview" alt="" hidden />
+                </div>
                 <label class="admin-field">
                   <span class="admin-field__label">سعر الكورس</span>
                   <input class="admin-field__input admin-field__input--price" type="text" inputmode="numeric" id="instructorCoursePrice" placeholder="مثال: 150,000" autocomplete="off" />

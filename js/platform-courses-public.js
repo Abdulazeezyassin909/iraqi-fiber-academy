@@ -127,6 +127,7 @@
           c.durationHours || 0,
           c.durationWeeks || 0,
           c.price || 0,
+          c.imageUrl || c.thumbnailUrl || '',
           c.requiredPlanId || '',
           c.accessLevel || '',
           c.sortOrder != null ? c.sortOrder : '',
@@ -881,9 +882,14 @@
           ctaHref +
           '">ابدأ التعلم</a></p>';
       }
+      var cover = course.imageUrl || course.thumbnailUrl || '';
+      var coverHtml = cover
+        ? '<img class="course-details__cover" src="' + escapeHtml(cover) + '" alt="' + escapeHtml(course.title || '') + '">'
+        : '';
       pageHtml =
         '<header class="course-details__header">' +
         '<p class="course-details__back"><a href="index.html#courses" class="course-back-btn">← العودة للكورسات</a></p>' +
+        coverHtml +
         '<h1 class="course-details__title">' +
         escapeHtml(course.title || '') +
         '</h1>' +

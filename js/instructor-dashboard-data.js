@@ -194,7 +194,8 @@
       instructorEmail: payload.instructorEmail || key,
       instructorName: payload.instructorName || name,
       instructorId: payload.instructorId || (authUser && authUser.uid) || '',
-      thumbnailUrl: '',
+      thumbnailUrl: payload.thumbnailUrl || payload.imageUrl || '',
+      imageUrl: payload.imageUrl || payload.thumbnailUrl || '',
       category: 'individual',
       price: payload.price,
       currency: payload.currency || 'IQD',
@@ -226,6 +227,10 @@
     if (patch.durationHours != null) next.durationHours = patch.durationHours;
     if (patch.durationWeeks != null) next.durationWeeks = patch.durationWeeks;
     if (patch.weeklySchedule != null) next.weeklySchedule = patch.weeklySchedule;
+    if (patch.imageUrl != null || patch.thumbnailUrl != null) {
+      next.imageUrl = patch.imageUrl || patch.thumbnailUrl || '';
+      next.thumbnailUrl = patch.thumbnailUrl || patch.imageUrl || '';
+    }
     if (patch.lessons != null) next.lessons = patch.lessons;
     if (patch.simulators || patch.allowedSimulators) {
       next.allowedSimulators = patch.simulators || patch.allowedSimulators;

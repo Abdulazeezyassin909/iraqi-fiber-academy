@@ -903,6 +903,37 @@
   cursor: default;
 }
 
+.course-image-preview {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: 140px;
+  object-fit: cover;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.course-thumb {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.course-thumb--empty {
+  display: inline-block;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.course-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .admin-field--full {
   grid-column: 1 / -1;
 }

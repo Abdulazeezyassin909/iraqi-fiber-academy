@@ -40,6 +40,47 @@
       .replace(/"/g, '&quot;');
   }
 
+  function courseThumbHtml(url) {
+    if (!url) return '<span class="course-thumb course-thumb--empty" aria-hidden="true"></span>';
+    return '<img class="course-thumb" src="' + escapeHtml(url) + '" alt="" />';
+  }
+
+  function setCourseImagePreview(url, hiddenId, previewId, fileId) {
+    var hidden = document.getElementById(hiddenId);
+    var preview = document.getElementById(previewId);
+    var file = document.getElementById(fileId);
+    if (hidden) hidden.value = url || '';
+    if (file) file.value = '';
+    if (!preview) return;
+    if (url) {
+      preview.src = url;
+      preview.hidden = false;
+    } else {
+      preview.removeAttribute('src');
+      preview.hidden = true;
+    }
+  }
+
+  function bindCourseImageInput(fileId, hiddenId, previewId) {
+    var input = document.getElementById(fileId);
+    if (!input || input.dataset.bound === '1') return;
+    input.dataset.bound = '1';
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (file.size > 1200000) {
+        input.value = '';
+        alert('حجم الصورة كبير. اختر صورة أصغر من 1.2 ميغابايت.');
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function () {
+        setCourseImagePreview(String(reader.result || ''), hiddenId, previewId, null);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   var YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
   function extractYouTubeVideoId(url) {
@@ -625,6 +666,12 @@
     document.getElementById('courseEditorId').value = course ? course.id : '';
     document.getElementById('courseEditorName').value = course ? course.title : '';
     document.getElementById('courseEditorDescription').value = course ? course.description : '';
+    setCourseImagePreview(
+      course ? course.imageUrl || course.thumbnailUrl || '' : '',
+      'courseEditorImageUrl',
+      'course-image-preview',
+      'course-image-input'
+    );
     document.getElementById('courseEditorHours').value = course ? course.durationHours || '' : '';
     document.getElementById('courseEditorWeeks').value = course ? course.durationWeeks || '' : '';
     document.getElementById('courseEditorPrice').value =
@@ -1093,8 +1140,11 @@
           '<span class="admin-drag-handle" title="اسحب لإعادة الترتيب" aria-hidden="true">⋮⋮</span>' +
           '</td>' +
           '<td>' +
+          '<div class="course-title-cell">' +
+          courseThumbHtml(course.imageUrl || course.thumbnailUrl) +
           '<div class="admin-user-cell__name">' +
           escapeHtml(course.title) +
+          '</div>' +
           '</div>' +
           '<div class="admin-user-cell__email">' +
           lessonsCount +
@@ -1203,6 +1253,7 @@
         openCourseModal(null);
       });
     }
+    bindCourseImageInput('course-image-input', 'courseEditorImageUrl', 'course-image-preview');
 
     var refreshBtn = document.getElementById('refreshCoursesBtn');
     if (refreshBtn) {
@@ -1272,6 +1323,8 @@
           softDeleted: false,
           deletedAt: '',
           source: 'admin',
+          imageUrl: (document.getElementById('courseEditorImageUrl') || {}).value || '',
+          thumbnailUrl: (document.getElementById('courseEditorImageUrl') || {}).value || '',
         };
         try {
           var wasPublish = payload.status === 'published';
