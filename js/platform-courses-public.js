@@ -136,7 +136,7 @@
   }
 
   function revealCards(grid) {
-    var cards = grid.querySelectorAll('.public-course-card');
+    var cards = grid.querySelectorAll('.custom-course-card');
     cards.forEach(function (card, index) {
       window.setTimeout(function () {
         card.classList.add('is-visible');
@@ -173,73 +173,58 @@
     return amount + ' ' + label;
   }
 
-  function accessPlanLabel(course) {
-    if (window.PlatformCourses && typeof window.PlatformCourses.formatCourseAccessLabel === 'function') {
-      return window.PlatformCourses.formatCourseAccessLabel(course);
-    }
-    return '';
-  }
-
   function renderCourseCard(course, index) {
-    var instructor = course.instructorName || course.instructorEmail || '';
-    var lessonCount = Array.isArray(course.lessons) ? course.lessons.length : 0;
+    var title = course.title || 'كورس بدون عنوان';
+    var description = course.shortDescription || course.description || '';
+    var imageUrl = course.imageUrl || course.thumbnailUrl || '';
+    var prerequisites = course.prerequisites || 'لا يوجد';
+    var duration = course.duration || formatDurationLabel(course) || 'متاح دائماً';
     var priceLabel = formatCoursePrice(course);
-    var planLabel = accessPlanLabel(course);
-    var planChip = planLabel
-      ? '<span class="public-course-card__plan" title="باقة الوصول">' +
-        escapeHtml(planLabel) +
-        '</span>'
-      : '';
-
-    var footer =
-      '<footer class="public-course-card__footer">' +
-      '<div class="public-course-card__instructor">' +
-      '<span class="public-course-card__footer-label">المدرب</span>' +
-      '<span class="public-course-card__footer-value">' +
-      escapeHtml(instructor || 'الأكاديمية') +
-      '</span>' +
-      '</div>' +
-      '<div class="public-course-card__meta">' +
-      '<span class="public-course-card__price">' +
-      escapeHtml(priceLabel) +
-      '</span>' +
-      '<span class="public-course-card__episodes">' +
-      (lessonCount ? lessonCount + ' حلقة' : 'قريباً') +
-      '</span>' +
-      '</div>' +
-      '</footer>';
+    var imageHtml = imageUrl
+      ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '">'
+      : '<div class="custom-course-card__image-fallback" aria-hidden="true"></div>';
 
     return (
-      '<a class="public-course-card-link" href="course-details.html?id=' +
-      encodeURIComponent(course.id) +
-      '">' +
-      '<article class="public-course-card" data-course-id="' +
+      '<article class="custom-course-card" data-course-id="' +
       escapeHtml(course.id) +
-      '" data-access-level="' +
-      escapeHtml(course.accessLevel || '') +
-      '" data-required-plan="' +
-      escapeHtml(course.requiredPlanId || '') +
       '" style="--card-index:' +
       index +
       '">' +
-      '<div class="public-course-card__header">' +
-      '<span class="public-course-card__badge">منشور</span>' +
-      planChip +
-      '<span class="public-course-card__duration">⏱ ' +
-      escapeHtml(formatDurationLabel(course)) +
+      '<div class="custom-course-card__image">' +
+      imageHtml +
+      '</div>' +
+      '<div class="custom-course-card__content">' +
+      '<h3 class="custom-course-card__title">' +
+      escapeHtml(title) +
+      '</h3>' +
+      '<p class="custom-course-card__description">' +
+      escapeHtml(description) +
+      '</p>' +
+      '<div class="custom-course-card__meta">' +
+      '<div class="meta-row">' +
+      '<span class="meta-label">المتطلبات:</span>' +
+      '<span class="meta-value meta-value--highlight">' +
+      escapeHtml(prerequisites) +
       '</span>' +
       '</div>' +
-      '<div class="public-course-card__body">' +
-      '<h3 class="public-course-card__title">' +
-      escapeHtml(course.title || 'كورس بدون عنوان') +
-      '</h3>' +
-      '<p class="public-course-card__desc">' +
-      escapeHtml(course.description || 'لا يوجد وصف لهذا الكورس بعد.') +
-      '</p>' +
+      '<div class="meta-row">' +
+      '<span class="meta-label">تاريخ البدء / المدة:</span>' +
+      '<span class="meta-value meta-value--highlight">' +
+      escapeHtml(duration) +
+      '</span>' +
       '</div>' +
-      footer +
-      '</article>' +
-      '</a>'
+      '<div class="meta-row">' +
+      '<span class="meta-label">السعر:</span>' +
+      '<span class="meta-value">' +
+      escapeHtml(priceLabel) +
+      '</span>' +
+      '</div>' +
+      '</div>' +
+      '<a href="course-details.html?id=' +
+      encodeURIComponent(course.id) +
+      '" class="custom-course-card__btn">تفاصيل الكورس</a>' +
+      '</div>' +
+      '</article>'
     );
   }
 
