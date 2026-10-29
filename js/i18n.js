@@ -28,7 +28,7 @@
       'settings.markAllRead': 'تعيين الكل كمقروء',
       'settings.emptyNotifications': 'لا توجد إشعارات حالياً',
       'settings.viewDetails': 'عرض التفاصيل',
-      'logo.main': 'مسار المهندس ‎°360',
+      'logo.main': 'مسار المهندس 360°',
       'logo.sub': 'منصة المسار المهني الهندسي',
       'hero.default.title': 'مسارك المهني الهندسي يبدأ هنا',
       'hero.default.description': 'منصة المسار المهني الهندسي — كورسات منظمة ومحاكيات تفاعلية لبناء مهاراتك خطوة بخطوة.',

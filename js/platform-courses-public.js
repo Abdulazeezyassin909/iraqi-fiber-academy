@@ -175,7 +175,86 @@
     return amount + ' ' + label;
   }
 
-  function renderCourseCard(course, index) {
+  var CATEGORY_LABELS = {
+    individual: 'فردي',
+    program: 'شبكات',
+    master: 'اتصالات',
+    ftth: 'FTTH',
+    civil: 'مدني',
+    electrical: 'كهرباء',
+    telecom: 'اتصالات',
+    networks: 'شبكات',
+  };
+
+  function categoryKey(course) {
+    return String((course && course.category) || 'individual').trim().toLowerCase();
+  }
+
+  function categoryLabel(key) {
+    if (!key || key === 'all') return 'الكل';
+    if (CATEGORY_LABELS[key]) return CATEGORY_LABELS[key];
+    return key;
+  }
+
+  function renderCategoryChips(courses) {
+    var box =
+      document.getElementById('categoryChips') ||
+      document.querySelector('.category-chips-container');
+    if (!box) return;
+    var seen = { all: true };
+    var keys = ['all'];
+    (courses || []).forEach(function (course) {
+      var key = categoryKey(course);
+      if (seen[key]) return;
+      seen[key] = true;
+      keys.push(key);
+    });
+    var selected = box.getAttribute('data-selected') || 'all';
+    if (keys.indexOf(selected) === -1) selected = 'all';
+    box.setAttribute('data-selected', selected);
+    box.innerHTML = keys
+      .map(function (key) {
+        var active = key === selected ? ' is-active active' : '';
+        return (
+          '<button type="button" class="mobile-chip' +
+          active +
+          '" data-category="' +
+          escapeHtml(key) +
+          '">' +
+          escapeHtml(categoryLabel(key)) +
+          '</button>'
+        );
+      })
+      .join('');
+    if (box.dataset.filterBound !== '1') {
+      box.dataset.filterBound = '1';
+      box.addEventListener('click', function (event) {
+        var chip = event.target.closest('[data-category]');
+        if (!chip || !box.contains(chip)) return;
+        applyCategoryFilter(chip.getAttribute('data-category') || 'all');
+      });
+    }
+  }
+
+  function applyCategoryFilter(key) {
+    var box =
+      document.getElementById('categoryChips') ||
+      document.querySelector('.category-chips-container');
+    var grid = document.getElementById(GRID_ID);
+    if (box) {
+      box.setAttribute('data-selected', key || 'all');
+      box.querySelectorAll('[data-category]').forEach(function (chip) {
+        var on = chip.getAttribute('data-category') === (key || 'all');
+        chip.classList.toggle('is-active', on);
+        chip.classList.toggle('active', on);
+      });
+    }
+    if (!grid) return;
+    grid.querySelectorAll('.custom-course-card').forEach(function (card) {
+      var match = !key || key === 'all' || card.getAttribute('data-category') === key;
+      card.style.display = match ? '' : 'none';
+    });
+  }
     var title = course.title || 'كورس بدون عنوان';
     var description = course.shortDescription || course.description || '';
     var imageUrl = course.imageUrl || course.thumbnailUrl || '';
@@ -190,6 +269,8 @@
     return (
       '<article class="custom-course-card" data-course-id="' +
       escapeHtml(course.id) +
+      '" data-category="' +
+      escapeHtml(categoryKey(course)) +
       '" style="--card-index:' +
       index +
       '">' +
@@ -264,6 +345,12 @@
     }
 
     grid.innerHTML = courses.map(renderCourseCard).join('');
+    renderCategoryChips(courses);
+    applyCategoryFilter(
+      (document.getElementById('categoryChips') || {}).getAttribute
+        ? document.getElementById('categoryChips').getAttribute('data-selected') || 'all'
+        : 'all'
+    );
     revealCards(grid);
   }
 

@@ -1,9 +1,5 @@
 {
   "appId": "com.masar.almuhandis",
   "appName": "مسار المهندس 360",
-  "webDir": "www",
-  "server": {
-    "url": "https://iraqi-fiber-academy.web.app",
-    "cleartext": true
-  }
+  "webDir": "www"
 }

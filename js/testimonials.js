@@ -230,8 +230,14 @@
         '" />'
       : escapeHtml(initial(item.name));
     return (
-      '<article class="testimonial-card fade-in visible" data-testimonial-id="' +
+      '<article class="testimonial-card fade-in visible" tabindex="0" role="button" data-testimonial-id="' +
       escapeHtml(item.id) +
+      '" data-testimonial-name="' +
+      escapeHtml(item.name) +
+      '" data-testimonial-role="' +
+      escapeHtml(item.role) +
+      '" data-testimonial-text="' +
+      escapeHtml(item.text) +
       '">' +
       '<div class="testimonial-card__avatar">' +
       avatar +
@@ -264,7 +270,6 @@
   function renderPublic() {
     var grid = findPublicTestimonialsHost();
     if (!grid) return;
-    grid.style.display = 'grid';
     var section = document.querySelector('.testimonials-section') || grid.closest('section');
     if (section) section.style.display = 'block';
     var list = getPublishedTestimonials();
@@ -283,6 +288,50 @@
     if (typeof global.reobserveAnimations === 'function') {
       global.reobserveAnimations(grid);
     }
+    bindTestimonialModal(grid);
+  }
+
+  function bindTestimonialModal(grid) {
+    if (grid.dataset.modalBound === '1') return;
+    grid.dataset.modalBound = '1';
+    grid.addEventListener('click', function (event) {
+      var card = event.target.closest('.testimonial-card');
+      if (!card || !grid.contains(card)) return;
+      openTestimonialModal(card);
+    });
+    grid.addEventListener('keydown', function (event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      var card = event.target.closest('.testimonial-card');
+      if (!card) return;
+      event.preventDefault();
+      openTestimonialModal(card);
+    });
+  }
+
+  function openTestimonialModal(card) {
+    var modal = document.getElementById('testimonialModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'testimonialModal';
+      modal.className = 'testimonial-modal';
+      modal.hidden = true;
+      modal.innerHTML =
+        '<div class="testimonial-modal__backdrop" data-close-testimonial></div>' +
+        '<div class="testimonial-modal__panel" role="dialog" aria-modal="true" aria-labelledby="testimonialModalName">' +
+        '<button type="button" class="testimonial-modal__close" data-close-testimonial aria-label="إغلاق">×</button>' +
+        '<h3 id="testimonialModalName"></h3>' +
+        '<p class="testimonial-modal__role" id="testimonialModalRole"></p>' +
+        '<p class="testimonial-modal__text" id="testimonialModalText"></p>' +
+        '</div>';
+      document.body.appendChild(modal);
+      modal.addEventListener('click', function (event) {
+        if (event.target.closest('[data-close-testimonial]')) modal.hidden = true;
+      });
+    }
+    document.getElementById('testimonialModalName').textContent = card.getAttribute('data-testimonial-name') || '';
+    document.getElementById('testimonialModalRole').textContent = card.getAttribute('data-testimonial-role') || '';
+    document.getElementById('testimonialModalText').textContent = card.getAttribute('data-testimonial-text') || '';
+    modal.hidden = false;
   }
 
   function loadPublicTestimonials() {
