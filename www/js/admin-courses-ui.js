@@ -690,15 +690,25 @@
     if (notifyEl) {
       notifyEl.checked = !course || course.status !== 'published';
     }
-    var courseCategoryInput = document.getElementById('courseCategoryInput');
-    if (courseCategoryInput) {
+    var courseCategorySelect = document.getElementById('courseCategorySelect');
+    if (courseCategorySelect) {
       var savedCategory = course ? String(course.category || '').trim() : '';
       if (savedCategory === 'individual' || savedCategory === 'general') savedCategory = 'عام';
       if (savedCategory === 'program') savedCategory = 'شبكات';
       if (savedCategory === 'master') savedCategory = 'اتصالات';
       if (savedCategory.toLowerCase() === 'ftth') savedCategory = 'FTTH';
-      courseCategoryInput.value = savedCategory || 'عام';
-      if (!courseCategoryInput.value) courseCategoryInput.value = 'عام';
+      if (!savedCategory) savedCategory = 'عام';
+      var known = false;
+      Array.prototype.forEach.call(courseCategorySelect.options, function (opt) {
+        if (opt.value === savedCategory) known = true;
+      });
+      if (!known) {
+        var extra = document.createElement('option');
+        extra.value = savedCategory;
+        extra.textContent = savedCategory;
+        courseCategorySelect.appendChild(extra);
+      }
+      courseCategorySelect.value = savedCategory;
     }
     writeSimulatorChecks(course ? course.allowedSimulators : []);
     writeGeneratePlanCheck(course);
@@ -1320,7 +1330,7 @@
           requiredPlanId: '',
           weeklySchedule: (document.getElementById('courseEditorSchedule') || {}).value,
           status: (document.getElementById('courseEditorStatus') || {}).value,
-          category: (document.getElementById('courseCategoryInput') || {}).value || 'عام',
+          category: (document.getElementById('courseCategorySelect') || {}).value || 'عام',
           allowedSimulators: readSimulatorChecks(),
           autoPricingPlan: autoPricingPlan,
           suppressPricingPlan: autoPricingPlan ? false : undefined,

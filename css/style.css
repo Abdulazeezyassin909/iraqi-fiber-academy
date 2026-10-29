@@ -594,6 +594,36 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   white-space: nowrap;
 }
 
+.category-chips-container,
+.mobile-chips {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 8px;
+}
+.mobile-chip {
+  border-radius: 20px;
+  padding: 8px 16px;
+  white-space: nowrap;
+  border: 1px solid #2d3748;
+  background: #121824;
+  color: #e2e8f0;
+  min-height: 40px;
+  cursor: pointer;
+}
+.mobile-chip.is-active,
+.mobile-chip.active {
+  background: #00d2ff;
+  color: #0f172a;
+  border-color: #00d2ff;
+}
+.course-category-empty .custom-course-card__title {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
 .public-courses-empty {
   grid-column: 1 / -1;
   text-align: center;
