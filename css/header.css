@@ -133,7 +133,8 @@
   flex-shrink: 0;
   flex-wrap: nowrap;
   white-space: nowrap;
-  margin-inline-start: auto;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
   overflow: visible;
   direction: ltr;
 }
