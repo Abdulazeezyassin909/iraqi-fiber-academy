@@ -887,7 +887,6 @@
       pageHtml =
         '<div class="course-hero-banner" id="courseHeroBanner">' +
         '<div class="course-hero-container">' +
-        '<a href="index.html#courses" class="btn-back-up">← العودة للكورسات</a>' +
         '<div class="course-floating-card">' +
         '<h1 class="course-floating-title" id="courseTitle">' +
         escapeHtml(course.title || '') +

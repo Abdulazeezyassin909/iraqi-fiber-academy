@@ -1933,22 +1933,27 @@ body.admin-body.has-announcement-bar .admin-content {
   justify-content: flex-start;
 }
 
-.btn-back-up {
-  position: absolute;
-  top: -60px;
-  right: 20px;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.header-btn-back {
   background-color: #00d2ff;
   color: #0f172a !important;
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 6px;
   text-decoration: none;
   font-weight: bold;
-  font-size: 0.95rem;
-  z-index: 10;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.btn-back-up:hover {
+.header-btn-back:hover {
   opacity: 0.9;
   transform: translateX(4px);
 }
@@ -2056,11 +2061,6 @@ body.admin-body.has-announcement-bar .admin-content {
     .course-floating-card {
     max-width: 100%;
     margin: 0 auto;
-  }
-
-  .btn-back-up {
-    top: -45px;
-    right: 15px;
   }
 }
 
