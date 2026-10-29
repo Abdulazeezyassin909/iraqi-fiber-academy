@@ -1330,7 +1330,7 @@
           requiredPlanId: '',
           weeklySchedule: (document.getElementById('courseEditorSchedule') || {}).value,
           status: (document.getElementById('courseEditorStatus') || {}).value,
-          category: (document.getElementById('courseCategorySelect') || {}).value || 'عام',
+          category: document.getElementById('courseCategorySelect').value || 'عام',
           allowedSimulators: readSimulatorChecks(),
           autoPricingPlan: autoPricingPlan,
           suppressPricingPlan: autoPricingPlan ? false : undefined,
