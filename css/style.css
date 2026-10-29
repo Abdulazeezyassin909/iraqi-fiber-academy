@@ -1887,28 +1887,24 @@ body.admin-body.has-announcement-bar .admin-content {
 
 .course-hero-banner {
   width: 100%;
-  height: 50vh;
-  min-height: 400px;
-  background-color: #0f172a;
-  background-size: cover;
+  min-height: 480px;
+  max-height: 550px;
+  background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  background-color: #0b0f17;
   position: relative;
   display: flex;
   align-items: center;
   margin-bottom: 2.5rem;
-  border-bottom: 1px solid #2d3748;
 }
 
 .course-hero-banner img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  image-rendering: -webkit-optimize-contrast;
-  display: block;
+  height: auto;
+  max-height: 550px;
+  object-fit: contain;
+  background-color: #0b0f17;
 }
 
 .course-hero-banner::before {
