@@ -1886,12 +1886,17 @@ body.admin-body.has-announcement-bar .admin-content {
 }
 
 .course-details__cover {
-  display: block;
   width: 100%;
-  max-height: 280px;
+  max-width: 1000px;
+  margin: 0 auto 2rem auto;
+  background-color: #0f172a;
+  border-radius: 16px;
+  overflow: hidden;
+  height: auto;
+  max-height: 500px;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 8px;
-  margin: 0.75rem 0 0.4rem;
+  display: block;
 }
 
 .course-details__title {
