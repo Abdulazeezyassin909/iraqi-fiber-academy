@@ -127,6 +127,7 @@ function preparePayload(payload, existing) {
     isAcademy: normalized.isAcademy,
     durationHours: normalized.durationHours,
     durationWeeks: normalized.durationWeeks,
+    startDate: normalized.startDate || '',
     price: normalized.price,
     currency: normalized.currency,
     requiredPlanId: normalized.requiredPlanId,

@@ -476,6 +476,9 @@
       isAcademy: academy,
       durationHours: Number(raw.durationHours) || 0,
       durationWeeks: Number(raw.durationWeeks) || 0,
+      startDate: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.startDate || '').trim())
+        ? String(raw.startDate).trim()
+        : '',
       price: parsePrice(raw.price),
       currency: normalizeCurrency(raw.currency),
       requiredPlanId: String(raw.requiredPlanId || raw.planId || '').trim(),
@@ -896,6 +899,7 @@
       instructorName: instructorName,
       durationHours: payload && payload.durationHours,
       durationWeeks: payload && payload.durationWeeks,
+      startDate: payload && payload.startDate,
       price: payload && payload.price,
       currency: payload && payload.currency,
       requiredPlanId: payload && payload.requiredPlanId,

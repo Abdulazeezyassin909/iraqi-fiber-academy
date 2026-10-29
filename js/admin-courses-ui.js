@@ -674,6 +674,9 @@
     );
     document.getElementById('courseEditorHours').value = course ? course.durationHours || '' : '';
     document.getElementById('courseEditorWeeks').value = course ? course.durationWeeks || '' : '';
+    if (document.getElementById('courseStartDate')) {
+      document.getElementById('courseStartDate').value = course ? course.startDate || '' : '';
+    }
     document.getElementById('courseEditorPrice').value =
       course && parsePriceValue(course.price) ? formatPriceInputValue(course.price) : '';
     writeCourseCurrency(course ? course.currency : 'IQD');
@@ -1304,6 +1307,7 @@
           description: (document.getElementById('courseEditorDescription') || {}).value,
           durationHours: (document.getElementById('courseEditorHours') || {}).value,
           durationWeeks: (document.getElementById('courseEditorWeeks') || {}).value,
+          startDate: (document.getElementById('courseStartDate') || {}).value || null,
           price: parsePriceValue((document.getElementById('courseEditorPrice') || {}).value),
           currency: readCourseCurrency(),
           requiredPlanId: '',

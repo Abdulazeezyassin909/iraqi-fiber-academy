@@ -203,6 +203,7 @@
       source: 'instructor',
       durationHours: payload.durationHours,
       durationWeeks: payload.durationWeeks,
+      startDate: payload.startDate || '',
       weeklySchedule: payload.weeklySchedule,
       lessons: payload.lessons || [],
       allowedSimulators: payload.simulators || payload.allowedSimulators || [],
@@ -226,6 +227,7 @@
     if (patch.currency != null) next.currency = patch.currency;
     if (patch.durationHours != null) next.durationHours = patch.durationHours;
     if (patch.durationWeeks != null) next.durationWeeks = patch.durationWeeks;
+    if (patch.startDate !== undefined) next.startDate = patch.startDate || '';
     if (patch.weeklySchedule != null) next.weeklySchedule = patch.weeklySchedule;
     if (patch.imageUrl != null || patch.thumbnailUrl != null) {
       next.imageUrl = patch.imageUrl || patch.thumbnailUrl || '';

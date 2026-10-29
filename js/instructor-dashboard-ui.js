@@ -1036,6 +1036,9 @@
       if (currency) currency.value = course.currency || 'IQD';
       document.getElementById('instructorCourseHours').value = course.durationHours || '';
       document.getElementById('instructorCourseWeeks').value = course.durationWeeks || '';
+      if (document.getElementById('courseStartDate')) {
+        document.getElementById('courseStartDate').value = course.startDate || '';
+      }
       document.getElementById('instructorCourseSchedule').value = course.weeklySchedule || '';
       var sims = course.allowedSimulators || course.simulators || [];
       document.querySelectorAll('input[name="instructorCourseSimulator"]').forEach(function (input) {
@@ -1216,6 +1219,7 @@
         currency: document.getElementById('instructorCourseCurrency').value,
         durationHours: document.getElementById('instructorCourseHours').value,
         durationWeeks: document.getElementById('instructorCourseWeeks').value,
+        startDate: (document.getElementById('courseStartDate') || {}).value || null,
         weeklySchedule: document.getElementById('instructorCourseSchedule').value,
         lessons: collectInstructorLessons(),
         simulators: Array.prototype.map.call(

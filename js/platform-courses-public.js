@@ -126,6 +126,7 @@
           c.instructorName || '',
           c.durationHours || 0,
           c.durationWeeks || 0,
+          c.startDate || '',
           c.price || 0,
           c.imageUrl || c.thumbnailUrl || '',
           c.requiredPlanId || '',
@@ -180,6 +181,7 @@
     var imageUrl = course.imageUrl || course.thumbnailUrl || '';
     var prerequisites = course.prerequisites || 'لا يوجد';
     var duration = course.duration || formatDurationLabel(course) || 'متاح دائماً';
+    var startDateStr = course.startDate ? course.startDate + ' / ' : 'قريباً / ';
     var priceLabel = formatCoursePrice(course);
     var imageHtml = imageUrl
       ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(title) + '">'
@@ -210,8 +212,8 @@
       '</div>' +
       '<div class="meta-row">' +
       '<span class="meta-label">تاريخ البدء / المدة:</span>' +
-      '<span class="meta-value meta-value--highlight">' +
-      escapeHtml(duration) +
+      '<span class="meta-value meta-value--highlight" dir="ltr">' +
+      escapeHtml(startDateStr + duration) +
       '</span>' +
       '</div>' +
       '<div class="meta-row">' +
