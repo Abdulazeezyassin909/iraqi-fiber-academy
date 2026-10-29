@@ -1885,6 +1885,139 @@ body.admin-body.has-announcement-bar .admin-content {
   padding-bottom: 4rem;
 }
 
+.course-hero-banner {
+  width: 100%;
+  height: 60vh;
+  min-height: 450px;
+  background-color: #0f172a;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 3rem;
+  border-bottom: 2px solid #2d3748;
+}
+
+.course-hero-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to left, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.2) 100%);
+  z-index: 1;
+}
+
+.course-hero-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.course-floating-card {
+  background-color: #121824;
+  padding: 32px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid #2d3748;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.course-floating-title {
+  color: #fff;
+  font-size: 1.8rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.course-floating-meta {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #2d3748;
+  border-bottom: 1px solid #2d3748;
+  padding: 16px 0;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.meta-value {
+  color: #00d2ff;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.course-enroll-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background-color: #2b5c8f;
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.course-enroll-btn:hover {
+  background-color: #00d2ff;
+  color: #0f172a;
+}
+
+.course-main-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+  color: #cbd5e1;
+  line-height: 1.8;
+}
+
+.course-main-content .section-title {
+  color: #fff;
+  margin: 0 0 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .course-hero-banner {
+    height: auto;
+    min-height: auto;
+    padding: 40px 0;
+    background-attachment: scroll;
+  }
+
+  .course-hero-banner::before {
+    background: rgba(15, 23, 42, 0.7);
+  }
+
+  .course-floating-card {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+}
+
 .course-details__cover {
   width: 100%;
   max-width: 1000px;

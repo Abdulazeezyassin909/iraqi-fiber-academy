@@ -873,39 +873,59 @@
         }
       }
       if (!targetLesson && lessons.length) targetLesson = lessons[0];
-      var ctaHtml = '';
-      if (targetLesson) {
-        var ctaHref =
-          overviewUrl + '&lesson=' + encodeURIComponent(targetLesson.id);
-        ctaHtml =
-          '<p class="course-details__cta"><a class="btn btn--primary" href="' +
-          ctaHref +
-          '">ابدأ التعلم</a></p>';
+      var durationLabel = course.duration || '';
+      if (!durationLabel) {
+        var formattedDuration = formatDurationLabel(course);
+        durationLabel =
+          formattedDuration && formattedDuration !== 'كورس تدريبي' ? formattedDuration : 'TBA';
       }
-      var cover = course.imageUrl || course.thumbnailUrl || '';
-      var coverHtml = cover
-        ? '<img class="course-details__cover" src="' + escapeHtml(cover) + '" alt="' + escapeHtml(course.title || '') + '">'
-        : '';
+      var priceLabel = formatCoursePrice(course);
+      var enrollHref = 'index.html#plans';
+      if (targetLesson && (subscribed || lessonCanPlay(targetLesson, course))) {
+        enrollHref = overviewUrl + '&lesson=' + encodeURIComponent(targetLesson.id);
+      }
       pageHtml =
-        '<header class="course-details__header">' +
+        '<div class="course-hero-banner" id="courseHeroBanner">' +
+        '<div class="course-hero-container">' +
+        '<div class="course-floating-card">' +
         '<p class="course-details__back"><a href="index.html#courses" class="course-back-btn">← العودة للكورسات</a></p>' +
-        coverHtml +
-        '<h1 class="course-details__title">' +
+        '<h1 class="course-floating-title" id="courseTitle">' +
         escapeHtml(course.title || '') +
         '</h1>' +
-        '<p class="course-details__desc">' +
+        '<div class="course-floating-meta">' +
+        '<div class="meta-item">' +
+        '<span class="meta-label">السعر</span>' +
+        '<span class="meta-value" id="coursePrice">' +
+        escapeHtml(priceLabel) +
+        '</span>' +
+        '</div>' +
+        '<div class="meta-item">' +
+        '<span class="meta-label">المدة</span>' +
+        '<span class="meta-value" id="courseDuration">' +
+        escapeHtml(durationLabel) +
+        '</span>' +
+        '</div>' +
+        '</div>' +
+        '<a class="course-enroll-btn" href="' +
+        enrollHref +
+        '">اشترك الآن</a>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="course-main-content">' +
+        '<h2 class="section-title">عن الكورس</h2>' +
+        '<p id="courseDescription">' +
         escapeHtml(course.description || '') +
         '</p>' +
-        ctaHtml +
         (subscribed ? '' : '<p class="course-details__hint">يمكنك مشاهدة الحلقات المحددة كمعاينة مجانية. بقية المحتوى يتطلب الاشتراك.</p>') +
         (!isCoursePublished(course) && isCoursePreviewMode()
           ? '<p class="course-details__hint">معاينة إدارية — الكورس غير منشور للجمهور.</p>'
           : '') +
-        '</header>' +
         '<aside class="course-details__curriculum">' +
         '<h2>المنهج</h2>' +
         listHtml +
-        '</aside>';
+        '</aside>' +
+        '</div>';
     } else {
       var playerHtml = '';
       if (lessonCanPlay(active, course)) {
@@ -926,6 +946,7 @@
           '</div>';
       }
       pageHtml =
+        '<div class="container">' +
         '<header class="course-details__header">' +
         '<p class="course-details__back"><a href="' +
         overviewUrl +
@@ -936,10 +957,19 @@
         '</header>' +
         '<section class="course-details__stage">' +
         playerHtml +
-        '</section>';
+        '</section>' +
+        '</div>';
     }
 
     root.innerHTML = pageHtml;
+
+    if (!active) {
+      var banner = document.getElementById('courseHeroBanner');
+      var coverUrl = course.imageUrl || course.thumbnailUrl || '';
+      if (banner && coverUrl) {
+        banner.style.backgroundImage = "url('" + String(coverUrl).replace(/'/g, '%27') + "')";
+      }
+    }
 
     if (active && lessonCanPlay(active, course)) {
       activeLessonContext = { course: course, lesson: active };
