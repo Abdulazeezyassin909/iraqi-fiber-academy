@@ -282,6 +282,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 /* Public courses grid (homepage) */
 .public-courses-grid,
+.courses-carousel,
+#homeCoursesGrid,
 .courses-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -1870,8 +1872,10 @@ body.article-reader-open {
   .stat-card__label { font-size: 0.65rem; line-height: 1.25; }
 
   .public-courses-grid,
+  .courses-carousel,
   .courses-grid-container,
   #publicCoursesGrid,
+  #homeCoursesGrid,
   #publicInstructorsGrid,
   .instructors-container {
     display: flex;

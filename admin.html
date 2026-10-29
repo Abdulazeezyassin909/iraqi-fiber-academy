@@ -594,21 +594,21 @@
                 <input class="admin-field__input" type="text" id="courseEditorName" required />
               </label>
               <label class="admin-field admin-field--full">
-                <span class="admin-field__label">تصنيف الكورس</span>
-                <select class="admin-field__input" id="courseEditorCategory">
+                <span class="admin-field__label">الوصف</span>
+                <textarea class="admin-field__input admin-field__textarea" id="courseEditorDescription" rows="3"></textarea>
+              </label>
+              <div class="form-group admin-field admin-field--full">
+                <label>تصنيف الكورس</label>
+                <select id="courseCategoryInput" class="form-control admin-field__input">
                   <option value="اتصالات">اتصالات</option>
                   <option value="شبكات">شبكات</option>
                   <option value="مدني">مدني</option>
                   <option value="كهرباء">كهرباء</option>
                   <option value="FTTH">FTTH</option>
                   <option value="فايبر">فايبر</option>
-                  <option value="عام" selected>عام</option>
+                  <option value="عام">عام</option>
                 </select>
-              </label>
-              <label class="admin-field admin-field--full">
-                <span class="admin-field__label">الوصف</span>
-                <textarea class="admin-field__input admin-field__textarea" id="courseEditorDescription" rows="3"></textarea>
-              </label>
+              </div>
               <div class="admin-field admin-field--full">
                 <span class="admin-field__label">صورة الكورس</span>
                 <input type="file" id="course-image-input" accept="image/*" />

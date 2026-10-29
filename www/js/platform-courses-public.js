@@ -265,15 +265,27 @@
     );
   }
 
-  /** Render published courses into #publicCoursesGrid (or legacy timeline id). */
+  function courseGrids() {
+    var ids = [GRID_ID, 'homeCoursesGrid', 'publicCoursesTimeline'];
+    var seen = {};
+    var grids = [];
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el || seen[el.id]) return;
+      seen[el.id] = true;
+      grids.push(el);
+    });
+    return grids;
+  }
+
+  /** Render published courses into #publicCoursesGrid and #homeCoursesGrid. */
   function renderPublicCourses() {
-    var grid =
-      document.getElementById(GRID_ID) || document.getElementById('publicCoursesTimeline');
-    if (!grid) return;
+    var grids = courseGrids();
+    if (!grids.length) return;
 
     if (isCoursesDataLoading()) {
       lastSignature = '__loading__';
-      renderLoadingState(grid);
+      grids.forEach(renderLoadingState);
       return;
     }
 
@@ -289,17 +301,23 @@
     });
 
     var signature = courseSignature(courses);
-    if (signature === lastSignature && grid.childElementCount) return;
+    var allFilled = grids.every(function (grid) {
+      return grid.childElementCount > 0;
+    });
+    if (signature === lastSignature && allFilled) return;
     lastSignature = signature;
 
     if (!courses.length) {
-      renderEmptyState(grid);
+      grids.forEach(renderEmptyState);
       return;
     }
 
-    grid.innerHTML = courses.map(renderCourseCard).join('');
+    var html = courses.map(renderCourseCard).join('');
+    grids.forEach(function (grid) {
+      grid.innerHTML = html;
+      revealCards(grid);
+    });
     bindCategoryChips();
-    revealCards(grid);
   }
 
   function bindLiveSync() {
