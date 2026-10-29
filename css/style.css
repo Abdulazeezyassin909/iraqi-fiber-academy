@@ -1887,24 +1887,28 @@ body.admin-body.has-announcement-bar .admin-content {
 
 .course-hero-banner {
   width: 100%;
-  min-height: 480px;
-  max-height: 550px;
-  background-size: contain;
+  height: 55vh;
+  min-height: 400px;
+  max-height: 600px;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #0b0f17;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
+  border-bottom: 2px solid #2d3748;
 }
 
 .course-hero-banner img {
   width: 100%;
-  height: auto;
-  max-height: 550px;
-  object-fit: contain;
-  background-color: #0b0f17;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  image-rendering: -webkit-optimize-contrast;
+  display: block;
 }
 
 .course-hero-banner::before {
@@ -2018,8 +2022,9 @@ body.admin-body.has-announcement-bar .admin-content {
 
 @media (max-width: 768px) {
   .course-hero-banner {
-    height: auto;
-    min-height: auto;
+    height: 42vh;
+    min-height: 280px;
+    max-height: 420px;
     padding: 40px 0;
     background-attachment: scroll;
   }
