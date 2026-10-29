@@ -983,16 +983,25 @@ body.auth-modal-open {
   }
 
   .logo__text-sub {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    font-size: 0.72rem;
-    line-height: 1.25;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    -webkit-line-clamp: unset;
-    -webkit-box-orient: unset;
+    display: none;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .header-btn-back {
+    min-height: 44px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
   }
 
   .header__actions {
@@ -1000,14 +1009,15 @@ body.auth-modal-open {
   }
 
   .auth-login-btn {
+    min-height: 44px;
     padding: 0.45rem 0.7rem;
     font-size: 0.78rem;
   }
 
   .settings-menu__btn,
   .nav__toggle {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     flex-shrink: 0;
   }
 

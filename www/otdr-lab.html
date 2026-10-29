@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>مختبر OTDR (OTDR Lab) | Engineer Path °360</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=20260921">
+  <link rel="stylesheet" href="css/simulator.css?v=20260921">
+  <link rel="stylesheet" href="css/ftth-lab.css?v=20260921">
+  <link rel="stylesheet" href="css/fusion-splicer-machine.css?v=20260921">
+  <link rel="stylesheet" href="css/otdr-device.css?v=20260921">
+  <link rel="stylesheet" href="css/header.css?v=20260921">
+  <script src="js/env-access.js?v=20260921"></script>
+</head>
+<body class="lab-page otdr-lab-page splicer-lab-page" dir="ltr">
+
+  <div id="lab-startup-view" class="startup-view" role="main" aria-label="Welcome" dir="ltr">
+    <header class="startup-view__hero">
+      <div class="startup-view__brand">
+        <img class="startup-view__logo" src="images/logo.png" alt="Engineer Path °360 Logo" width="42" height="42" />
+        <div>
+          <h1 class="startup-view__title">مختبر OTDR (OTDR Lab)</h1>
+          <p class="startup-view__subtitle">ENGINEER PATH °360 — Engineering Career Path Platform — Open a recent project or start from a template</p>
+        </div>
+      </div>
+      <div class="startup-view__hero-actions">
+        <button type="button" id="lab-startup-back" class="startup-view__home-link" hidden>Back to workspace</button>
+        <a href="index.html" class="startup-view__home-link">← Back to Home</a>
+      </div>
+    </header>
+    <div class="startup-view__panels" dir="ltr">
+      <section class="startup-view__panel startup-view__panel--recent" aria-labelledby="lab-startup-recent-heading">
+        <h2 id="lab-startup-recent-heading" class="startup-view__panel-title">Recent Projects</h2>
+        <ul id="lab-startup-recent-list" class="startup-view__recent-list" role="list"></ul>
+      </section>
+      <section class="startup-view__panel startup-view__panel--templates" aria-labelledby="lab-startup-templates-heading">
+        <h2 id="lab-startup-templates-heading" class="startup-view__panel-title">Project Templates</h2>
+        <div id="lab-startup-templates-grid" class="startup-view__templates-grid"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Standalone sellable module — tools plug in one-by-one -->
+  <div class="lab-app lab-app--2d" id="lab-app" hidden aria-hidden="true" dir="ltr">
+    <header class="lab-header">
+      <a class="lab-brand" href="index.html" title="Engineer Path °360">
+        <img src="images/logo.png" alt="Engineer Path °360 Logo" width="40" height="40" />
+        <div class="lab-brand__meta">
+          <h1>مختبر OTDR (OTDR Lab)</h1>
+          <p>Fusion splicing · Fiber alignment · Arc weld · Cleaver workflow</p>
+        </div>
+      </a>
+      <div class="lab-header__actions">
+        <div class="lab-toggle-group lab-history-group" role="group" aria-label="History">
+          <button type="button" class="lab-toggle-btn lab-icon-btn" id="lab-btn-undo" data-lab-undo title="Undo (Ctrl+Z)" aria-label="Undo" disabled>↩️</button>
+          <button type="button" class="lab-toggle-btn lab-icon-btn" id="lab-btn-redo" data-lab-redo title="Redo (Ctrl+Y)" aria-label="Redo" disabled>↪️</button>
+          <button type="button" class="lab-toggle-btn lab-icon-btn" id="ftth-flip-btn" data-lab-flip title="Flip selected pigtail 180°" aria-label="Flip selected pigtail horizontally">🔁</button>
+          <button type="button" class="lab-toggle-btn lab-icon-btn lab-icon-btn--delete" id="lab-btn-delete" data-lab-delete title="Delete selected (Del)" aria-label="Delete selected">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9zm-1 12h12a1 1 0 0 0 1-1V8H5v12a1 1 0 0 0 1 1z"/>
+            </svg>
+          </button>
+        </div>
+        <button type="button" id="otdr-admin-settings-btn" class="anatomy-top-btn admin-only-btn" style="display: none;" hidden>
+          <i class="icon-settings" aria-hidden="true"></i> الإعدادات
+        </button>
+        <a class="lab-home-link" href="index.html">← Back to Home</a>
+        <nav class="sim-switcher" data-sim-switcher data-sim-switcher-class="lab-home-link" aria-label="Other simulators"></nav>
+        <div class="auth-slot auth-slot--sim shrink-0" data-auth-slot data-auth-variant="simulator">
+          <button type="button" class="auth-login-btn auth-login-btn--sim" data-auth-login>تسجيل الدخول</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="lab-menubar-row">
+      <nav id="lab-app-menu-bar" class="app-menu-bar" aria-label="Application menu">
+        <ul class="app-menu-bar__list">
+          <li class="app-menu-bar__item" data-menu="file">
+            <button type="button" class="app-menu-bar__trigger" aria-haspopup="true" aria-expanded="false">File</button>
+            <ul class="app-menu-bar__dropdown" role="menu" aria-label="File menu">
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="new">New <span class="app-menu-bar__shortcut">Ctrl+N</span></button></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="open">Open… <span class="app-menu-bar__shortcut">Ctrl+O</span></button></li>
+              <li class="app-menu-bar__separator" role="separator"></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="save">Save <span class="app-menu-bar__shortcut">Ctrl+S</span></button></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="save-as">Save As… <span class="app-menu-bar__shortcut">Ctrl+Shift+S</span></button></li>
+              <li class="app-menu-bar__separator" role="separator"></li>
+              <li class="app-menu-bar__subhead">Recent Projects</li>
+              <ul id="lab-file-menu-recent-list" class="app-menu-bar__recent-list"></ul>
+              <li class="app-menu-bar__separator" role="separator"></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="close">Close</button></li>
+            </ul>
+          </li>
+          <li class="app-menu-bar__item app-menu-bar__item--disabled" data-menu="edit">
+            <button type="button" class="app-menu-bar__trigger" disabled>Edit</button>
+          </li>
+          <li class="app-menu-bar__item app-menu-bar__item--disabled" data-menu="view">
+            <button type="button" class="app-menu-bar__trigger" disabled>View</button>
+          </li>
+        </ul>
+      </nav>
+      <div class="lab-menubar-row__meta">
+        <span id="lab-save-status" class="save-status app-menu-bar__save-status">—</span>
+        <span id="lab-menu-project-name" class="app-menu-bar__project" title="Current project">Untitled Project</span>
+      </div>
+    </div>
+
+    <main class="lab-main" dir="ltr">
+      <aside class="lab-rail" aria-label="Toolbox">
+        <p class="lab-rail__title">Toolbox</p>
+        <div class="lab-rail__panel">
+          <section class="lab-rail__group" aria-labelledby="lab-cat-active">
+            <h3 class="lab-rail__cat" id="lab-cat-active">Active Equipment</h3>
+            <div id="lab-hw-tree" class="lab-hw-tree" aria-label="OLT tools">
+              <!-- Filled by ftth-lab-olt-fx16.js -->
+            </div>
+          </section>
+
+          <section class="lab-rail__group" aria-labelledby="lab-cat-splitters">
+            <h3 class="lab-rail__cat" id="lab-cat-splitters">Splitters</h3>
+            <div id="lab-splitter-tree" class="lab-hw-tree" aria-label="Splitter tool">
+              <!-- Single Splitter tool · ftth-lab-splitter.js -->
+            </div>
+          </section>
+
+          <section class="lab-rail__group" aria-labelledby="lab-cat-jumpers">
+            <h3 class="lab-rail__cat" id="lab-cat-jumpers">Fiber Jumpers</h3>
+            <div id="lab-patchcord-tree" class="lab-hw-tree" aria-label="Patch cord tool">
+              <!-- Patch Cord tool · ftth-lab-patch-cord.js -->
+            </div>
+            <div id="lab-pigtail-tree" class="lab-hw-tree" aria-label="SC Pigtail tool">
+              <!-- SC Pigtail · ftth-lab-pigtail.js -->
+            </div>
+            <div id="lab-cable-tree" class="lab-hw-tree" aria-label="Bare fiber cable tool">
+              <!-- Cable · ftth-lab-cable.js -->
+            </div>
+            <div id="lab-spool-tree" class="lab-hw-tree" aria-label="Fiber spool pin tools">
+              <!-- Fiber spools · ftth-lab-canvas.js -->
+            </div>
+            <div id="lab-bendjig-tree" class="lab-hw-tree" aria-label="Macro-Bend Tester">
+              <!-- Macro-Bend Tester · ftth-lab-bend-jig.js -->
+            </div>
+          </section>
+
+          <section class="lab-rail__group" aria-labelledby="lab-cat-fusion">
+            <h3 class="lab-rail__cat" id="lab-cat-fusion">Fusion Splicing</h3>
+            <div id="lab-sleeve-tree" class="lab-hw-tree" aria-label="Splice protection sleeve">
+              <!-- Sleeve 60mm · fusion-splicer-sleeve.js -->
+            </div>
+            <div id="lab-stripper-tree" class="lab-hw-tree" aria-label="CFS-3 fiber stripper">
+              <!-- CFS-3 Stripper · fusion-splicer-stripper.js -->
+            </div>
+            <div id="lab-cleaning-wipe-tree" class="lab-hw-tree" aria-label="Cleaning wipes">
+              <!-- Cleaning Wipes · fusion-splicer-cleaning-wipe.js -->
+            </div>
+            <div id="lab-cleaver-tree" class="lab-hw-tree" aria-label="Fiber cleaver">
+              <!-- Fiber Cleaver placeholder · fusion-splicer-cleaver.js -->
+            </div>
+            <div id="lab-machine-tree" class="lab-hw-tree" aria-label="Fusion splicer machine">
+              <!-- Machine UI · fusion-splicer-machine.js -->
+            </div>
+          </section>
+
+          <section class="lab-rail__group" aria-labelledby="lab-cat-otdr-test">
+            <h3 class="lab-rail__cat" id="lab-cat-otdr-test">TESTING EQUIPMENT</h3>
+            <div id="lab-otdr-tree" class="lab-hw-tree" aria-label="VIAVI SmartOTDR">
+              <!-- SmartOTDR · otdr-device.js -->
+            </div>
+          </section>
+
+          <section class="lab-rail__group" aria-labelledby="lab-cat-adapters">
+            <h3 class="lab-rail__cat" id="lab-cat-adapters">Adapters</h3>
+            <div id="lab-coupler-tree" class="lab-hw-tree" aria-label="SC Coupler tool">
+              <!-- Single SC Coupler · ftth-lab-coupler.js -->
+            </div>
+          </section>
+
+          <section class="lab-rail__group" aria-labelledby="lab-cat-test">
+            <h3 class="lab-rail__cat" id="lab-cat-test">TEST EQUIPMENT</h3>
+            <div id="lab-opm-tree" class="lab-hw-tree" aria-label="Optical Power Meter">
+              <!-- OPM · ftth-lab-opm.js -->
+            </div>
+            <div id="lab-ols-tree" class="lab-hw-tree" aria-label="Optical Laser Source">
+              <!-- OLS-35 · ftth-lab-ols.js -->
+            </div>
+            <div id="lab-vfl-tree" class="lab-hw-tree" aria-label="Visual Fault Locator">
+              <!-- VFL · ftth-lab-vfl.js -->
+            </div>
+          </section>
+        </div>
+        <div class="otdr-toolbox-title splicer-toolbox-title">OTDR Lab</div>
+      </aside>
+
+      <section class="lab-stage-wrap" aria-label="Lab stage">
+        <div id="lab-canvas-2d" class="lab-2d-stage">
+          <div class="lab-2d-world" id="lab-2d-world">
+            <div class="lab-2d-grid" aria-hidden="true"></div>
+            <div class="lab-2d-origin" title="Layout origin" aria-hidden="true"></div>
+            <div id="lab-2d-mount" class="lab-2d-mount" data-lab-mount="2d"></div>
+          </div>
+        </div>
+
+        <div id="lab-canvas-3d" hidden data-lab-mount="3d"></div>
+
+        <div class="lab-stage-hud">
+          <span class="lab-hud-chip" id="lab-hud-mode">2D Layout · Empty Workspace</span>
+          <span class="lab-hud-chip" id="lab-hud-zoom">Zoom 100%</span>
+          <span class="lab-hud-chip" id="lab-hud-budget">Power budget · no active fiber path</span>
+        </div>
+      </section>
+
+      <aside class="lab-inspector" aria-label="Properties">
+        <p class="lab-inspector__label">Properties</p>
+        <div class="lab-inspector__card" id="lab-inspector-card">
+          <h2>No selection</h2>
+          <p>Select equipment on the canvas, or drag an item from the toolbox.</p>
+        </div>
+        <div id="lab-inspector-detail" class="lab-inspector__detail" hidden></div>
+      </aside>
+    </main>
+
+    <footer class="lab-footer">
+      <span id="lab-status">Loading lab shell…</span>
+      <span>ENGINEER PATH °360 · OTDR Lab</span>
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/settings/FtthLabSettings.js?v=20260921"></script>
+  <script src="js/settings/OtdrSettings.js?v=20260921"></script>
+  <script src="js/ftth-lab.js?v=20260921"></script>
+  <script src="js/ftth-lab-olt-fx16.js?v=20260921"></script>
+  <script src="js/ftth-lab-splitter.js?v=20260921"></script>
+  <script src="js/ftth-lab-patch-cord.js?v=20260921"></script>
+  <script src="js/ftth-lab-canvas.js?v=20260921"></script>
+  <script src="js/ftth-lab-bend-jig.js?v=20260921"></script>
+  <script src="js/ftth-lab-pigtail.js?v=20260921"></script>
+  <script src="js/ftth-lab-cable.js?v=20260921"></script>
+  <script src="js/fusion-splicer-sleeve.js?v=20260921"></script>
+  <script src="js/fusion-splicer-stripper.js?v=20260921"></script>
+  <script src="js/fusion-splicer-cleaning-wipe.js?v=20260921"></script>
+  <script src="js/FiberCleaver.js?v=20260921"></script>
+  <script src="js/fusion-splicer-cleaver.js?v=20260921"></script>
+  <script src="js/FusionSplicerMachineUI.js?v=20260921"></script>
+  <script src="js/fusion-splicer-machine.js?v=20260921"></script>
+  <script src="js/ftth-lab-coupler.js?v=20260921"></script>
+  <script src="js/ftth-lab-vfl.js?v=20260921"></script>
+  <script src="js/ftth-lab-opm.js?v=20260921"></script>
+  <script src="js/ftth-lab-ols.js?v=20260921"></script>
+  <script src="js/otdr-device.js?v=20260921"></script>
+  <script src="js/ftth-lab-settings-cms.js?v=20260921"></script>
+  <script src="js/ftth-lab-project-manager.js?v=20260921"></script>
+  <script src="js/platform-simulators.js?v=20260921"></script>
+  <script type="module" src="js/platform-otdr-config-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20260921"></script>
+</body>
+</html>

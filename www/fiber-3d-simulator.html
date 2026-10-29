@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Fiber Optics 3D Interactive Anatomy | Engineer Path °360</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="css/simulator.css?v=20260921">
+  <link rel="stylesheet" href="css/fiber-3d-simulator.css?v=20260921">
+  <link rel="stylesheet" href="css/header.css?v=20260921">
+  <script src="js/env-access.js?v=20260921"></script>
+</head>
+<body class="f3d-page">
+
+  <!-- Open access: no subscriber gate — workspace loads for all visitors -->
+  <div class="f3d-app f3d-app--3d" id="f3d-app">
+    <header class="f3d-header">
+      <a class="f3d-brand" href="index.html" title="Engineer Path °360">
+        <img src="images/logo.png" alt="Engineer Path °360 Logo" width="40" height="40" />
+        <div class="f3d-brand__meta">
+          <h1>Fiber Optics 3D / 2D Interactive Anatomy</h1>
+          <p>Last Mile · FTTH Feeder · Jacket → Tubes → Strands</p>
+        </div>
+      </a>
+      <div class="f3d-header__actions">
+        <div class="f3d-toggle-group" role="group" aria-label="View mode">
+          <button type="button" class="f3d-toggle-btn is-active" data-f3d-view="3d">3D View</button>
+          <button type="button" class="f3d-toggle-btn" data-f3d-view="2d">2D Layout</button>
+        </div>
+        <button type="button" class="f3d-toggle-btn is-active" id="f3d-auto-rotate" aria-pressed="true">Auto-Rotate: On</button>
+        <button type="button" id="anatomy-admin-settings-btn" class="anatomy-top-btn admin-only-btn" style="display: none;" hidden>
+          <i class="icon-settings" aria-hidden="true"></i> الإعدادات
+        </button>
+        <a class="f3d-home-link" href="index.html">← Back to Home</a>
+        <nav class="sim-switcher" data-sim-switcher data-sim-switcher-class="f3d-home-link" aria-label="Other simulators"></nav>
+        <div class="auth-slot auth-slot--sim shrink-0" data-auth-slot data-auth-variant="simulator">
+          <button type="button" class="auth-login-btn auth-login-btn--sim" data-auth-login>تسجيل الدخول</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="f3d-main">
+      <aside class="f3d-rail" id="f3d-rail" aria-label="Cable capacity and components"></aside>
+
+      <section class="f3d-stage-wrap" aria-label="Dissection stage">
+        <div id="f3d-canvas-host"></div>
+        <div id="f3d-2d-host" class="f3d-2d-host" hidden></div>
+        <div id="f3d-media-host" class="f3d-media-host" hidden></div>
+        <div class="f3d-stage-hud">
+          <button type="button" class="f3d-layer-btn btn-anatomy-action" id="btn-reset-jacket">Reset Jacket</button>
+          <button type="button" class="f3d-layer-btn btn-anatomy-action" id="btn-reset-tube">Reset Tube</button>
+          <div id="f3d-variant-pills" class="f3d-variant-pills" hidden></div>
+          <span class="f3d-hint">2D/3D: jacket → tubes → strands (6F / 12F)</span>
+        </div>
+      </section>
+
+      <aside class="f3d-inspector" aria-label="Layer inspector">
+        <p class="f3d-inspector__label">Anatomy Guide</p>
+        <div class="f3d-inspector__card" id="f3d-inspector-card">
+          <h2>Fiber Cable Anatomy</h2>
+          <p>Select a capacity, then click to peel layers hierarchically.</p>
+        </div>
+        <div class="f3d-loose-tubes" id="f3d-loose-tubes">
+          <p class="f3d-inspector__label" id="f3d-loose-tubes-label">Loose Tubes</p>
+          <div class="f3d-layer-stack" id="f3d-layer-stack"></div>
+        </div>
+        <p class="f3d-inspector__label" id="f3d-fiber-caption" style="margin-top:0.9rem" hidden>Strands</p>
+        <div class="f3d-fiber-grid" id="f3d-fiber-grid" hidden></div>
+      </aside>
+    </main>
+
+    <footer class="f3d-footer">
+      <span id="f3d-status">Loading anatomy…</span>
+      <span>ENGINEER PATH °360 · 3D / 2D Interactive Simulator</span>
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="js/fiber-anatomy-store.js?v=20260921"></script>
+  <script src="js/fiber-anatomy-cms.js?v=20260921"></script>
+  <script src="js/fiber-3d-simulator.js?v=20260921"></script>
+  <script src="js/platform-simulators.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20260921"></script>
+</body>
+</html>

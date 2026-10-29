@@ -1,0 +1,224 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // User profiles — own doc read/write; admins manage all.
+    // Users cannot escalate their own role (only admins may change role).
+    match /trialConsumptions/{hashId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && !exists(/databases/$(database)/documents/trialConsumptions/$(hashId))
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.uid is string
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'user'
+        && request.resource.data.get('isInstructor', false) == false;
+      allow update: if isAdmin()
+        || (isOwner(userId)
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.get('isInstructor', false) == resource.data.get('isInstructor', false));
+      allow delete: if isAdmin();
+
+      match /fcmTokens/{tokenId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId)
+          && request.resource.data.token is string
+          && request.resource.data.token.size() > 20
+          && request.resource.data.role in ['user', 'admin']
+          && request.resource.data.role == (
+            userDoc().data.role == 'admin' ? 'admin' : 'user'
+          );
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Public pricing plans — world-readable; admin-only writes.
+    match /pricing/{planId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public courses catalog — world-readable; admin-only writes.
+    match /courses/{courseId} {
+      allow read: if true;
+      allow create: if isAdmin()
+        || (isSignedIn() && request.resource.data.instructorId == request.auth.uid);
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.instructorId == request.auth.uid);
+    }
+
+    // Checkout payment details — authenticated read; admin write only.
+    match /settings/checkout_config {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Simulator CMS bundle — public read; admin write.
+    match /settings/simulators {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // CMS singleton settings (stats, footer, hero, platform, etc.)
+    match /settings/{document} {
+      allow read: if document != 'checkout_config';
+      allow create, update, delete: if isAdmin();
+    }
+
+    // CMS list content — public read; admin-only writes.
+    match /faqs/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /articles/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /testimonials/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /instructors/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        || (isSignedIn() && request.auth.uid == id && request.resource.data.status == 'pending');
+      allow delete: if isAdmin();
+    }
+
+    function validReceiptBase64(value) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= 204800
+        && value.matches('^data:image/(jpeg|jpg|png|webp);base64,.+');
+    }
+
+    function validOrderStatus(status) {
+      return status in ['pending', 'approved', 'rejected'];
+    }
+
+    // Manual checkout orders — students create/read own; admins manage all.
+    match /orders/{orderId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid)
+        || (isSignedIn() && resource.data.instructorId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.paymentMethod in ['zaincash', 'mastercard']
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && validReceiptBase64(request.resource.data.receiptBase64)
+        && (request.resource.data.createdAt is timestamp
+          || request.resource.data.createdAt == request.time);
+      allow update: if isAdmin()
+        && validOrderStatus(request.resource.data.status)
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAdmin();
+    }
+
+    function validTriggerEmailPayload() {
+      return request.resource.data.to is list
+        && request.resource.data.to.size() > 0
+        && request.resource.data.message is map
+        && request.resource.data.message.subject is string
+        && request.resource.data.message.html is string;
+    }
+
+    function validMailDeliveryPatch() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['deliveryChannel', 'deliveryStatus', 'deliveredAt', 'deliveryError']);
+    }
+
+    function validNewOrderNotification() {
+      return request.resource.data.type == 'new_order'
+        && request.resource.data.targetAudience == 'admin'
+        && request.resource.data.active == true
+        && request.resource.data.read == false
+        && request.resource.data.orderId is string
+        && request.resource.data.orderId.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.userId == request.auth.uid
+        && (request.resource.data.body is string || request.resource.data.message is string)
+        && (request.resource.data.createdAt is timestamp
+          || request.resource.data.createdAt == request.time);
+    }
+
+    // Platform announcements (course publish, etc.) — signed-in read; admin write.
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn()
+        && resource.data.active == true
+        && (resource.data.targetAudience != 'admin' || isAdmin());
+      allow create: if isAdmin()
+        || (isSignedIn() && validNewOrderNotification());
+      allow update, delete: if isAdmin();
+    }
+
+    // Outbound email queue (Firebase Trigger Email Extension format).
+    match /mail_notifications/{notificationId} {
+      allow read: if isAdmin();
+      allow create: if validTriggerEmailPayload()
+        && (
+          isAdmin()
+          || (
+            isSignedIn()
+            && request.resource.data.userId == request.auth.uid
+            && request.resource.data.type == 'order_pending'
+          )
+        )
+        && (request.resource.data.createdAt is timestamp
+          || request.resource.data.createdAt == request.time);
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && resource.data.userId == request.auth.uid
+          && validMailDeliveryPatch()
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /instructor_applications/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.status == 'pending';
+      allow update: if isAdmin()
+        || (request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.uid == userId
+          && request.resource.data.status == 'pending');
+      allow delete: if isAdmin();
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="ENGINEER PATH °360 Admin — لوحة إدارة منصة المسار المهني الهندسي">
+  <title>لوحة الإدارة | ENGINEER PATH °360 Admin</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=20260921">
+  <link rel="stylesheet" href="css/admin.css?v=20260921">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria&family=Almarai&family=Cairo&family=Inter&family=Montserrat&family=Noto+Kufi+Arabic&family=Poppins&family=Roboto&family=Tajawal&display=swap" rel="stylesheet">
+</head>
+<body class="admin-body">
+
+  <div class="admin-overlay" id="adminOverlay" aria-hidden="true"></div>
+
+  <aside class="admin-sidebar" id="adminSidebar" aria-label="قائمة لوحة الإدارة">
+    <a href="index.html" class="admin-sidebar__brand">
+      <img class="admin-sidebar__brand-img" src="images/logo.png" alt="Engineer Path °360" width="40" height="40" />
+      <div class="admin-sidebar__brand-text">
+        <span class="admin-sidebar__brand-name">ENGINEER PATH °360 Admin</span>
+        <span class="admin-sidebar__brand-role">منصة المسار المهني الهندسي</span>
+      </div>
+    </a>
+
+    <nav class="admin-sidebar__nav">
+      <div class="admin-nav__group">
+        <p class="admin-nav__group-title">الرئيسية</p>
+        <a href="#overview" class="admin-nav__link active" data-section="overview">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          نظرة عامة
+        </a>
+        <a href="#site-stats" class="admin-nav__link" data-section="site-stats">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          إدارة الإحصائيات
+        </a>
+      </div>
+
+      <div class="admin-nav__group">
+        <p class="admin-nav__group-title">المبيعات والاشتراكات</p>
+        <a href="#orders" class="admin-nav__link" data-section="orders">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          طلبات الشراء
+          <span class="admin-nav__badge" id="adminOrdersPendingBadge" hidden aria-label="طلبات قيد المراجعة"></span>
+        </a>
+        <a href="#plans" class="admin-nav__link" data-section="plans">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          الباقات والأسعار
+        </a>
+        <a href="#settings-checkout" class="admin-nav__link" data-section="settings-checkout">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/>
+          </svg>
+          إعدادات الدفع والإشعارات
+        </a>
+      </div>
+
+      <div class="admin-nav__group">
+        <p class="admin-nav__group-title">المحتوى التعليمي</p>
+        <a href="#courses" class="admin-nav__link" data-section="courses">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          الكورسات
+        </a>
+        <a href="#instructors" class="admin-nav__link" data-section="instructors">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+          </svg>
+          إدارة المدربين
+        </a>
+        <a href="#site-simulator-showcase" class="admin-nav__link" data-section="site-simulator-showcase">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          إدارة المحاكيات
+        </a>
+        <div class="admin-nav__sub" data-site-subnav>
+          <p class="admin-nav__sub-label">محتوى الموقع</p>
+          <a href="#site-hero-slideshow" class="admin-nav__sublink" data-section="site-hero-slideshow">الصفحة الرئيسية</a>
+          <a href="#site-articles" class="admin-nav__sublink" data-section="site-articles">المقالات التقنية</a>
+          <a href="#site-faq" class="admin-nav__sublink" data-section="site-faq">الأسئلة الشائعة</a>
+          <a href="#site-testimonials" class="admin-nav__sublink" data-section="site-testimonials">آراء المستخدمين</a>
+          <a href="#" class="admin-nav__sublink admin-sidebar-sublink" data-section="admin-instructors-section">مدربونا</a>
+          <a href="#site-preview" class="admin-nav__sublink" data-section="site-preview">معاينة الموقع</a>
+          <a href="#site-footer" class="admin-nav__sublink" data-section="site-footer">إعدادات التذييل</a>
+        </div>
+      </div>
+
+      <div class="admin-nav__group">
+        <p class="admin-nav__group-title">النظام والشبكة</p>
+        <a href="#users" class="admin-nav__link" data-section="users">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          إدارة المستخدمين
+        </a>
+        <a href="#settings" class="admin-nav__link" data-section="settings">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          الإعدادات
+        </a>
+      </div>
+    </nav>
+
+    <div class="admin-sidebar__footer">
+      <a href="index.html" class="admin-sidebar__back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        العودة للموقع
+      </a>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <button class="admin-menu-toggle" id="adminMenuToggle" aria-label="فتح القائمة" type="button">☰</button>
+        <div>
+          <h1 class="admin-topbar__title">لوحة الإدارة</h1>
+          <p class="admin-topbar__subtitle">ENGINEER PATH °360 Admin — منصة المسار المهني الهندسي</p>
+        </div>
+      </div>
+      <div class="admin-topbar__actions">
+        <div class="admin-user-chip">
+          <div class="admin-user-chip__avatar" aria-hidden="true">…</div>
+          <div class="admin-user-chip__meta">
+            <div class="admin-user-chip__name">…</div>
+            <div class="admin-user-chip__role">…</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <section class="admin-view" id="overview" data-admin-view="overview" aria-label="نظرة عامة">
+      <section class="admin-stats" aria-label="إحصائيات المنصة">
+        <article class="admin-stat">
+          <div class="admin-stat__header">
+            <div class="admin-stat__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <span class="admin-stat__trend" id="statUsersTrend">—</span>
+          </div>
+          <div class="admin-stat__value" id="statTotalUsers">0</div>
+          <div class="admin-stat__label">إجمالي المستخدمين</div>
+        </article>
+
+        <article class="admin-stat">
+          <div class="admin-stat__header">
+            <div class="admin-stat__icon admin-stat__icon--green" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <span class="admin-stat__trend" id="statActiveUsersTrend">—</span>
+          </div>
+          <div class="admin-stat__value" id="statActiveUsers">0</div>
+          <div class="admin-stat__label">طلاب نشطون</div>
+        </article>
+
+        <article class="admin-stat">
+          <div class="admin-stat__header">
+            <div class="admin-stat__icon admin-stat__icon--blue" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+            </div>
+            <span class="admin-stat__trend" id="statCoursesTrend">0 مسودة</span>
+          </div>
+          <div class="admin-stat__value" id="statPublishedCourses">0</div>
+          <div class="admin-stat__label">كورسات منشورة</div>
+        </article>
+
+        <article class="admin-stat">
+          <div class="admin-stat__header">
+            <div class="admin-stat__icon admin-stat__icon--amber" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/>
+              </svg>
+            </div>
+            <span class="admin-stat__trend" id="statTotalCoursesTrend">الإجمالي</span>
+          </div>
+          <div class="admin-stat__value" id="statTotalCourses">0</div>
+          <div class="admin-stat__label">إجمالي الكورسات</div>
+        </article>
+      </section>
+
+      <section class="admin-panel" style="margin-top: 1.5rem;" aria-labelledby="overviewCoursesHeading">
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="overviewCoursesHeading">ملخص الكورسات</h2>
+            <p class="admin-panel__desc">يتحدّث تلقائياً عند إنشاء أو نشر الكورسات من قسم الكورسات</p>
+          </div>
+          <button class="admin-btn admin-btn--ghost" type="button" data-goto-section="courses">إدارة الكورسات</button>
+        </div>
+        <div class="admin-overview-courses" id="overviewCoursesSummary">
+          <p class="admin-empty-cell">لا توجد كورسات بعد.</p>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-panel admin-panel--users admin-view" id="users" data-admin-view="users" aria-labelledby="usersHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="usersHeading">إدارة المستخدمين</h2>
+            <p class="admin-panel__desc" id="usersDesc">عرض وإدارة حسابات الطلاب</p>
+          </div>
+          <div class="admin-panel__tools">
+            <label class="admin-search" id="userSearchWrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input class="admin-search__input" type="search" id="userSearch" placeholder="بحث بالاسم أو البريد..." aria-label="بحث عن مستخدم" />
+            </label>
+            <label class="admin-filter" id="usersFilterWrap">
+              <span class="admin-filter__label">تصفية</span>
+              <select class="admin-filter__select" id="usersStatusFilter" aria-label="تصفية المستخدمين">
+                <option value="all">الكل</option>
+                <option value="active">نشط</option>
+                <option value="expired">منتهي الاشتراك</option>
+                <option value="suspended">موقوف</option>
+              </select>
+            </label>
+            <button class="admin-btn admin-btn--primary" type="button" id="addUserBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              إضافة مستخدم
+            </button>
+
+            <div class="admin-tools-menu" id="usersToolsMenu">
+              <button
+                class="admin-btn admin-btn--ghost admin-btn--icon"
+                type="button"
+                id="usersMenuBtn"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="قائمة الإجراءات"
+                title="قائمة الإجراءات"
+              >☰</button>
+              <button
+                class="admin-btn admin-btn--ghost admin-btn--sm"
+                type="button"
+                id="usersCancelMode"
+                hidden
+                title="إلغاء وضع التحديد"
+              >إلغاء</button>
+              <div class="admin-tools-menu__dropdown" id="usersMenuDropdown" role="menu" hidden>
+                <button type="button" role="menuitem" data-users-menu="select-delete">تحديد عناصر للحذف</button>
+                <div class="admin-tools-menu__divider" role="separator" data-users-menu-main></div>
+                <button type="button" role="menuitem" data-users-menu="view-archive">سجل الأرشيف</button>
+                <button type="button" role="menuitem" data-users-menu="exit-archive" hidden>العودة للمستخدمين</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-table-wrap admin-table-wrap--users">
+          <table class="admin-table" id="usersTable">
+            <thead>
+              <tr>
+                <th scope="col" class="admin-th-check">
+                  <input type="checkbox" id="usersSelectAll" aria-label="تحديد الكل" />
+                </th>
+                <th scope="col">المستخدم</th>
+                <th scope="col">الدور</th>
+                <th scope="col">الحالة</th>
+                <th scope="col">الاشتراك</th>
+                <th scope="col">تاريخ التسجيل</th>
+                <th scope="col">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="7" class="admin-empty-cell">جاري التحميل...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-panel__footer">
+          <p class="admin-panel__meta" id="usersMeta">0 مستخدم</p>
+        </div>
+      </section>
+
+      <div class="admin-modal" id="userEditorModal" hidden>
+        <div class="admin-modal__backdrop" data-close-user-modal></div>
+        <div class="admin-modal__dialog admin-modal__dialog--compact" role="dialog" aria-modal="true" aria-labelledby="userEditorTitle">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="userEditorTitle">إضافة مستخدم</h3>
+            <button class="admin-modal__close" type="button" data-close-user-modal aria-label="إغلاق">×</button>
+          </div>
+          <form class="admin-modal__body admin-modal__body--compact" id="userEditorForm">
+            <input type="hidden" id="userEditorId" value="" />
+            <label class="admin-field">
+              <span class="admin-field__label">الاسم الكامل</span>
+              <input class="admin-field__input" type="text" id="userEditorName" required autocomplete="name" />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">البريد الإلكتروني</span>
+              <input class="admin-field__input" type="email" id="userEditorEmail" required autocomplete="email" />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">الحالة</span>
+              <select class="admin-field__input" id="userEditorStatus">
+                <option value="active">نشط</option>
+                <option value="pending">قيد المراجعة</option>
+                <option value="suspended">موقوف</option>
+                <option value="expired">منتهي</option>
+              </select>
+            </label>
+            <div class="admin-modal__actions">
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-user-modal>إلغاء</button>
+              <button class="admin-btn admin-btn--primary" type="submit" id="userEditorSubmit">حفظ</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <section class="admin-panel admin-panel--requests admin-view" id="instructors" data-admin-view="instructors" aria-labelledby="instructorsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="instructorsHeading">إدارة المدربين</h2>
+            <p class="admin-panel__desc" id="instructorsDesc">مراجعة طلبات الانضمام وإدارة حسابات المدربين المعتمدين</p>
+          </div>
+          <div class="admin-panel__tools">
+            <label class="admin-filter" id="instructorFilterWrap">
+              <span class="admin-filter__label">تصفية</span>
+              <select class="admin-filter__select" id="instructorRequestsFilter" aria-label="تصفية">
+                <option value="all">الكل</option>
+                <option value="pending">قيد المراجعة</option>
+                <option value="on_hold">معلّق</option>
+                <option value="rejected">مرفوض</option>
+              </select>
+            </label>
+            <button class="admin-btn admin-btn--ghost" type="button" id="refreshInstructorRequests">تحديث</button>
+
+            <div class="admin-tools-menu" id="instructorToolsMenu">
+              <button
+                class="admin-btn admin-btn--ghost admin-btn--icon"
+                type="button"
+                id="instructorMenuBtn"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="قائمة الإجراءات"
+                title="قائمة الإجراءات"
+              >☰</button>
+              <button
+                class="admin-btn admin-btn--ghost admin-btn--sm"
+                type="button"
+                id="instructorCancelMode"
+                hidden
+                title="إلغاء وضع التحديد"
+              >إلغاء</button>
+              <div class="admin-tools-menu__dropdown" id="instructorMenuDropdown" role="menu" hidden>
+                <button type="button" role="menuitem" data-menu-action="select-delete">تحديد عناصر للحذف</button>
+                <div class="admin-tools-menu__divider" role="separator" data-menu-main></div>
+                <button type="button" role="menuitem" data-menu-action="view-archive">سجل الأرشيف</button>
+                <button type="button" role="menuitem" data-menu-action="exit-archive" hidden>العودة لإدارة المدربين</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-tabs" id="instructorTabs" role="tablist" aria-label="أقسام إدارة المدربين">
+          <button
+            class="admin-tabs__btn is-active"
+            type="button"
+            role="tab"
+            id="tabRequests"
+            aria-selected="true"
+            data-instructor-tab="requests"
+          >طلبات الانضمام</button>
+          <button
+            class="admin-tabs__btn"
+            type="button"
+            role="tab"
+            id="tabRoster"
+            aria-selected="false"
+            data-instructor-tab="roster"
+          >قائمة المدربين</button>
+        </div>
+
+        <div class="admin-table-wrap admin-table-wrap--requests">
+          <table class="admin-table" id="instructorRequestsTable">
+            <thead id="instructorTableHead">
+              <tr>
+                <th scope="col" class="admin-th-check">
+                  <input type="checkbox" id="instructorSelectAll" aria-label="تحديد الكل" />
+                </th>
+                <th scope="col">المتقدم</th>
+                <th scope="col">السيرة الذاتية</th>
+                <th scope="col">التاريخ</th>
+                <th scope="col">الحالة</th>
+                <th scope="col">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="instructorRequestsBody">
+              <tr>
+                <td colspan="6" class="admin-empty-cell">لا توجد طلبات حالياً</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-panel__footer">
+          <p class="admin-panel__meta" id="instructorRequestsMeta">0 طلب قيد المراجعة</p>
+        </div>
+      </section>
+
+      <div class="admin-modal" id="instructorEditorModal" hidden>
+        <div class="admin-modal__backdrop" data-close-instructor-modal></div>
+        <div class="admin-modal__dialog admin-modal__dialog--compact" role="dialog" aria-modal="true" aria-labelledby="instructorEditorTitle">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="instructorEditorTitle">تعديل مدرب</h3>
+            <button class="admin-modal__close" type="button" data-close-instructor-modal aria-label="إغلاق">×</button>
+          </div>
+          <form class="admin-modal__body admin-modal__body--compact" id="instructorEditorForm">
+            <input type="hidden" id="instructorEditorId" value="" />
+            <label class="admin-field">
+              <span class="admin-field__label">الاسم الكامل</span>
+              <input class="admin-field__input" type="text" id="instructorEditorName" required />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">البريد الإلكتروني</span>
+              <input class="admin-field__input" type="email" id="instructorEditorEmail" disabled />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">النبذة</span>
+              <textarea class="admin-field__input admin-field__textarea" id="instructorEditorBio" rows="3"></textarea>
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">الكورسات</span>
+              <textarea class="admin-field__input admin-field__textarea" id="instructorEditorCourses" rows="2"></textarea>
+            </label>
+            <div class="admin-modal__actions">
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-instructor-modal>إلغاء</button>
+              <button class="admin-btn admin-btn--primary" type="submit">حفظ</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="admin-modal" id="appDetailsModal" hidden>
+        <div class="admin-modal__backdrop" data-close-app-details></div>
+        <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="appDetailsTitle" style="width:min(800px,96vw);max-width:800px;">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="appDetailsTitle">تفاصيل الطلب</h3>
+            <button class="admin-modal__close" type="button" data-close-app-details aria-label="إغلاق">×</button>
+          </div>
+          <div class="admin-modal__body">
+            <p id="appDetailsName"></p>
+            <p id="appDetailsEmail" dir="ltr"></p>
+            <label class="admin-field">
+              <span class="admin-field__label">النبذة</span>
+              <p id="appDetailsBio" style="white-space:pre-wrap;word-break:break-word;background:rgba(148,163,184,0.12);border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:0.85rem 1rem;margin:0.35rem 0 0;"></p>
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">الكورسات المقترحة</span>
+              <p id="appDetailsCourses" style="white-space:pre-wrap;word-break:break-word;background:rgba(148,163,184,0.12);border:1px solid rgba(148,163,184,0.28);border-radius:10px;padding:0.85rem 1rem;margin:0.35rem 0 0;"></p>
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">رابط السيرة الذاتية</span>
+              <p id="appDetailsCv">لا يوجد</p>
+            </label>
+            <div class="admin-modal__actions">
+              <button type="button" id="modalApproveBtn" class="admin-btn admin-btn--primary">موافقة</button>
+              <button type="button" id="modalRejectBtn" class="admin-btn admin-btn--danger">رفض</button>
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-app-details>إغلاق</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="admin-panel admin-panel--courses admin-view" id="courses" data-admin-view="courses" aria-labelledby="coursesHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="coursesHeading">الكورسات</h2>
+            <p class="admin-panel__desc" id="coursesDesc">إنشاء وإدارة الكورسات وربطها بالمدربين ونشرها على المنصة</p>
+          </div>
+          <div class="admin-panel__tools" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-start; margin-bottom: 16px;">
+            <select id="adminCourseInstructorFilter" class="admin-filter__select" aria-label="تصفية حسب المدرب">
+              <option value="all">كل المدربين</option>
+            </select>
+            <label class="admin-filter" id="coursesFilterWrap">
+              <span class="admin-filter__label">تصفية</span>
+              <select class="admin-filter__select" id="coursesStatusFilter" aria-label="تصفية الكورسات">
+                <option value="active">النشطة</option>
+                <option value="published">منشور</option>
+                <option value="suspended">معلّق</option>
+                <option value="draft">مسودة</option>
+                <option value="pending">قيد المراجعة</option>
+                <option value="all">الكل</option>
+              </select>
+            </label>
+            <button class="admin-btn admin-btn--ghost" type="button" id="refreshCoursesBtn">تحديث</button>
+            <button class="admin-btn admin-btn--primary" type="button" id="addCourseBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              إضافة كورس
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-courses-tabs" role="tablist" aria-label="عرض الكورسات" style="display: flex; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; width: 100%;">
+          <button type="button" class="admin-courses-tab is-active" role="tab" aria-selected="true" data-courses-tab="active" id="coursesTabActive">
+            الكورسات النشطة
+          </button>
+          <button type="button" id="btnPendingCourses" class="admin-courses-tab" data-courses-tab="pending">
+            طلبات الكورسات <span id="pendingCoursesCount" class="admin-nav__badge" style="display: none; margin-inline-start: 8px;">0</span>
+          </button>
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="coursesTable">
+            <thead>
+              <tr>
+                <th scope="col" class="admin-table__drag-col" aria-label="ترتيب">⋮⋮</th>
+                <th scope="col">الكورس</th>
+                <th scope="col">المدرب</th>
+                <th scope="col">السعر</th>
+                <th scope="col">المدة</th>
+                <th scope="col">الجدول الأسبوعي</th>
+                <th scope="col">الحالة</th>
+                <th scope="col">آخر تحديث</th>
+                <th scope="col">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="coursesTableBody">
+              <tr>
+                <td colspan="9" class="admin-empty-cell">جاري التحميل...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-panel__footer">
+          <p class="admin-panel__meta" id="coursesMeta">0 كورس</p>
+        </div>
+      </section>
+
+      <div class="admin-modal" id="courseEditorModal" hidden>
+        <div class="admin-modal__backdrop" data-close-course-modal></div>
+        <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="courseEditorTitle">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="courseEditorTitle">إضافة كورس</h3>
+            <button class="admin-modal__close" type="button" data-close-course-modal aria-label="إغلاق">×</button>
+          </div>
+          <form class="admin-modal__body admin-modal__body--course" id="courseEditorForm">
+            <input type="hidden" id="courseEditorId" value="" />
+            <input type="hidden" id="courseEditorCategory" value="individual" />
+
+            <div class="admin-form-grid">
+              <label class="admin-field admin-field--full">
+                <span class="admin-field__label">عنوان الكورس</span>
+                <input class="admin-field__input" type="text" id="courseEditorName" required />
+              </label>
+              <label class="admin-field admin-field--full">
+                <span class="admin-field__label">الوصف</span>
+                <textarea class="admin-field__input admin-field__textarea" id="courseEditorDescription" rows="3"></textarea>
+              </label>
+              <div class="admin-field admin-field--full">
+                <span class="admin-field__label">صورة الكورس</span>
+                <input type="file" id="course-image-input" accept="image/*" />
+                <input type="hidden" id="courseEditorImageUrl" value="" />
+                <img id="course-image-preview" class="course-image-preview" alt="" hidden />
+              </div>
+              <label class="admin-field">
+                <span class="admin-field__label">المدرب المسؤول</span>
+                <select class="admin-field__input" id="courseEditorInstructor"></select>
+                <span class="admin-field__hint">اترك «مسار المهندس ‎°360» لكورس رسمي من المنصة</span>
+              </label>
+              <label class="admin-field">
+                <span class="admin-field__label">حالة النشر</span>
+                <select class="admin-field__input" id="courseEditorStatus">
+                  <option value="draft">مسودة</option>
+                  <option value="published">منشور</option>
+                  <option value="suspended">معلّق</option>
+                </select>
+              </label>
+              <label class="admin-field admin-field--inline admin-field--full">
+                <input type="checkbox" id="courseEditorNotifySubscribers" />
+                <span class="admin-field__label">إرسال إشعار للمشتركين عند النشر</span>
+              </label>
+              <p class="admin-field__hint admin-field--full">يظهر تنبيه فوري في المنصة لكل المستخدمين المشتركين عند نشر الكورس لأول مرة.</p>
+              <label class="admin-field">
+                <span class="admin-field__label">سعر الكورس</span>
+                <input
+                  class="admin-field__input admin-field__input--price"
+                  type="text"
+                  inputmode="numeric"
+                  id="courseEditorPrice"
+                  placeholder="مثال: 150,000"
+                  autocomplete="off"
+                />
+              </label>
+              <label class="admin-field">
+                <span class="admin-field__label">العملة</span>
+                <select class="admin-field__input" id="course-currency" name="currency" required>
+                  <option value="IQD" selected>د.ع</option>
+                  <option value="USD">$</option>
+                </select>
+              </label>
+              <fieldset class="admin-field admin-field--full admin-field--fieldset">
+                <legend class="admin-field__label">المحاكيات المخصصة لهذا الكورس / الباقة</legend>
+                <div class="admin-simulator-checklist" id="courseEditorSimulators">
+                  <label>
+                    <input type="checkbox" name="courseSimulator" value="ftth-simulator" />
+                    <span>محاكي FTTH متكامل <code>ftth-simulator</code></span>
+                  </label>
+                  <label>
+                    <input type="checkbox" name="courseSimulator" value="otdr-simulator" />
+                    <span>محاكي OTDR افتراضي <code>otdr-simulator</code></span>
+                  </label>
+                  <label>
+                    <input type="checkbox" name="courseSimulator" value="power-meter" />
+                    <span>قياس القدرة البصرية <code>power-meter</code></span>
+                  </label>
+                  <label>
+                    <input type="checkbox" name="courseSimulator" value="fusion-splicer" />
+                    <span>مختبر لحام الألياف الضوئية (Fusion Splicer Lab) <code>fusion-splicer</code></span>
+                  </label>
+                  <label>
+                    <input type="checkbox" name="courseSimulator" value="fiber-anatomy" />
+                    <span>تشريح الألياف 3D / 2D <code>fiber-anatomy</code></span>
+                  </label>
+                  <label>
+                    <input type="checkbox" name="courseSimulator" value="patch-panel-lab" />
+                    <span>محاكي FTTH Network &amp; Patch Panel <code>patch-panel-lab</code></span>
+                  </label>
+                </div>
+                <label class="admin-field--checkbox admin-field--generate-plan">
+                  <input type="checkbox" id="courseEditorGeneratePlan" checked />
+                  <span>إنشاء باقة أسعار مطابقة باسم الكورس تلقائياً</span>
+                </label>
+                <span class="admin-field__hint">تُنشأ باقة باسم الكورس تلقائياً عند كل حفظ، وتشمل المحاكيات المحددة</span>
+              </fieldset>
+              <label class="admin-field">
+                <span class="admin-field__label">المدة بالساعات</span>
+                <input class="admin-field__input" type="number" min="0" step="1" id="courseEditorHours" placeholder="مثال: 24" />
+              </label>
+              <label class="admin-field">
+                <span class="admin-field__label">المدة بالأسابيع</span>
+                <input class="admin-field__input" type="number" min="0" step="1" id="courseEditorWeeks" placeholder="مثال: 3" />
+              </label>
+              <label class="admin-field">
+                <span class="admin-field__label">تاريخ البدء (اختياري)</span>
+                <input class="admin-field__input" type="date" id="courseStartDate" />
+              </label>
+              <label class="admin-field admin-field--full">
+                <span class="admin-field__label">الجدول الأسبوعي</span>
+                <input class="admin-field__input" type="text" id="courseEditorSchedule" placeholder="مثال: سبت وثلاثاء — ساعتان لكل جلسة" />
+              </label>
+            </div>
+
+            <div class="admin-lessons-panel">
+              <div class="admin-lessons-panel__header">
+                <div>
+                  <h4 class="admin-lessons-panel__title">محتوى الدروس والفيديوهات والامتحانات</h4>
+                  <p class="admin-lessons-panel__hint">أضف دروساً مع فيديو، واربط بكل درس امتحاناً (أسئلة اختيار من متعدد) بنفس هيكل لوحة المدرب</p>
+                </div>
+                <button class="admin-btn admin-btn--ghost admin-btn--sm" type="button" id="addCourseLessonBtn">+ إضافة درس</button>
+              </div>
+              <div class="admin-upload-status" id="courseUploadStatus" hidden>
+                <div class="admin-upload-status__label" id="courseUploadLabel">جاري تحميل الفيديو...</div>
+                <div class="admin-upload-status__track">
+                  <div class="admin-upload-status__bar" id="courseUploadBar"></div>
+                </div>
+              </div>
+              <div id="courseLessonsList" class="admin-lessons-list"></div>
+            </div>
+
+            <div class="admin-modal__actions">
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-course-modal>إلغاء</button>
+              <button class="admin-btn admin-btn--primary" type="submit">حفظ الكورس</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="admin-upload-status admin-upload-status--cms" id="cmsSaveProgress" hidden role="status">
+        <div class="admin-upload-status__label" id="cmsSaveLabel">جاري الحفظ…</div>
+        <div class="admin-upload-status__track">
+          <div class="admin-upload-status__bar admin-upload-status__bar--publish" id="cmsSaveBar"></div>
+        </div>
+      </div>
+
+      <div class="admin-toast" id="adminToast" hidden role="status" aria-live="polite"></div>
+
+      <section class="admin-panel admin-panel--orders admin-view" id="orders" data-admin-view="orders" aria-labelledby="ordersHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="ordersHeading">طلبات الشراء</h2>
+            <p class="admin-panel__desc">مراجعة أواصر الدفع اليدوي (زين كاش / ماستر كارد) وقبول أو رفض الطلبات</p>
+          </div>
+          <div class="admin-panel__tools">
+            <label class="admin-field admin-field--inline">
+              <span class="admin-field__label">الحالة</span>
+              <select class="admin-field__input" id="adminOrdersStatusFilter">
+                <option value="all">كل الطلبات</option>
+                <option value="pending" selected>قيد المراجعة</option>
+                <option value="approved">مقبولة</option>
+                <option value="rejected">مرفوضة</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table admin-table--orders">
+            <thead>
+              <tr>
+                <th scope="col">الوصل</th>
+                <th scope="col">الطالب</th>
+                <th scope="col">المنتج</th>
+                <th scope="col">المبلغ</th>
+                <th scope="col">طريقة الدفع</th>
+                <th scope="col">التاريخ</th>
+                <th scope="col">الحالة</th>
+                <th scope="col">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="adminOrdersBody">
+              <tr><td colspan="8" class="admin-empty-cell">جاري تحميل الطلبات…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="admin-panel__footer">
+          <p class="admin-panel__meta" id="adminOrdersMeta">0 طلب</p>
+        </div>
+      </section>
+
+      <section class="admin-panel admin-view" id="settings-checkout" data-admin-view="settings-checkout" aria-labelledby="checkoutSettingsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="checkoutSettingsHeading">إعدادات الدفع والإشعارات</h2>
+            <p class="admin-panel__desc">تكوين بريد إشعارات الطلبات وأرقام الدفع اليدوي المعروضة في صفحة إتمام الشراء</p>
+          </div>
+        </div>
+        <form class="admin-settings-form admin-settings-form--checkout" id="checkoutSettingsForm">
+          <div class="admin-form-grid">
+            <label class="admin-field admin-field--full">
+              <span class="admin-field__label">بريد إشعارات الإدارة</span>
+              <input class="admin-field__input" type="email" id="checkoutSettingsAdminEmail" dir="ltr" placeholder="admin@example.com" autocomplete="email" required />
+              <span class="admin-field__hint">يُستخدم لإرسال تنبيهات الطلبات الجديدة (قائمة mail_notifications)</span>
+            </label>
+            <div class="admin-field admin-field--full">
+              <div class="admin-field__label-row" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                <span class="admin-field__label">إشعارات المتصفح (طلبات جديدة)</span>
+                <label class="toggle-switch" title="Push notifications">
+                  <input type="checkbox" id="adminPushNotificationsToggle" />
+                  <span class="toggle-switch__track" aria-hidden="true"><span class="toggle-switch__thumb"></span></span>
+                </label>
+              </div>
+              <span class="admin-field__hint">فعّل الإشعار لتلقي تنبيهات الخلفية عند إنشاء طلب شراء جديد</span>
+            </div>
+            <label class="admin-field">
+              <span class="admin-field__label">رقم زين كاش (ZainCash)</span>
+              <input class="admin-field__input" type="text" id="checkoutSettingsZaincash" dir="ltr" placeholder="078XXXXXXXX" required />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">رقم ماستر كارد / كي كارد</span>
+              <input class="admin-field__input" type="text" id="checkoutSettingsMastercard" dir="ltr" placeholder="5358-XXXX-XXXX-XXXX" required />
+            </label>
+            <label class="admin-field admin-field--full">
+              <span class="admin-field__label">IBAN / رقم الحساب البنكي</span>
+              <input class="admin-field__input" type="text" id="checkoutSettingsIban" dir="ltr" placeholder="IQXX XXXX XXXX XXXX XXXX XXXX XX" />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">EmailJS Public Key (اختياري)</span>
+              <input class="admin-field__input" type="text" id="checkoutSettingsEmailjsKey" dir="ltr" placeholder="user_xxxxxxxx" autocomplete="off" />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">EmailJS Service ID (اختياري)</span>
+              <input class="admin-field__input" type="text" id="checkoutSettingsEmailjsService" dir="ltr" placeholder="service_xxxxx" autocomplete="off" />
+            </label>
+            <label class="admin-field admin-field--full">
+              <span class="admin-field__label">EmailJS Template ID (اختياري)</span>
+              <input class="admin-field__input" type="text" id="checkoutSettingsEmailjsTemplate" dir="ltr" placeholder="template_xxxxx" autocomplete="off" />
+              <span class="admin-field__hint">يُستخدم كاحتياطي عند عدم تفعيل Firebase Trigger Email — المتغيرات: to_email, subject, message_html</span>
+            </label>
+          </div>
+          <div class="admin-settings-form__actions">
+            <button class="admin-btn admin-btn--primary" type="submit" id="checkoutSettingsSaveBtn">حفظ التغييرات</button>
+            <p class="admin-panel__meta" id="checkoutSettingsSaveStatus" role="status"></p>
+          </div>
+        </form>
+        <div class="admin-panel__footer">
+          <p class="admin-panel__meta">تُحفظ الإعدادات في Firestore: <code>settings/checkout_config</code></p>
+        </div>
+      </section>
+
+      <div class="admin-modal" id="adminOrderReceiptModal" hidden>
+        <div class="admin-modal__backdrop" data-close-receipt-modal></div>
+        <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="adminOrderReceiptTitle">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="adminOrderReceiptTitle">صورة الوصل</h3>
+            <button class="admin-modal__close" type="button" data-close-receipt-modal aria-label="إغلاق">×</button>
+          </div>
+          <div class="admin-modal__scroll admin-order-receipt-view">
+            <p class="admin-panel__meta" id="adminOrderReceiptCaption"></p>
+            <img id="adminOrderReceiptImage" alt="صورة وصل الدفع" />
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-modal" id="adminOrderApproveModal" hidden>
+        <div class="admin-modal__backdrop" data-close-approve-modal></div>
+        <div class="admin-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="adminOrderApproveTitle">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="adminOrderApproveTitle">قبول الطلب</h3>
+            <button class="admin-modal__close" type="button" data-close-approve-modal aria-label="إغلاق">×</button>
+          </div>
+          <form id="adminOrderApproveForm" class="admin-modal__form">
+            <p class="admin-panel__meta">سيتم تفعيل وصول الطالب للمحتوى المرتبط بالطلب وإرسال إشعار بالبريد.</p>
+            <label class="admin-field admin-field--full">
+              <span class="admin-field__label">رسالة مخصصة للطالب (اختياري)</span>
+              <textarea class="admin-field__input" id="adminOrderApproveNote" rows="3" placeholder="ملاحظة ترحيبية أو تعليمات إضافية"></textarea>
+            </label>
+            <div class="admin-modal__footer">
+              <button type="button" class="admin-btn admin-btn--ghost" data-close-approve-modal>إلغاء</button>
+              <button type="submit" class="admin-btn admin-btn--primary">تأكيد القبول</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="admin-modal" id="adminOrderRejectModal" hidden>
+        <div class="admin-modal__backdrop" data-close-reject-modal></div>
+        <div class="admin-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="adminOrderRejectTitle">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="adminOrderRejectTitle">رفض الطلب</h3>
+            <button class="admin-modal__close" type="button" data-close-reject-modal aria-label="إغلاق">×</button>
+          </div>
+          <form id="adminOrderRejectForm" class="admin-modal__form">
+            <label class="admin-field admin-field--full">
+              <span class="admin-field__label">ملاحظة (اختياري)</span>
+              <textarea class="admin-field__input" id="adminOrderRejectNote" rows="3" placeholder="سبب الرفض أو ملاحظة للطالب"></textarea>
+            </label>
+            <div class="admin-modal__footer">
+              <button type="button" class="admin-btn admin-btn--ghost" data-close-reject-modal>إلغاء</button>
+              <button type="submit" class="admin-btn admin-btn--danger">تأكيد الرفض</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <section class="admin-panel admin-panel--plans admin-view" id="plans" data-admin-view="plans" aria-labelledby="plansHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="plansHeading">الباقات والأسعار</h2>
+            <p class="admin-panel__desc">عدّل عناوين الباقات والأسعار ودورة الفوترة والمميزات — تظهر فوراً في الصفحة الرئيسية</p>
+          </div>
+          <div class="admin-panel__tools">
+            <button class="admin-btn admin-btn--primary" type="button" id="addPlanBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              إضافة باقة
+            </button>
+          </div>
+        </div>
+        <div class="admin-plans-list" id="adminPlansList"></div>
+        <div class="admin-panel__footer">
+          <p class="admin-panel__meta">التغييرات تُحفظ في Firestore (<code>pricing</code>) وتُحدَّث على الموقع فوراً عبر المزامنة الحية.</p>
+        </div>
+      </section>
+
+      <div class="admin-modal" id="planEditorModal" hidden>
+        <div class="admin-modal__backdrop" data-close-plan-modal></div>
+        <div class="admin-modal__dialog admin-modal__dialog--plan" role="dialog" aria-modal="true" aria-labelledby="planEditorTitle">
+          <div class="admin-modal__header">
+            <h3 class="admin-modal__title" id="planEditorTitle">إضافة باقة</h3>
+            <button class="admin-modal__close" type="button" data-close-plan-modal aria-label="إغلاق">×</button>
+          </div>
+          <form class="admin-modal__form" id="planEditorForm">
+            <div class="admin-modal__scroll">
+              <div class="admin-form-grid">
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">عنوان الباقة</span>
+                  <input class="admin-field__input" type="text" id="planEditorName" required />
+                </label>
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">الوصف القصير</span>
+                  <input class="admin-field__input" type="text" id="planEditorDescription" placeholder="مثال: للفنيين والمهتمين بالتخصص" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">السعر</span>
+                  <input
+                    class="admin-field__input admin-field__input--price"
+                    type="text"
+                    inputmode="numeric"
+                    id="planEditorPrice"
+                    placeholder="مثال: 150,000"
+                    autocomplete="off"
+                    required
+                  />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">العملة</span>
+                  <input class="admin-field__input" type="text" id="planEditorCurrency" value="ر.س" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">دورة الفوترة</span>
+                  <input class="admin-field__input" type="text" id="planEditorPeriod" placeholder="شهرياً / سنوياً / مجاناً للأبد" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">نص زر الاشتراك</span>
+                  <input class="admin-field__input" type="text" id="planEditorCta" placeholder="اشترك الآن" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">نمط الزر</span>
+                  <select class="admin-field__input" id="planEditorCtaStyle">
+                    <option value="outline">حدود</option>
+                    <option value="primary">أساسي</option>
+                  </select>
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">شارة التمييز</span>
+                  <input class="admin-field__input" type="text" id="planEditorBadge" placeholder="الأكثر شعبية" />
+                </label>
+                <label class="admin-field admin-field--full admin-field--checkbox">
+                  <input type="checkbox" id="planEditorFeatured" />
+                  <span class="admin-field__label">باقة مميزة (الأكثر شعبية)</span>
+                </label>
+                <fieldset class="admin-field admin-field--full admin-field--fieldset">
+                  <legend class="admin-field__label">فئات الكورسات المشمولة</legend>
+                  <div class="admin-checkbox-row">
+                    <label><input type="checkbox" id="planCatIndividual" checked /> المنفردة</label>
+                    <label><input type="checkbox" id="planCatProgram" /> البرامج</label>
+                    <label><input type="checkbox" id="planCatMaster" /> الشامل</label>
+                  </div>
+                  <span class="admin-field__hint">تحدد أي أنواع كورسات تُفتح بهذه الباقة</span>
+                </fieldset>
+                <fieldset class="admin-field admin-field--full admin-field--fieldset">
+                  <legend class="admin-field__label">المحاكيات المخصصة لهذه الباقة</legend>
+                  <div class="admin-simulator-checklist" id="planEditorSimulators">
+                    <label>
+                      <input type="checkbox" name="planSimulator" value="ftth-simulator" />
+                      <span>محاكي FTTH متكامل <code>ftth-simulator</code></span>
+                    </label>
+                    <label>
+                      <input type="checkbox" name="planSimulator" value="otdr-simulator" />
+                      <span>محاكي OTDR افتراضي <code>otdr-simulator</code></span>
+                    </label>
+                    <label>
+                      <input type="checkbox" name="planSimulator" value="power-meter" />
+                      <span>قياس القدرة البصرية <code>power-meter</code></span>
+                    </label>
+                    <label>
+                    <input type="checkbox" name="planSimulator" value="fusion-splicer" />
+                    <span>مختبر لحام الألياف الضوئية (Fusion Splicer Lab) <code>fusion-splicer</code></span>
+                    </label>
+                    <label>
+                      <input type="checkbox" name="planSimulator" value="fiber-anatomy" />
+                      <span>تشريح الألياف 3D / 2D <code>fiber-anatomy</code></span>
+                    </label>
+                    <label>
+                      <input type="checkbox" name="planSimulator" value="patch-panel-lab" />
+                      <span>محاكي FTTH Network &amp; Patch Panel <code>patch-panel-lab</code></span>
+                    </label>
+                  </div>
+                </fieldset>
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">المميزات (سطر لكل ميزة)</span>
+                  <textarea class="admin-field__input admin-field__textarea" id="planEditorFeatures" rows="5" placeholder="ميزة مضمّنة&#10;✗ ميزة غير مضمّنة"></textarea>
+                  <span class="admin-field__hint">ابدأ السطر بـ ✗ أو - لميزة غير مضمّنة</span>
+                </label>
+              </div>
+            </div>
+            <div class="admin-modal__actions admin-modal__actions--sticky">
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-plan-modal>إلغاء</button>
+              <button class="admin-btn admin-btn--primary" type="submit">حفظ الباقة</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <section class="admin-panel admin-view" id="site-simulator-showcase" data-admin-view="site-simulator-showcase" aria-labelledby="simulatorShowcaseHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="simulatorShowcaseHeading">إدارة المحاكيات</h2>
+            <p class="admin-panel__desc">تحكم موحّد لكل محاكي: بطاقة الشبكة، عرض الدوران، الصور، النصوص، حالة «قيد التطوير»، وسرعة التنقل</p>
+          </div>
+        </div>
+        <form class="admin-settings-form cms-showcase-settings" id="cmsShowcaseSettingsForm">
+          <label class="admin-field">
+            <span class="admin-field__label">سرعة التنقل بين المحاكيات (بالثواني) — Simulator Transition Interval</span>
+            <input class="admin-field__input cms-stats-input" id="cmsShowcaseInterval" type="number" min="2" max="60" step="1" value="5" inputmode="numeric" lang="en" dir="ltr" required />
+          </label>
+          <div class="admin-settings-form__actions">
+            <button class="admin-btn admin-btn--primary" type="submit">حفظ سرعة العرض</button>
+            <p class="admin-panel__meta" id="cmsShowcaseIntervalStatus" role="status"></p>
+          </div>
+        </form>
+        <div class="cms-showcase-manager" id="cmsSimulatorShowcaseList" aria-live="polite"></div>
+        <div class="cms-showcase-save-all">
+          <button class="admin-btn admin-btn--primary admin-btn--lg" type="button" id="cmsSimulatorsSaveAll">حفظ التغييرات</button>
+          <p class="admin-panel__meta" id="cmsSimulatorsSaveAllStatus" role="status"></p>
+        </div>
+      </section>
+
+      <section class="admin-panel admin-view" id="site-stats" data-admin-view="site-stats" aria-labelledby="siteStatsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="siteStatsHeading">إدارة الإحصائيات</h2>
+            <p class="admin-panel__desc">Website Statistics — تتحكم في أرقام قسم الإحصائيات على الصفحة الرئيسية (أرقام إنجليزية فقط)</p>
+          </div>
+        </div>
+        <form class="admin-settings-form cms-stats-form" id="cmsStatsForm">
+          <div class="cms-stats-grid">
+            <label class="admin-field">
+              <span class="admin-field__label">الطلاب المسجّلون (Enrolled Students)</span>
+              <input class="admin-field__input cms-stats-input" id="cmsStatEnrolledStudents" type="number" min="0" max="99999999" step="1" inputmode="numeric" lang="en" dir="ltr" readonly aria-readonly="true" />
+              <span class="admin-field__hint">يتم حسابه تلقائياً من إجمالي المستخدمين</span>
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">الكيلومترات المحاكاة (Simulated Kilometers)</span>
+              <input class="admin-field__input cms-stats-input" id="cmsStatSimulatedKm" type="number" min="0" max="999999999" step="1" inputmode="numeric" lang="en" dir="ltr" required />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">المشاريع التدريبية (Training Projects)</span>
+              <input class="admin-field__input cms-stats-input" id="cmsStatTrainingProjects" type="number" min="0" max="9999999" step="1" inputmode="numeric" lang="en" dir="ltr" required />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">نسبة رضا الطلاب (Student Satisfaction %)</span>
+              <input class="admin-field__input cms-stats-input" id="cmsStatSatisfaction" type="number" min="0" max="100" step="1" inputmode="numeric" lang="en" dir="ltr" required />
+              <span class="admin-field__hint">قيمة من 0 إلى 100 — تُعرض على الموقع مع علامة %</span>
+            </label>
+          </div>
+          <div class="cms-stats-preview" id="cmsStatsPreview" aria-live="polite"></div>
+          <div class="admin-settings-form__actions">
+            <button class="admin-btn admin-btn--primary" type="submit">حفظ الإحصائيات</button>
+            <button class="admin-btn admin-btn--ghost" type="button" id="cmsStatsReset">استعادة الافتراضي</button>
+            <p class="admin-panel__meta" id="cmsStatsSaveStatus" role="status"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel admin-view" id="site-hero-slideshow" data-admin-view="site-hero-slideshow" aria-labelledby="siteHeroSlideshowHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="siteHeroSlideshowHeading">الصفحة الرئيسية (Homepage)</h2>
+            <p class="admin-panel__desc">إدارة شرائح المحتوى: نص، صورة، أزرار، وألوان مخصصة لكل شريحة</p>
+          </div>
+          <button class="admin-btn admin-btn--primary" type="button" id="cmsHeroAddSlide">شريحة جديدة</button>
+        </div>
+        <form class="admin-settings-form cms-hero-slideshow-form" id="cmsHeroSlideshowForm">
+          <label class="admin-field">
+            <span class="admin-field__label">مدة عرض كل شريحة (ثوانٍ) — Slide Transition Interval</span>
+            <input class="admin-field__input cms-stats-input" id="cmsHeroInterval" type="number" min="2" max="60" step="1" value="5" inputmode="numeric" lang="en" dir="ltr" required />
+          </label>
+          <div class="cms-hero-slides-list" id="cmsHeroSlidesList" aria-live="polite"></div>
+          <div class="admin-settings-form__actions">
+            <button class="admin-btn admin-btn--primary" type="submit">حفظ الصفحة الرئيسية</button>
+            <button class="admin-btn admin-btn--ghost" type="button" id="cmsHeroSlideshowReset">استعادة الشرائح الافتراضية</button>
+            <p class="admin-panel__meta" id="cmsHeroSlideshowSaveStatus" role="status"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel admin-view" id="site-articles" data-admin-view="site-articles" aria-labelledby="siteArticlesHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="siteArticlesHeading">المقالات التقنية</h2>
+            <p class="admin-panel__desc">إضافة وتعديل وحذف المقالات المعروضة في الصفحة الرئيسية</p>
+          </div>
+          <div class="admin-panel__actions">
+            <button class="admin-btn admin-btn--ghost" type="button" data-article-bin-toggle aria-pressed="false">سلة المهملات</button>
+            <button class="admin-btn admin-btn--primary" type="button" data-article-add>مقال جديد</button>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>العنوان</th><th>التصنيف</th><th>الحالة</th><th>الوسوم</th><th></th></tr></thead>
+            <tbody id="cmsArticlesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel admin-view" id="admin-instructors-section" data-admin-view="admin-instructors-section" aria-labelledby="ourInstructorsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="ourInstructorsHeading">إدارة مدربينا</h2>
+            <p class="admin-panel__desc">ملفات المدربين الظاهرة في قسم «مدربونا» على الموقع العام</p>
+          </div>
+        </div>
+        <form class="admin-form" id="publicInstructorForm">
+          <input type="hidden" id="publicInstructorId" value="" />
+          <label class="admin-field"><span class="admin-field__label">الاسم</span>
+            <input class="admin-field__input" id="publicInstructorName" type="text" required />
+          </label>
+          <label class="admin-field"><span class="admin-field__label">الاختصاص / المسمى الوظيفي</span>
+            <input class="admin-field__input" id="publicInstructorTitle" type="text" required />
+          </label>
+          <label class="admin-field"><span class="admin-field__label">نبذة مختصرة</span>
+            <textarea class="admin-field__input" id="publicInstructorBio" rows="3" required></textarea>
+          </label>
+          <label class="admin-field" for="instructorPhotoInput"><span class="admin-field__label">صورة المدرب الشخصية</span>
+            <input type="file" id="instructorPhotoInput" accept="image/*" class="admin-input-file">
+            <div id="instructorPhotoPreview" style="margin-top: 10px;"></div>
+          </label>
+          <div class="admin-panel__actions">
+            <button class="admin-btn admin-btn--primary" type="submit" id="publicInstructorSave">إضافة مدرب</button>
+            <button class="admin-btn admin-btn--ghost" type="button" id="publicInstructorCancel" hidden>إلغاء التعديل</button>
+          </div>
+        </form>
+        <h3 class="admin-panel__title" style="margin-top:1.5rem;">المدربون الحاليون</h3>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>الصورة</th><th>الاسم</th><th>الاختصاص</th><th>النبذة</th><th></th></tr></thead>
+            <tbody id="publicInstructorsBody"></tbody>
+          </table>
+        </div>
+        <h3 class="admin-panel__title" style="margin-top:1.5rem;">طلبات بانتظار الموافقة</h3>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>الصورة</th><th>الاسم</th><th>الاختصاص</th><th>النبذة</th><th></th></tr></thead>
+            <tbody id="pendingInstructorsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel admin-view" id="site-faq" data-admin-view="site-faq" aria-labelledby="siteFaqHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="siteFaqHeading">الأسئلة الشائعة</h2>
+            <p class="admin-panel__desc">إدارة الأسئلة والأجوبة وترتيبها في أكورديون الصفحة الرئيسية</p>
+          </div>
+          <div class="admin-panel__actions">
+            <button class="admin-btn admin-btn--ghost" type="button" data-faq-bin-toggle aria-pressed="false">سلة المهملات</button>
+            <button class="admin-btn admin-btn--primary" type="button" data-faq-add>سؤال جديد</button>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>السؤال</th><th>الإجابة</th><th>الحالة</th><th></th></tr></thead>
+            <tbody id="cmsFaqBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel admin-view" id="site-testimonials" data-admin-view="site-testimonials" aria-labelledby="siteTestimonialsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="siteTestimonialsHeading">آراء المستخدمين</h2>
+            <p class="admin-panel__desc">إدارة تقييمات وآراء الطلاب المعروضة على الصفحة الرئيسية</p>
+          </div>
+          <div class="admin-panel__actions">
+            <button class="admin-btn admin-btn--ghost" type="button" data-tst-bin-toggle aria-pressed="false">سلة المهملات</button>
+            <button class="admin-btn admin-btn--ghost" type="button" data-tst-restore-defaults>إعادة تعيين الافتراضيات</button>
+            <button class="admin-btn admin-btn--primary" type="button" data-tst-add>رأي جديد</button>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>الاسم</th><th>المسمى / الشركة</th><th>التقييم</th><th>الحالة</th><th></th></tr></thead>
+            <tbody id="cmsTestimonialsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel admin-view" id="site-footer" data-admin-view="site-footer" aria-labelledby="siteFooterHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="siteFooterHeading">إعدادات التذييل (Footer Settings)</h2>
+            <p class="admin-panel__desc">عبارة الشعار الفرعية، وصف العلامة التجارية، أحجام الخط، اللون، وروابط التواصل الاجتماعي</p>
+          </div>
+        </div>
+        <form class="admin-settings-form cms-footer-form" id="cmsFooterForm">
+          <div class="cms-footer-editor">
+            <div class="cms-footer-editor__fields">
+              <label class="admin-field">
+                <span class="admin-field__label">عبارة الشعار الفرعية (Logo Subtitle)</span>
+                <input class="admin-field__input" id="cmsFooterLogoSubText" type="text" data-footer-field="logoSubtitleText" />
+              </label>
+              <label class="admin-field">
+                <span class="admin-field__label">حجم خط الشعار الفرعي (rem)</span>
+                <input class="admin-field__input" id="cmsFooterLogoSubSize" type="number" min="0.5" max="1.5" step="0.05" data-footer-field="logoSubtitleFontSize" dir="ltr" lang="en" />
+              </label>
+              <label class="admin-field">
+                <span class="admin-field__label">وصف الأكاديمية</span>
+                <textarea class="admin-field__input admin-field__textarea" id="cmsFooterDescText" rows="4" data-footer-field="text"></textarea>
+              </label>
+              <div class="admin-form-grid">
+                <label class="admin-field">
+                  <span class="admin-field__label">حجم خط الوصف (rem)</span>
+                  <input class="admin-field__input" id="cmsFooterDescSize" type="number" min="0.65" max="1.5" step="0.05" data-footer-field="fontSize" dir="ltr" lang="en" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">لون النص</span>
+                  <input class="admin-field__input cms-footer-color" id="cmsFooterDescColor" type="color" data-footer-field="color" />
+                </label>
+              </div>
+              <fieldset class="admin-field cms-footer-social-fieldset">
+                <legend class="admin-field__label">روابط التواصل (تُخفى الأيقونة إذا كان الحقل فارغاً)</legend>
+                <div class="cms-footer-social-grid" id="cmsFooterSocialFields"></div>
+              </fieldset>
+            </div>
+            <aside class="cms-footer-editor__preview" aria-label="معاينة التذييل">
+              <span class="cms-footer-editor__preview-label">معاينة مباشرة</span>
+              <div class="cms-footer-preview-card">
+                <div class="footer__logo cms-footer-preview-card__logo">
+                  <img class="footer__logo-img" src="images/logo.png" alt="" width="42" height="42" />
+                  <div class="logo__text">
+                    <span class="logo__text-main">مسار المهندس ‎°360</span>
+                    <span class="logo__text-sub" id="cmsFooterLogoSubPreview"></span>
+                  </div>
+                </div>
+                <p class="footer__desc" id="cmsFooterDescPreview" data-footer-desc></p>
+                <div class="footer__social" id="cmsFooterSocialPreview" data-footer-social></div>
+              </div>
+            </aside>
+          </div>
+          <div class="admin-settings-form__actions">
+            <button class="admin-btn admin-btn--primary" type="submit">حفظ إعدادات التذييل</button>
+            <button class="admin-btn admin-btn--ghost" type="button" id="cmsFooterReset">استعادة الافتراضي</button>
+            <p class="admin-panel__meta" id="cmsFooterSaveStatus" role="status"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel admin-view admin-panel--site-preview" id="site-preview" data-admin-view="site-preview" aria-labelledby="sitePreviewHeading" hidden>
+        <h2 class="visually-hidden" id="sitePreviewHeading">معاينة الموقع</h2>
+        <iframe id="site-preview-frame" class="admin-site-iframe" src="index.html?mode=admin-preview" title="معاينة الموقع المباشر"></iframe>
+      </section>
+
+      <div class="admin-modal" id="articleEditorModal" data-article-modal hidden>
+        <div class="admin-modal__backdrop" data-close-article-modal></div>
+        <div class="admin-modal__dialog admin-modal__dialog--wide ql-container" id="article-modal" role="dialog" aria-modal="true">
+          <form class="admin-modal__form" id="articleEditorForm">
+            <div class="admin-modal__header">
+              <h3 class="admin-modal__title" id="articleEditorTitleLabel">مقال جديد</h3>
+              <button class="admin-modal__close" type="button" data-close-article-modal aria-label="إغلاق">×</button>
+            </div>
+            <div class="admin-modal__body admin-modal__scroll">
+              <input type="hidden" id="articleEditorId" />
+              <input type="hidden" id="articleEditorImageData" />
+              <label class="admin-field"><span class="admin-field__label">عنوان المقال</span>
+                <input class="admin-field__input" id="articleEditorTitle" required /></label>
+              <div class="admin-form-grid">
+                <label class="admin-field"><span class="admin-field__label">التصنيف</span>
+                  <input class="admin-field__input" id="articleEditorCategory" placeholder="دليل فني" /></label>
+                <label class="admin-field"><span class="admin-field__label">الوسوم</span>
+                  <input class="admin-field__input" id="articleEditorTags" placeholder="OTDR, FTTH" /></label>
+              </div>
+              <label class="admin-field"><span class="admin-field__label">مقتطف</span>
+                <textarea class="admin-field__input admin-field__textarea" id="articleEditorExcerpt" rows="2"></textarea></label>
+              <label class="admin-field"><span class="admin-field__label">بيانات المؤلف / مدة القراءة</span>
+                <input class="admin-field__input" id="articleEditorMeta" /></label>
+              <label class="admin-field"><span class="admin-field__label">حالة النشر</span>
+                <select class="admin-field__input" id="articleEditorStatus">
+                  <option value="draft">مسودة</option>
+                  <option value="published">منشور</option>
+                </select></label>
+              <label class="admin-field"><span class="admin-field__label">صورة بارزة (رابط)</span>
+                <input class="admin-field__input" id="articleEditorImageUrl" placeholder="https://..." /></label>
+              <label class="cms-file-btn">رفع صورة بارزة
+                <input type="file" id="articleEditorImageFile" accept="image/*" hidden /></label>
+              <img class="cms-image-preview" id="articleEditorImagePreview" alt="" hidden />
+              <div class="cms-rich-toolbar cms-rich-toolbar--extended">
+                <label>الخط
+                  <select id="articleEditorFontFamily">
+                    <option value="">افتراضي</option>
+                    <optgroup label="عربي">
+                      <option value="Cairo, sans-serif">Cairo</option>
+                      <option value="Tajawal, sans-serif">Tajawal</option>
+                      <option value="Almarai, sans-serif">Almarai</option>
+                      <option value="Alexandria, sans-serif">Alexandria</option>
+                      <option value="'Noto Kufi Arabic', sans-serif">Noto Kufi Arabic</option>
+                    </optgroup>
+                    <optgroup label="English">
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="Montserrat, sans-serif">Montserrat</option>
+                      <option value="Poppins, sans-serif">Poppins</option>
+                      <option value="Roboto, sans-serif">Roboto</option>
+                    </optgroup>
+                  </select>
+                </label>
+                <label>الحجم
+                  <select id="articleEditorFontSize">
+                    <option value="0.9rem">صغير</option>
+                    <option value="1rem" selected>عادي</option>
+                    <option value="1.15rem">كبير</option>
+                    <option value="1.35rem">أكبر</option>
+                  </select>
+                </label>
+                <label>لون النص
+                  <input type="color" id="articleEditorTextColor" value="#e2e8f0" /></label>
+                <div class="cms-rich-toolbar__group" role="group" aria-label="محاذاة النص">
+                  <button class="cms-rich-btn" type="button" data-cms-align="right" title="محاذاة لليمين">⇤</button>
+                  <button class="cms-rich-btn" type="button" data-cms-align="center" title="توسيط">≡</button>
+                  <button class="cms-rich-btn" type="button" data-cms-align="left" title="محاذاة لليسار">⇥</button>
+                  <button class="cms-rich-btn" type="button" data-cms-align="justify" title="ضبط">☰</button>
+                </div>
+                <div class="cms-rich-toolbar__group" role="group" aria-label="اتجاه النص">
+                  <button class="cms-rich-btn" type="button" data-cms-dir="rtl" title="من اليمين لليسار">RTL</button>
+                  <button class="cms-rich-btn" type="button" data-cms-dir="ltr" title="من اليسار لليمين">LTR</button>
+                </div>
+                <button class="cms-file-btn" type="button" id="articleEditorInsertImage">إدراج صورة في المحتوى</button>
+                <button class="cms-rich-btn ql-fullscreen" type="button" title="ملء الشاشة" aria-label="ملء الشاشة">⛶</button>
+                <input type="file" id="articleEditorBodyImageFile" accept="image/*" hidden />
+              </div>
+              <div class="admin-field">
+                <span class="admin-field__label">محتوى المقال</span>
+                <div class="cms-rich-body-wrap" id="articleEditorBodyWrap">
+                  <div class="cms-rich-body" id="articleEditorBody" contenteditable="true"></div>
+                  <div class="cms-img-handles" id="articleImgHandles" hidden aria-hidden="true">
+                    <span class="cms-img-handle" data-handle="nw"></span>
+                    <span class="cms-img-handle" data-handle="n"></span>
+                    <span class="cms-img-handle" data-handle="ne"></span>
+                    <span class="cms-img-handle" data-handle="e"></span>
+                    <span class="cms-img-handle" data-handle="se"></span>
+                    <span class="cms-img-handle" data-handle="s"></span>
+                    <span class="cms-img-handle" data-handle="sw"></span>
+                    <span class="cms-img-handle" data-handle="w"></span>
+                    <button
+                      type="button"
+                      class="cms-img-layout-trigger"
+                      id="articleImgLayoutTrigger"
+                      title="تخطيط الصورة"
+                      aria-label="تخطيط الصورة"
+                      aria-expanded="false"
+                      aria-controls="articleImgContextMenu"
+                    >
+                      <svg class="cms-img-layout-trigger__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <rect x="3" y="4" width="8" height="8" rx="1" fill="#5B9BD5"/>
+                        <path d="M13 5h8M13 8h8M13 11h5" stroke="url(#cmsWrapGrad)" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M3 15h18M3 18h14M3 21h10" stroke="url(#cmsWrapGrad)" stroke-width="1.6" stroke-linecap="round"/>
+                        <defs>
+                          <linearGradient id="cmsWrapGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#ED7D31"/>
+                            <stop offset="35%" stop-color="#FFC000"/>
+                            <stop offset="70%" stop-color="#70AD47"/>
+                            <stop offset="100%" stop-color="#5B9BD5"/>
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="cms-img-context-menu" id="articleImgContextMenu" hidden role="menu" aria-label="تخطيط الصورة">
+                    <p class="cms-img-context-menu__title">تخطيط الصورة</p>
+                    <button type="button" role="menuitem" data-img-layout="inline">سطري مع النص</button>
+                    <button type="button" role="menuitem" data-img-layout="square-right">مربع (يمين)</button>
+                    <button type="button" role="menuitem" data-img-layout="square-left">مربع (يسار)</button>
+                    <button type="button" role="menuitem" data-img-layout="tight">مشدود</button>
+                    <button type="button" role="menuitem" data-img-layout="top-bottom">أعلى وأسفل</button>
+                    <button type="button" role="menuitem" data-img-layout="behind">خلف النص</button>
+                    <button type="button" role="menuitem" data-img-layout="front">أمام النص</button>
+                    <div class="cms-img-context-menu__divider"></div>
+                    <p class="cms-img-context-menu__title">الموضع</p>
+                    <button type="button" role="menuitem" data-img-position="flow">يتحرك مع النص</button>
+                    <button type="button" role="menuitem" data-img-position="fixed">تثبيت الموضع في الصفحة</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="admin-modal__actions">
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-article-modal>إلغاء</button>
+              <button class="admin-btn admin-btn--primary" type="submit">حفظ المقال</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="admin-modal" id="faqEditorModal" hidden>
+        <div class="admin-modal__backdrop" data-close-faq-modal></div>
+        <div class="admin-modal__dialog" role="dialog" aria-modal="true">
+          <form class="admin-modal__form" id="faqEditorForm">
+            <div class="admin-modal__header">
+              <h3 class="admin-modal__title" id="faqEditorTitleLabel">سؤال جديد</h3>
+              <button class="admin-modal__close" type="button" data-close-faq-modal aria-label="إغلاق">×</button>
+            </div>
+            <div class="admin-modal__body">
+              <input type="hidden" id="faqEditorId" />
+              <label class="admin-field"><span class="admin-field__label">السؤال</span>
+                <input class="admin-field__input" id="faqEditorQuestion" required /></label>
+              <label class="admin-field"><span class="admin-field__label">الإجابة</span>
+                <textarea class="admin-field__input admin-field__textarea" id="faqEditorAnswer" rows="5" required></textarea></label>
+              <label class="admin-field"><span class="admin-field__label">حالة النشر</span>
+                <select class="admin-field__input" id="faqEditorStatus">
+                  <option value="draft">مسودة</option>
+                  <option value="published">نشر</option>
+                </select></label>
+            </div>
+            <div class="admin-modal__actions">
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-faq-modal>إلغاء</button>
+              <button class="admin-btn admin-btn--primary" type="submit">حفظ</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="admin-modal" id="tstEditorModal" hidden>
+        <div class="admin-modal__backdrop" data-close-tst-modal></div>
+        <div class="admin-modal__dialog" role="dialog" aria-modal="true">
+          <form class="admin-modal__form" id="tstEditorForm">
+            <div class="admin-modal__header">
+              <h3 class="admin-modal__title" id="tstEditorTitleLabel">رأي جديد</h3>
+              <button class="admin-modal__close" type="button" data-close-tst-modal aria-label="إغلاق">×</button>
+            </div>
+            <div class="admin-modal__body">
+              <input type="hidden" id="tstEditorId" />
+              <input type="hidden" id="tstEditorAvatarData" />
+              <label class="admin-field"><span class="admin-field__label">اسم المراجع</span>
+                <input class="admin-field__input" id="tstEditorName" required /></label>
+              <label class="admin-field"><span class="admin-field__label">المسمى الوظيفي / الشركة</span>
+                <input class="admin-field__input" id="tstEditorRole" /></label>
+              <label class="admin-field"><span class="admin-field__label">نص الرأي</span>
+                <textarea class="admin-field__input admin-field__textarea" id="tstEditorText" rows="4" required></textarea></label>
+              <label class="admin-field"><span class="admin-field__label">التقييم</span>
+                <select class="admin-field__input" id="tstEditorRating">
+                  <option value="5">★★★★★ 5</option>
+                  <option value="4">★★★★☆ 4</option>
+                  <option value="3">★★★☆☆ 3</option>
+                  <option value="2">★★☆☆☆ 2</option>
+                  <option value="1">★☆☆☆☆ 1</option>
+                </select></label>
+              <label class="cms-file-btn">رفع صورة المستخدم
+                <input type="file" id="tstEditorAvatarFile" accept="image/*" hidden /></label>
+              <img class="cms-avatar-preview" id="tstEditorAvatarPreview" alt="" hidden />
+              <label class="admin-field"><span class="admin-field__label">حالة العرض</span>
+                <select class="admin-field__input" id="tstEditorStatus">
+                  <option value="published">نشر</option>
+                  <option value="draft">مسودة</option>
+                </select></label>
+            </div>
+            <div class="admin-modal__actions">
+              <button class="admin-btn admin-btn--ghost" type="button" data-close-tst-modal>إلغاء</button>
+              <button class="admin-btn admin-btn--primary" type="submit">حفظ الرأي</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <section class="admin-panel admin-view" id="settings" data-admin-view="settings" aria-labelledby="settingsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="settingsHeading">الإعدادات</h2>
+            <p class="admin-panel__desc">محاكيات الفترة التجريبية، قيد التطوير، وإعدادات التجربة والعروض</p>
+          </div>
+        </div>
+        <form class="admin-settings-form" id="platformSettingsForm">
+          <fieldset class="admin-field admin-field--fieldset">
+            <legend class="admin-field__label">محاكيات الفترة التجريبية المجانية للحسابات الجدد</legend>
+            <p class="admin-field__hint">المحاكيات المحددة متاحة فقط أثناء التجربة النشطة (حسب عدد أيام التجربة في القسم أدناه) أو للمشتركين والمسؤولين. بعد انتهاء التجربة تُقفل وتتطلب الاشتراك في باقة — وليست مجانية للزوار أو للجميع.</p>
+            <div class="admin-simulator-checklist" id="settingsFreeSimulators"></div>
+          </fieldset>
+          <fieldset class="admin-field admin-field--fieldset">
+            <legend class="admin-field__label">المحاكيات قيد التطوير (Under Development / Coming Soon)</legend>
+            <p class="admin-field__hint">عند التفعيل: تظهر شارة «قريباً — قيد التطوير» على البطاقة ويُقفل الوصول المباشر للمحاكي</p>
+            <div class="admin-simulator-checklist" id="settingsComingSoonSimulators"></div>
+          </fieldset>
+          <fieldset class="admin-field admin-field--fieldset">
+            <legend class="admin-field__label">أ — التجربة التلقائية للمستخدمين الجدد</legend>
+            <p class="admin-field__hint">يُفعَّل تلقائياً عندما تكون مدة التجربة أكبر من صفر. يظهر الشريط والعدّاد للمستخدمين المسجّلين الجدد فقط (ضمن فترة التجربة)، ويُخفى عن الزوار والمشتركين والمسؤولين.</p>
+            <div class="admin-field">
+              <span class="admin-field__label">مدة التجربة</span>
+              <div class="admin-trial-duration" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                <label class="admin-field" style="margin: 0; flex: 1 1 100px; min-width: 88px;">
+                  <span class="admin-field__label">أيام</span>
+                  <input class="admin-field__input" id="settingsTrialDays" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="admin-field" style="margin: 0; flex: 1 1 100px; min-width: 88px;">
+                  <span class="admin-field__label">ساعات</span>
+                  <input class="admin-field__input" id="settingsTrialHours" type="number" min="0" max="23" step="1" value="0" />
+                </label>
+                <label class="admin-field" style="margin: 0; flex: 1 1 100px; min-width: 88px;">
+                  <span class="admin-field__label">دقائق</span>
+                  <input class="admin-field__input" id="settingsTrialMinutes" type="number" min="0" max="59" step="1" value="0" />
+                </label>
+              </div>
+              <span class="admin-field__hint">0 في كل الحقول = تعطيل التجربة. عند التسجيل يُمنح المستخدم هذه المدة للوصول إلى المحاكيات في قائمة التجربة أعلاه (مثال للاختبار: 0 أيام، 0 ساعات، 5 دقائق).</span>
+            </div>
+            <label class="admin-field">
+              <span class="admin-field__label">نص شريط التجربة الشخصي</span>
+              <textarea class="admin-field__input admin-field__textarea" id="settingsTrialAnnouncementText" rows="2" maxlength="500" placeholder="مثال: استمتع بتجربتك المجانية على المحاكيات"></textarea>
+            </label>
+          </fieldset>
+          <fieldset class="admin-field admin-field--fieldset">
+            <legend class="admin-field__label">ب — عرض ترويجي عام (للجميع)</legend>
+            <p class="admin-field__hint">عند التفعيل يظهر هذا الشريط لجميع الزوار والمستخدمين حتى تاريخ الانتهاء، و<strong>يلغي أولوية</strong> شريط التجربة التلقائي طالما العرض العام سارياً.</p>
+            <label class="admin-field admin-field--checkbox">
+              <input type="checkbox" id="settingsGlobalOfferEnabled" name="globalOfferEnabled" />
+              <span>تفعيل العرض الترويجي العام</span>
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">نص العرض</span>
+              <textarea class="admin-field__input admin-field__textarea" id="settingsGlobalOfferText" rows="2" maxlength="500" placeholder="مثال: عرض خاص — اشترك الآن بخصم محدود"></textarea>
+            </label>
+            <label class="admin-field" id="settingsGlobalOfferEndsAtWrap" hidden>
+              <span class="admin-field__label">انتهاء العرض</span>
+              <input class="admin-field__input" id="settingsGlobalOfferEndsAt" type="datetime-local" />
+              <span class="admin-field__hint">العدّاد التنازلي حتى هذا التاريخ والوقت. يُحفظ بتوقيت UTC.</span>
+            </label>
+          </fieldset>
+          <fieldset class="admin-field admin-field--fieldset admin-ftth-lab-config" id="ifa_ftth_lab_config" aria-labelledby="adminFtthLabConfigLegend" hidden aria-hidden="true">
+            <legend class="admin-field__label" id="adminFtthLabConfigLegend">إعدادات مختبر FTTH · <code>ifa_ftth_lab_config</code></legend>
+            <p class="admin-field__hint">Device names, specs, toolbox icons — use the tabs below to edit lab device configuration.</p>
+            <div class="admin-ftth-lab-config__panel lab-settings-cms lab-settings-cms--embedded" id="admin-ftth-lab-config-root">
+              <div class="lab-settings-cms__toolbar">
+                <button type="button" class="lab-settings-cms__btn" id="admin-ftth-lab-settings-undo" title="Ctrl+Z">Undo</button>
+                <button type="button" class="lab-settings-cms__btn" id="admin-ftth-lab-settings-redo" title="Ctrl+Y">Redo</button>
+                <button type="button" class="lab-settings-cms__btn lab-settings-cms__btn--warn" id="admin-ftth-lab-settings-reset">Reset to Defaults</button>
+                <button type="button" class="lab-settings-cms__btn lab-settings-cms__btn--primary" id="admin-ftth-lab-settings-save">Save Changes</button>
+              </div>
+              <nav class="lab-settings-cms__tabs" aria-label="Settings sections">
+                <button type="button" class="lab-settings-cms__tab is-active" data-lab-settings-tab="devices">Devices &amp; Icons</button>
+                <button type="button" class="lab-settings-cms__tab" data-lab-settings-tab="splicing">معدات اللحام · Splicing</button>
+                <button type="button" class="lab-settings-cms__tab" data-lab-settings-tab="performance">Performance Specs</button>
+              </nav>
+              <div class="lab-settings-cms__body" id="admin-ftth-lab-settings-body"></div>
+              <p class="lab-settings-cms__status" id="admin-ftth-lab-settings-status"></p>
+            </div>
+          </fieldset>
+          <div class="admin-settings-form__actions">
+            <button class="admin-btn admin-btn--primary" type="submit">حفظ الإعدادات</button>
+            <p class="admin-panel__meta" id="settingsSaveStatus" role="status"></p>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/ifa-toast.js?v=20261015a"></script>
+  <script src="js/env-access.js?v=20260921"></script>
+  <script type="module" src="js/admin-guard.js?v=20260921"></script>
+  <script type="module" src="js/admin-profile.js?v=20260921"></script>
+  <script src="js/platform-simulators.js?v=20260921"></script>
+  <script src="js/platform-simulator-showcase.js?v=20260921"></script>
+  <script type="module" src="js/cms-status.js?v=20260921"></script>
+  <script src="js/articles.js?v=20260921"></script>
+  <script type="module" src="js/platform-articles-firestore-sync.js?v=20260921"></script>
+  <script src="js/faq.js?v=20260921"></script>
+  <script type="module" src="js/platform-faqs-firestore-sync.js?v=20260921"></script>
+  <script src="js/testimonials.js?v=20260921"></script>
+  <script type="module" src="js/platform-testimonials-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-stats.js?v=20260921"></script>
+  <script type="module" src="js/platform-stats-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/firestore-user-metrics.js?v=20260921"></script>
+  <script src="js/platform-footer.js?v=20260921"></script>
+  <script type="module" src="js/platform-footer-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-hero-slideshow.js?v=20260921"></script>
+  <script src="js/admin-users.js?v=20260921"></script>
+  <script type="module" src="js/admin-users-firestore-sync.js?v=20260921"></script>
+  <script src="js/instructor-applications.js?v=20261014c"></script>
+  <script src="js/platform-courses.js?v=20260921"></script>
+  <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-plans.js?v=20260921"></script>
+  <script type="module" src="js/platform-plans-firestore-sync.js?v=20260921"></script>
+  <script src="js/course-plan-sync.js?v=20260921"></script>
+  <script src="js/admin-courses-ui.js?v=20260921"></script>
+  <script src="js/admin-plans-ui.js?v=20260921"></script>
+  <script src="js/settings/FtthLabSettings.js?v=20260921"></script>
+  <script src="js/ftth-lab-settings-cms.js?v=20260921"></script>
+  <script src="js/admin-core.js?v=20260925"></script>
+  <script src="js/admin-users-ui.js?v=20260921"></script>
+  <script src="js/admin-instructors-ui.js?v=20261014g"></script>
+  <script type="module" src="js/admin-public-instructors.js?v=20261014h"></script>
+  <script type="module" src="js/platform-simulators-firestore-sync.js?v=20260921"></script>
+  <script src="js/admin-site-cms.js?v=20260921"></script>
+  <script type="module" src="js/admin-orders-ui.js?v=20260921"></script>
+  <script type="module" src="js/admin-checkout-settings-ui.js?v=20260921"></script>
+  <script src="js/admin.js?v=20260921"></script>
+</body>
+</html>

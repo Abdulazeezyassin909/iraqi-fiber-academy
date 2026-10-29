@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-i18n-document-title="page.title.home">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="مسار المهندس ‎°360 — منصة المسار المهني الهندسي | Engineer Path °360 Engineering Career Path Platform">
+  <title>مسار المهندس ‎°360 | Engineer Path °360</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=20260925">
+  <link rel="stylesheet" href="css/header.css?v=20260921">
+  <link rel="stylesheet" href="css/hero.css?v=20260921">
+  <link rel="stylesheet" href="css/features.css?v=20260921">
+  <link rel="stylesheet" href="css/pricing.css?v=20260921">
+  <link rel="stylesheet" href="css/footer.css?v=20260921">
+  <link rel="stylesheet" href="css/instructor-apply.css?v=20260921">
+  <link rel="stylesheet" href="css/notifications.css?v=20260921">
+  <script defer src="js/i18n.js?v=20260921"></script>
+  <script defer src="js/settings-manager.js?v=20260921"></script>
+</head>
+<body>
+
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="#" class="logo">
+        <img class="logo__img" src="images/logo.png" alt="Engineer Path °360 Logo" width="42" height="42" />
+        <div class="logo__text">
+          <span class="logo__text-main" data-i18n="logo.main">مسار المهندس ‎°360</span>
+          <span class="logo__text-sub" data-i18n="logo.sub">منصة المسار المهني الهندسي</span>
+        </div>
+      </a>
+      <nav class="nav" id="nav" aria-label="Main navigation">
+        <button type="button" class="nav__close" id="navClose" data-i18n-aria="header.navClose" aria-label="إغلاق القائمة">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <ul class="nav__list">
+          <li><a href="#hero" class="nav__link active" data-i18n="nav.home">الرئيسية</a></li>
+          <li><a href="#courses" class="nav__link" data-i18n="nav.courses">الكورسات التعليمية</a></li>
+          <li><a href="#simulators" class="nav__link" data-i18n="nav.simulators">المحاكيات</a></li>
+          <li><a href="#pricing" class="nav__link" data-i18n="nav.plans">الباقات</a></li>
+          <li><a href="#articles" class="nav__link" data-i18n="nav.articles">المقالات التقنية</a></li>
+          <li><a href="#faq" class="nav__link" data-i18n="nav.faq">الأسئلة الشائعة</a></li>
+          <li><a href="#our-instructors" class="nav__link">مدربونا</a></li>
+        </ul>
+      </nav>
+      <div class="header__actions">
+        <div class="auth-slot" data-auth-slot data-auth-variant="landing">
+          <button type="button" class="auth-login-btn" data-auth-login data-i18n="header.login">تسجيل الدخول</button>
+        </div>
+        <a href="#pricing" class="header__cta" data-i18n="header.cta">ابدأ مجاناً</a>
+      </div>
+      <button class="nav__toggle" id="navToggle" data-i18n-aria="header.navToggle" aria-label="فتح القائمة">
+        <span class="nav__toggle-bar"></span>
+        <span class="nav__toggle-bar"></span>
+        <span class="nav__toggle-bar"></span>
+      </button>
+    </div>
+    <div class="nav__overlay" id="navOverlay" aria-hidden="true"></div>
+  </header>
+
+  <div id="globalAnnouncementBar" class="platform-top-banner" style="display: none;" role="status" aria-live="polite" aria-label="إشعار المنصة"></div>
+
+  <main>
+    <section class="hero hero--content-slider" id="hero">
+      <div class="hero__bg">
+        <div class="hero__glow"></div>
+        <div class="hero__glow hero__glow--secondary"></div>
+        <div class="hero__grid-pattern"></div>
+        <div class="hero__fiber-lines">
+          <div class="fiber-line-animated"></div>
+          <div class="fiber-line-animated"></div>
+          <div class="fiber-line-animated"></div>
+        </div>
+      </div>
+      <div class="hero-content-slider" id="heroSlideshow" aria-roledescription="carousel" aria-label="Homepage slides">
+        <div class="hero-content-slider__track" id="heroSlideshowSlides"></div>
+      </div>
+      <template id="heroNetworkTemplate">
+        <div class="hero__visual-card">
+            <div class="hero__network" aria-label="FTTH Simulator — شبكة معدات الألياف الضوئية">
+              <div class="hero__network-grid" aria-hidden="true"></div>
+              <svg class="hero__network-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <line class="hero__link" x1="50" y1="50" x2="50" y2="14"/>
+                <line class="hero__link" x1="50" y1="50" x2="76" y2="24"/>
+                <line class="hero__link" x1="50" y1="50" x2="86" y2="50"/>
+                <line class="hero__link" x1="50" y1="50" x2="76" y2="76"/>
+                <line class="hero__link" x1="50" y1="50" x2="50" y2="86"/>
+                <line class="hero__link" x1="50" y1="50" x2="24" y2="76"/>
+                <line class="hero__link" x1="50" y1="50" x2="14" y2="50"/>
+                <line class="hero__link" x1="50" y1="50" x2="24" y2="24"/>
+              </svg>
+
+              <!-- Center: Fiber optic cable cross-section -->
+              <div class="hero__network-center" title="مقطع كابل الألياف الضوئية">
+                <svg class="hero__eq-svg hero__eq-svg--center" viewBox="0 0 64 64" aria-hidden="true">
+                  <!-- Outer jacket -->
+                  <circle cx="32" cy="32" r="26" fill="#1a1a1a" stroke="#3f3f46" stroke-width="1.2"/>
+                  <!-- Jacket thickness ring -->
+                  <circle cx="32" cy="32" r="22.5" fill="#2a2a2e" stroke="#52525b" stroke-width="0.6"/>
+                  <!-- Strength / aramid yarn ring -->
+                  <circle cx="32" cy="32" r="19.5" fill="none" stroke="#ca8a04" stroke-width="2.4" opacity="0.85"/>
+                  <circle cx="32" cy="32" r="18" fill="#e7e5e4"/>
+                  <!-- Buffer tube / coating -->
+                  <circle cx="32" cy="32" r="14.5" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1"/>
+                  <circle cx="32" cy="32" r="12.2" fill="#eceff1" stroke="#94a3b8" stroke-width="0.7"/>
+                  <!-- Central strength member -->
+                  <circle cx="32" cy="32" r="2.4" fill="#78716c" stroke="#57534e" stroke-width="0.6"/>
+                  <!-- Color-coded fiber strands (TIA-598) -->
+                  <circle cx="32" cy="22.2" r="2.15" fill="#2563eb" stroke="#1e3a5f" stroke-width="0.4"/>
+                  <circle cx="39.2" cy="24.8" r="2.15" fill="#ea580c" stroke="#7c2d12" stroke-width="0.4"/>
+                  <circle cx="41.8" cy="32" r="2.15" fill="#16a34a" stroke="#14532d" stroke-width="0.4"/>
+                  <circle cx="39.2" cy="39.2" r="2.15" fill="#92400e" stroke="#451a03" stroke-width="0.4"/>
+                  <circle cx="32" cy="41.8" r="2.15" fill="#64748b" stroke="#334155" stroke-width="0.4"/>
+                  <circle cx="24.8" cy="39.2" r="2.15" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.5"/>
+                  <circle cx="22.2" cy="32" r="2.15" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.4"/>
+                  <circle cx="24.8" cy="24.8" r="2.15" fill="#eab308" stroke="#713f12" stroke-width="0.4"/>
+                  <!-- Fiber cores (tiny dark centers) -->
+                  <circle cx="32" cy="22.2" r="0.55" fill="#0f172a"/>
+                  <circle cx="39.2" cy="24.8" r="0.55" fill="#0f172a"/>
+                  <circle cx="41.8" cy="32" r="0.55" fill="#0f172a"/>
+                  <circle cx="39.2" cy="39.2" r="0.55" fill="#0f172a"/>
+                  <circle cx="32" cy="41.8" r="0.55" fill="#0f172a"/>
+                  <circle cx="24.8" cy="39.2" r="0.55" fill="#0f172a"/>
+                  <circle cx="22.2" cy="32" r="0.55" fill="#0f172a"/>
+                  <circle cx="24.8" cy="24.8" r="0.55" fill="#0f172a"/>
+                </svg>
+                <span class="hero__node-label hero__node-label--center">Fiber Cable · كابل فايبر</span>
+              </div>
+
+              <!-- 12:00 OLT -->
+              <div class="hero__network-node hero__network-node--1" title="OLT">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="8" y="16" width="48" height="30" rx="3" stroke="#94a3b8" stroke-width="1.6"/>
+                  <path d="M8 24h48" stroke="#64748b" stroke-width="1.2"/>
+                  <rect x="12" y="28" width="10" height="12" rx="1" stroke="#64748b" stroke-width="1.2"/>
+                  <rect x="27" y="28" width="10" height="12" rx="1" stroke="#64748b" stroke-width="1.2"/>
+                  <rect x="42" y="28" width="10" height="12" rx="1" stroke="#38bdf8" stroke-width="1.2"/>
+                  <circle cx="15" cy="34" r="1.1" fill="#22c55e"/><circle cx="19" cy="34" r="1.1" fill="#22c55e"/>
+                  <circle cx="30" cy="34" r="1.1" fill="#eab308"/><circle cx="34" cy="34" r="1.1" fill="#22c55e"/>
+                  <path d="M14 48v4M32 48v4M50 48v4" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                <span class="hero__node-label">OLT</span>
+              </div>
+
+              <!-- 1:30 FDT -->
+              <div class="hero__network-node hero__network-node--2" title="FDT">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="18" y="8" width="28" height="44" rx="2" stroke="#94a3b8" stroke-width="1.6"/>
+                  <path d="M18 16h28" stroke="#64748b" stroke-width="1.2"/>
+                  <path d="M18 16 L10 18 V48 L18 50" stroke="#64748b" stroke-width="1.3" stroke-linejoin="round"/>
+                  <rect x="22" y="20" width="20" height="7" rx="1" stroke="#38bdf8" stroke-width="1.1"/>
+                  <rect x="22" y="30" width="20" height="7" rx="1" stroke="#64748b" stroke-width="1.1"/>
+                  <path d="M24 23h10M24 33h14" stroke="#94a3b8" stroke-width="1"/>
+                  <circle cx="26" cy="44" r="1.3" stroke="#22c55e" stroke-width="1"/><circle cx="32" cy="44" r="1.3" stroke="#38bdf8" stroke-width="1"/><circle cx="38" cy="44" r="1.3" stroke="#22c55e" stroke-width="1"/>
+                </svg>
+                <span class="hero__node-label">FDT</span>
+              </div>
+
+              <!-- 3:00 ONT -->
+              <div class="hero__network-node hero__network-node--3" title="ONT">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <path d="M10 30 L32 12 L54 30" stroke="#94a3b8" stroke-width="1.6" stroke-linejoin="round"/>
+                  <path d="M14 28 V50 H50 V28" stroke="#94a3b8" stroke-width="1.5" stroke-linejoin="round"/>
+                  <rect x="28" y="36" width="8" height="14" stroke="#64748b" stroke-width="1.2"/>
+                  <rect x="36" y="20" width="14" height="10" rx="1.5" stroke="#38bdf8" stroke-width="1.4"/>
+                  <circle cx="40" cy="25" r="1.2" fill="#22c55e"/>
+                  <circle cx="45" cy="25" r="1.2" fill="#ef4444"/>
+                  <path d="M32 12 V7" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                <span class="hero__node-label">ONT</span>
+              </div>
+
+              <!-- 4:30 SFP / Splitter -->
+              <div class="hero__network-node hero__network-node--4" title="SFP / Splitter">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <!-- Splitter Y topology -->
+                  <circle cx="14" cy="32" r="3" stroke="#38bdf8" stroke-width="1.4"/>
+                  <path d="M17 32 H30" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+                  <rect x="28" y="26" width="10" height="12" rx="1.5" stroke="#94a3b8" stroke-width="1.5"/>
+                  <path d="M38 29 L50 18" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M38 32 L52 32" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M38 35 L50 46" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round"/>
+                  <circle cx="50" cy="18" r="2.4" stroke="#22c55e" stroke-width="1.3"/>
+                  <circle cx="52" cy="32" r="2.4" stroke="#38bdf8" stroke-width="1.3"/>
+                  <circle cx="50" cy="46" r="2.4" stroke="#22c55e" stroke-width="1.3"/>
+                  <!-- SFP module hint -->
+                  <rect x="8" y="44" width="14" height="8" rx="1" stroke="#64748b" stroke-width="1.1"/>
+                  <path d="M11 48h8" stroke="#38bdf8" stroke-width="1"/>
+                </svg>
+                <span class="hero__node-label">SFP / Splitter</span>
+              </div>
+
+              <!-- 6:00 OPM -->
+              <div class="hero__network-node hero__network-node--5" title="Optical Power Meter">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="16" y="8" width="32" height="46" rx="4" stroke="#94a3b8" stroke-width="1.6"/>
+                  <rect x="20" y="14" width="24" height="16" rx="1.5" stroke="#38bdf8" stroke-width="1.3"/>
+                  <path d="M24 21h16M28 27h8" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round"/>
+                  <circle cx="26" cy="40" r="3" stroke="#64748b" stroke-width="1.2"/>
+                  <circle cx="38" cy="40" r="3" stroke="#64748b" stroke-width="1.2"/>
+                  <rect x="28" y="4" width="8" height="5" rx="1" stroke="#64748b" stroke-width="1.1"/>
+                </svg>
+                <span class="hero__node-label">OPM</span>
+              </div>
+
+              <!-- 7:30 Splicer -->
+              <div class="hero__network-node hero__network-node--6" title="Fusion Splicer">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="8" y="20" width="48" height="26" rx="3" stroke="#94a3b8" stroke-width="1.6"/>
+                  <rect x="12" y="25" width="18" height="12" rx="1.2" stroke="#38bdf8" stroke-width="1.2"/>
+                  <path d="M15 31h12" stroke="#94a3b8" stroke-width="1.2"/>
+                  <rect x="36" y="25" width="16" height="14" rx="1.2" stroke="#64748b" stroke-width="1.2"/>
+                  <path d="M40 32h8" stroke="#94a3b8" stroke-width="1.2"/>
+                  <path d="M2 33 H10 M54 33 H62" stroke="#38bdf8" stroke-width="1.4" stroke-linecap="round"/>
+                  <rect x="24" y="10" width="16" height="8" rx="1.2" stroke="#64748b" stroke-width="1.2"/>
+                </svg>
+                <span class="hero__node-label">Splicer</span>
+              </div>
+
+              <!-- 9:00 OTDR -->
+              <div class="hero__network-node hero__network-node--7" title="OTDR">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="10" y="12" width="44" height="38" rx="3" stroke="#94a3b8" stroke-width="1.6"/>
+                  <rect x="14" y="18" width="36" height="18" rx="1.5" stroke="#38bdf8" stroke-width="1.2"/>
+                  <polyline points="17,32 23,26 28,28 34,20 40,24 46,22" stroke="#f97316" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+                  <circle cx="20" cy="44" r="2.2" stroke="#64748b" stroke-width="1.1"/>
+                  <circle cx="32" cy="44" r="2.2" stroke="#64748b" stroke-width="1.1"/>
+                  <circle cx="44" cy="44" r="2.2" stroke="#22c55e" stroke-width="1.1"/>
+                </svg>
+                <span class="hero__node-label">OTDR</span>
+              </div>
+
+              <!-- 10:30 NMS -->
+              <div class="hero__network-node hero__network-node--8" title="NMS">
+                <svg class="hero__eq-svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="8" y="10" width="48" height="30" rx="2.5" stroke="#94a3b8" stroke-width="1.6"/>
+                  <rect x="12" y="14" width="40" height="22" rx="1" stroke="#64748b" stroke-width="1.1"/>
+                  <circle cx="20" cy="24" r="2.4" stroke="#38bdf8" stroke-width="1.2"/>
+                  <circle cx="32" cy="20" r="2.4" stroke="#22c55e" stroke-width="1.2"/>
+                  <circle cx="44" cy="26" r="2.4" stroke="#eab308" stroke-width="1.2"/>
+                  <path d="M22 24 L30 21 M34 21 L42 25" stroke="#64748b" stroke-width="1.1"/>
+                  <path d="M28 40 V46 H36 V40" stroke="#64748b" stroke-width="1.3" stroke-linejoin="round"/>
+                  <path d="M20 50 H44" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span class="hero__node-label">NMS</span>
+              </div>
+            </div>
+            <div class="hero__float-badge hero__float-badge--1">OTDR Readout</div>
+            <div class="hero__float-badge hero__float-badge--2">FTH Simulator</div>
+        </div>
+      </template>
+    </section>
+
+    <section class="stats stats--loading" id="stats">
+      <div class="container">
+        <div class="stats__grid">
+          <div class="stat-card fade-in"><div class="stat-card__icon">👨‍🎓</div><div class="stat-card__number" lang="en" dir="ltr" data-stat-key="enrolledStudents" data-target="0">0</div><div class="stat-card__label" data-i18n="stats.enrolled">طالب مسجّل</div></div>
+          <div class="stat-card fade-in"><div class="stat-card__icon">📏</div><div class="stat-card__number" lang="en" dir="ltr" data-stat-key="simulatedKilometers" data-target="0">0</div><div class="stat-card__label" data-i18n="stats.kilometers">كيلومتر محاكى</div></div>
+          <div class="stat-card fade-in"><div class="stat-card__icon">🎯</div><div class="stat-card__number" lang="en" dir="ltr" data-stat-key="trainingProjects" data-target="0">0</div><div class="stat-card__label" data-i18n="stats.projects">مشروع تدريبي</div></div>
+          <div class="stat-card fade-in"><div class="stat-card__icon">⭐</div><div class="stat-card__number" lang="en" dir="ltr" data-stat-key="satisfactionRate" data-target="0" data-stat-suffix="%">0</div><div class="stat-card__label" data-i18n="stats.satisfaction">% رضا الطلاب</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="simulators">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge" data-i18n="section.simulators.badge">بيئة التدريب العملي</span>
+          <h2 class="section__title" data-i18n="section.simulators.title">المحاكيات</h2>
+          <p class="section__subtitle" data-i18n="section.simulators.subtitle">أدوات محاكاة متقدمة مصممة خصيصاً لفنيي ومهندسي الألياف الضوئية</p>
+        </div>
+        <div class="features__grid" id="publicSimulatorsGrid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="courses">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge" data-i18n="section.courses.badge">رحلتك التعليمية</span>
+          <h2 class="section__title" data-i18n="section.courses.title">المسار من الصفر للاحتراف</h2>
+          <p class="section__subtitle" data-i18n="section.courses.subtitle">كورسات منظمة تأخذك من المفاهيم الأساسية إلى إدارة مشاريع FTTH كاملة</p>
+        </div>
+        <div class="public-courses-grid" id="publicCoursesGrid" aria-live="polite">
+          <!-- Filled on load by js/platform-courses-public.js from localStorage key platform_courses -->
+        </div>
+      </div>
+    </section>
+
+    <section class="section demo" id="demo">
+      <div class="container">
+        <div class="demo__wrapper" id="simulatorShowcase" data-sim-showcase>
+          <div class="demo__content sim-showcase__content">
+            <span class="section__badge" data-i18n="section.demo.badge">معاينة المحاكيات</span>
+            <div class="sim-showcase__copy" id="simShowcaseCopy" aria-live="polite">
+              <h2 class="section__title sim-showcase__title" id="simShowcaseTitle" style="text-align:right" data-i18n="section.demo.title">محاكي FTTH متكامل</h2>
+              <p class="section__subtitle sim-showcase__desc" id="simShowcaseDesc" style="text-align:right;margin-inline:0" data-i18n="section.demo.subtitle">صمّم واربط شبكات الألياف الضوئية من OLT حتى منزل المشترك مع محاكاة واقعية لكل مكوّن في الشبكة.</p>
+              <a href="simulator.html" class="btn btn--primary sim-showcase__cta" id="simShowcaseCta" style="margin-top:1.5rem" data-simulator-launch="ftth-simulator" data-i18n="section.demo.cta">Try Simulator</a>
+            </div>
+          </div>
+          <div class="demo__screen sim-showcase__screen" id="simShowcaseScreen">
+            <div class="demo__screen-header">
+              <span class="demo__screen-dot demo__screen-dot--red"></span>
+              <span class="demo__screen-dot demo__screen-dot--yellow"></span>
+              <span class="demo__screen-dot demo__screen-dot--green"></span>
+              <span class="demo__screen-title" id="simShowcaseScreenTitle">fiber-academy-simulator v2.0</span>
+            </div>
+            <div class="demo__screen-body">
+              <div class="demo__mock-toolbar" id="simShowcaseToolbar" aria-hidden="true"></div>
+              <div class="demo__mock-canvas sim-showcase__canvas" id="simShowcaseCanvas">
+                <div class="sim-showcase__visual" id="simShowcaseVisual" aria-hidden="true"></div>
+                <div class="demo__coming-soon sim-showcase__soon" id="simShowcaseSoon" hidden>
+                  <span data-i18n="section.demo.soon">قريباً — قيد التطوير</span>
+                </div>
+              </div>
+              <div class="demo__mock-stats" id="simShowcaseStats"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="articles">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge" data-i18n="section.articles.badge">معرفة تقنية</span>
+          <h2 class="section__title" data-i18n="section.articles.title">المقالات التقنية</h2>
+          <p class="section__subtitle" data-i18n="section.articles.subtitle">أدلة عملية ومحتوى من المدربين لمساعدتك على إتقان شبكات FTTH والألياف الضوئية</p>
+        </div>
+        <div class="articles__grid articles-container" id="articles-grid"></div>
+      </div>
+    </section>
+
+    <div id="plans"></div>
+    <section class="section" id="pricing">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge" data-i18n="section.pricing.badge">خطط الاشتراك</span>
+          <h2 class="section__title" data-i18n="section.pricing.title">اختر الباقة المناسبة لك</h2>
+          <p class="section__subtitle" data-i18n="section.pricing.subtitle">ابدأ مجاناً وطوّر مهاراتك مع باقات تناسب كل المستويات</p>
+        </div>
+        <div class="pricing__grid" id="publicPricingGrid" aria-live="polite">
+          <!-- تُملأ ديناميكياً من platform_plans -->
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt testimonials-section" id="testimonials">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge" data-i18n="section.testimonials.badge">آراء المستخدمين</span>
+          <h2 class="section__title" data-i18n="section.testimonials.title">ماذا يقول طلابنا؟</h2>
+          <p class="section__subtitle" data-i18n="section.testimonials.subtitle">تجارب حقيقية من فنيين ومهندسين استفادوا من منصتنا</p>
+        </div>
+        <div class="testimonials__grid" id="testimonials-grid"></div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="our-instructors">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge">فريق التدريب</span>
+          <h2 class="section__title">مدربونا</h2>
+          <p class="section__subtitle">تعرّف على المدربين الذين يقدّمون المحتوى على المنصة</p>
+        </div>
+        <div class="instructors-container" id="publicInstructorsGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge" data-i18n="section.faq.badge">أسئلة شائعة</span>
+          <h2 class="section__title" data-i18n="section.faq.title">كل ما تحتاج معرفته</h2>
+          <p class="section__subtitle" data-i18n="section.faq.subtitle">إجابات على أكثر الأسئلة تكراراً حول المنصة والمحاكي والاشتراكات</p>
+        </div>
+        <div class="faq__list" id="faq-accordion"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <div class="footer__logo">
+            <img class="footer__logo-img" src="images/logo.png" alt="Engineer Path °360 Logo" width="42" height="42" />
+            <div class="logo__text">
+              <span class="logo__text-main" data-i18n="logo.main">مسار المهندس ‎°360</span>
+              <span class="logo__text-sub" data-i18n="logo.sub">منصة المسار المهني الهندسي</span>
+            </div>
+          </div>
+          <p class="footer__desc" id="footerDesc" data-footer-desc data-i18n="footer.desc">منصة تدريبية رائدة في مجال الألياف الضوئية وشبكات FTTH. نُعدّ الجيل القادم من فنيي ومهندسي الاتصالات.</p>
+          <div class="footer__social" id="footerSocial" data-footer-social data-i18n-aria="footer.social" aria-label="روابط التواصل"></div>
+        </div>
+        <div class="footer__column">
+          <h4 class="footer__column-title" data-i18n="footer.platform">المنصة</h4>
+          <ul class="footer__links">
+            <li><a href="#stats" data-i18n="footer.features">المميزات</a></li>
+            <li><a href="#courses" data-i18n="footer.learningPath">المسار التعليمي</a></li>
+            <li><a href="#demo" data-i18n="footer.simulator">المحاكي</a></li>
+            <li><a href="#pricing" data-i18n="nav.plans">الباقات</a></li>
+          </ul>
+        </div>
+        <div class="footer__column">
+          <h4 class="footer__column-title" data-i18n="footer.support">الدعم</h4>
+          <ul class="footer__links">
+            <li><a href="#faq" data-i18n="nav.faq">الأسئلة الشائعة</a></li>
+            <li><a href="#" data-i18n="footer.helpCenter">مركز المساعدة</a></li>
+            <li><a href="#" data-i18n="footer.contact">تواصل معنا</a></li>
+          </ul>
+        </div>
+        <div class="footer__column">
+          <h4 class="footer__column-title" data-i18n="footer.dashboards">لوحات التحكم</h4>
+          <ul class="footer__links">
+            <li><a href="#" id="footerInstructorLink" data-join-instructor data-i18n="footer.joinInstructor">انضم إلينا كمدرب</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copyright" data-i18n="footer.copyright">© 2026 مسار المهندس ‎°360. جميع الحقوق محفوظة.</p>
+        <div class="footer__legal"><a href="#" data-i18n="footer.privacy">سياسة الخصوصية</a><a href="#" data-i18n="footer.terms">شروط الاستخدام</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="instructor-modal" id="instructorModal" hidden aria-hidden="true">
+    <div class="instructor-modal__backdrop" data-instructor-modal-close></div>
+    <div class="instructor-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="instructorModalTitle">
+      <div class="instructor-modal__header">
+        <div>
+          <h2 class="instructor-modal__title" id="instructorModalTitle" data-i18n="instructor.modalTitle">انضم إلينا كمدرب</h2>
+          <p class="instructor-modal__subtitle" data-i18n="instructor.modalSubtitle">قدّم طلبك للانضمام إلى فريق المدربين في مسار المهندس ‎°360. ستتم مراجعة الطلب من لوحة الإدارة.</p>
+        </div>
+        <button type="button" class="instructor-modal__close" data-instructor-modal-close data-i18n-aria="auth.close" aria-label="إغلاق">×</button>
+      </div>
+
+      <form class="instructor-form" id="instructorApplyForm" novalidate>
+        <div class="instructor-form__error" id="instructorFormError" hidden></div>
+        <div class="instructor-form__success" id="instructorFormSuccess" hidden></div>
+
+        <div class="instructor-form__field">
+          <label class="instructor-form__label" for="instructorFullName">الاسم الكامل <span>*</span></label>
+          <input class="instructor-form__input" type="text" id="instructorFullName" name="fullName" required autocomplete="name" placeholder="مثال: أحمد محمد" />
+        </div>
+
+        <div class="instructor-form__field">
+          <label class="instructor-form__label" for="instructorEmail">البريد الإلكتروني <span>*</span></label>
+          <input class="instructor-form__input" type="email" id="instructorEmail" name="email" required autocomplete="email" placeholder="name@example.com" dir="ltr" />
+        </div>
+
+        <div class="instructor-form__field">
+          <label class="instructor-form__label" for="instructorBio">نبذة مختصرة <span>*</span></label>
+          <textarea class="instructor-form__textarea" id="instructorBio" name="bio" required placeholder="خبرتك في شبكات الألياف الضوئية / FTTH والتعليم..."></textarea>
+        </div>
+
+        <div class="instructor-form__field">
+          <label class="instructor-form__label" for="instructorCvLink">رابط السيرة الذاتية <span>*</span></label>
+          <input class="instructor-form__input" type="url" id="instructorCvLink" name="cvLink" required placeholder="https://..." dir="ltr" />
+        </div>
+
+        <div class="instructor-form__field">
+          <label class="instructor-form__label" for="instructorCourses">الكورسات المقترحة <span>*</span></label>
+          <textarea class="instructor-form__textarea" id="instructorCourses" name="courses" required placeholder="مثال: أساسيات FTTH، لحام الألياف، قراءة مخططات OTDR..."></textarea>
+        </div>
+
+        <div class="instructor-form__actions">
+          <button type="submit" class="btn btn--primary" id="instructorSubmitBtn">إرسال الطلب</button>
+          <button type="button" class="btn btn--outline" data-instructor-modal-close>إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="instructor-alert" id="instructorSuccessAlert" hidden aria-hidden="true">
+    <div class="instructor-alert__backdrop" data-instructor-success-ok></div>
+    <div class="instructor-alert__dialog" role="alertdialog" aria-modal="true" aria-labelledby="instructorSuccessTitle" aria-describedby="instructorSuccessMessage">
+      <div class="instructor-alert__icon" aria-hidden="true">✓</div>
+      <h3 class="instructor-alert__title" id="instructorSuccessTitle">تم إرسال طلبك بنجاح!</h3>
+      <p class="instructor-alert__message" id="instructorSuccessMessage">سيتم مراجعة طلبك والرد عليك خلال 48 ساعة، وستصلك رسالة عبر البريد الإلكتروني عند الموافقة.</p>
+      <button type="button" class="btn btn--primary instructor-alert__ok" id="instructorSuccessOk" data-instructor-success-ok>موافق</button>
+    </div>
+  </div>
+
+  <div class="article-reader" id="article-reader-modal" hidden aria-hidden="true">
+    <div class="article-reader__backdrop" data-article-reader-close></div>
+    <div class="article-reader__dialog" role="dialog" aria-modal="true" aria-labelledby="articleReaderTitle">
+      <header class="article-reader__toolbar">
+        <button type="button" class="article-reader__close" data-article-reader-close aria-label="إغلاق">✕ إغلاق</button>
+      </header>
+      <div class="article-reader__scroll">
+        <img class="article-reader__cover" id="articleReaderCover" alt="" hidden />
+        <span class="article-reader__category" id="articleReaderCategory" hidden></span>
+        <h1 class="article-reader__title" id="articleReaderTitle"></h1>
+        <p class="article-reader__meta" id="articleReaderMeta"></p>
+        <div class="article-reader__body article-body" id="articleReaderBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/ifa-toast.js?v=20261015a"></script>
+  <script src="js/env-access.js?v=20260921"></script>
+  <script src="js/platform-simulators.js?v=20260921"></script>
+  <script src="js/platform-simulator-showcase.js?v=20260921"></script>
+  <script src="js/platform-simulators-public.js?v=20260921"></script>
+  <script type="module" src="js/platform-simulators-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/cms-status.js?v=20260921"></script>
+  <script src="js/articles.js?v=20260921"></script>
+  <script type="module" src="js/platform-articles-firestore-sync.js?v=20260921"></script>
+  <script src="js/faq.js?v=20260921"></script>
+  <script type="module" src="js/public-instructors.js?v=20261014h"></script>
+  <script type="module" src="js/platform-faqs-firestore-sync.js?v=20260921"></script>
+  <script src="js/testimonials.js?v=20260921"></script>
+  <script type="module" src="js/platform-testimonials-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-stats.js?v=20260921"></script>
+  <script type="module" src="js/platform-stats-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/firestore-user-metrics.js?v=20260921"></script>
+  <script src="js/platform-footer.js?v=20260921"></script>
+  <script type="module" src="js/platform-footer-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-hero-slideshow.js?v=20260921"></script>
+  <script>
+    (function bootPublicCms() {
+      function refreshPublicSimulators() {
+        if (typeof window.refreshPublicSimulators === 'function') {
+          window.refreshPublicSimulators();
+          return;
+        }
+        if (window.PlatformSimulators) {
+          if (typeof window.PlatformSimulators.applySimulatorMetaToCards === 'function') {
+            window.PlatformSimulators.applySimulatorMetaToCards();
+          }
+          if (typeof window.PlatformSimulators.applyPublicSimulatorGates === 'function') {
+            window.PlatformSimulators.applyPublicSimulatorGates();
+          }
+        }
+        if (
+          window.PlatformSimulatorShowcase &&
+          typeof window.PlatformSimulatorShowcase.mountSimulatorShowcase === 'function'
+        ) {
+          window.PlatformSimulatorShowcase.mountSimulatorShowcase();
+        }
+      }
+
+      function run() {
+        try {
+          refreshPublicSimulators();
+          if (typeof loadPublicArticles === 'function') loadPublicArticles();
+          if (typeof loadPublicFAQs === 'function') loadPublicFAQs();
+          if (typeof loadPublicTestimonials === 'function') loadPublicTestimonials();
+          if (window.PlatformStats && typeof window.PlatformStats.loadPublicStats === 'function') {
+            window.PlatformStats.loadPublicStats();
+          }
+          if (window.PlatformHeroSlideshow && typeof window.PlatformHeroSlideshow.mountHeroSlideshow === 'function') {
+            window.PlatformHeroSlideshow.mountHeroSlideshow();
+          }
+        } catch (err) {
+          console.error('[CMS public boot]', err);
+        }
+      }
+
+      window.addEventListener('ifa:simulators-firestore-ready', refreshPublicSimulators);
+      window.addEventListener('ifa:simulators-firestore-changed', refreshPublicSimulators);
+      window.addEventListener('ifa:simulators-meta-changed', refreshPublicSimulators);
+      if (window.__ifaSimulatorsFirestoreReady) {
+        window.__ifaSimulatorsFirestoreReady.then(refreshPublicSimulators).catch(function (err) {
+          console.error('[CMS public boot] simulators Firestore init failed', err);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+      } else {
+        run();
+      }
+      window.addEventListener('load', run);
+    })();
+  </script>
+  <script src="js/instructor-applications.js?v=20261014d"></script>
+  <script src="js/platform-courses.js?v=20260921"></script>
+  <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-courses-public.js?v=20260921"></script>
+  <script src="js/platform-plans.js?v=20260921"></script>
+  <script type="module" src="js/platform-plans-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-plans-public.js?v=20260921"></script>
+  <script>
+    /* Role-gated menu hardening before/alongside auth-manager */
+    (function () {
+      function normalizeEmail(value) {
+        return String(value || '').trim().toLowerCase();
+      }
+
+      function isLocalDev() {
+        return !!(window.IFA_ENV && window.IFA_ENV.shouldBypassAccessControl && window.IFA_ENV.shouldBypassAccessControl());
+      }
+
+      function isLiveDomain() {
+        return !!(window.IFA_ENV && window.IFA_ENV.isProductionEnvironment && window.IFA_ENV.isProductionEnvironment());
+      }
+
+      function readSessionEmail() {
+        try {
+          var authRaw = localStorage.getItem('ifa_auth_user');
+          if (authRaw) {
+            var authUser = JSON.parse(authRaw);
+            var authEmail = normalizeEmail(authUser && authUser.email);
+            if (authEmail) return authEmail;
+          }
+          if (window.InstructorApps && typeof window.InstructorApps.getSessionEmail === 'function') {
+            var fromApps = normalizeEmail(window.InstructorApps.getSessionEmail());
+            if (fromApps) return fromApps;
+          }
+          var keys = ['ifa_session_email', 'approvedInstructorEmail', 'ifa_user_email', 'currentUserEmail'];
+          for (var i = 0; i < keys.length; i++) {
+            var v = normalizeEmail(localStorage.getItem(keys[i]));
+            if (v) return v;
+          }
+        } catch (err) { /* ignore */ }
+        return '';
+      }
+
+      function readSessionRole() {
+        try {
+          var authRaw = localStorage.getItem('ifa_auth_user');
+          if (authRaw) {
+            return String((JSON.parse(authRaw) || {}).role || '');
+          }
+        } catch (err) { /* ignore */ }
+        return '';
+      }
+
+      function isAdminSession() {
+        if (window.IFAAuth && typeof window.IFAAuth.isAdminUser === 'function') {
+          return window.IFAAuth.isAdminUser(window.IFAAuth.getAuthState().profile);
+        }
+        return readSessionRole() === 'admin';
+      }
+
+      function isGuestTestUser(menu) {
+        if (!menu) return true;
+        if (menu.getAttribute('data-auth-guest') === '1') return true;
+        if (menu.querySelector('[data-auth-login]') && !menu.querySelector('.user-menu__info-name')) {
+          return true;
+        }
+        try {
+          if (!localStorage.getItem('ifa_auth_user')) return true;
+        } catch (err) {
+          return true;
+        }
+        return false;
+      }
+
+      function isAuthorizedInstructor(email) {
+        if (!email || !window.InstructorApps) return false;
+        if (typeof window.InstructorApps.isApprovedInstructor === 'function' &&
+            window.InstructorApps.isApprovedInstructor(email)) {
+          return true;
+        }
+        if (typeof window.InstructorApps.getApprovedInstructorEmail === 'function' &&
+            normalizeEmail(window.InstructorApps.getApprovedInstructorEmail()) === email) {
+          return true;
+        }
+        return false;
+      }
+
+      function applyRoleMenuVisibility() {
+        if (window.InstructorApps && typeof window.InstructorApps.absorbApprovalFromUrl === 'function') {
+          window.InstructorApps.absorbApprovalFromUrl();
+        }
+
+        var slot = document.querySelector('[data-auth-slot][data-auth-variant="landing"]');
+        if (!slot) return;
+        var menu = slot.querySelector('#userMenu, .user-menu');
+        if (!menu) return;
+
+        var email = readSessionEmail();
+        var guest = isGuestTestUser(menu);
+        var localDev = isLocalDev();
+        var liveDomain = isLiveDomain();
+
+        /* Guests: hide privileged dashboards — except local-dev bypass */
+        if (guest && !localDev) {
+          menu.classList.remove('is-admin', 'is-instructor', 'is-file-local', 'is-local-dev');
+          menu.querySelectorAll(
+            '.user-menu__item--admin, [data-admin-only], .user-menu__item--instructor'
+          ).forEach(function (el) {
+            el.remove();
+          });
+          return;
+        }
+
+        /* local dev bypass, or Firestore RBAC role === admin */
+        var admin = localDev || isAdminSession();
+        var instructor = localDev || isAdminSession() || isAuthorizedInstructor(email);
+
+        menu.classList.toggle('is-file-local', localDev);
+        menu.classList.toggle('is-local-dev', localDev);
+        menu.classList.toggle('is-live-domain', liveDomain);
+        menu.setAttribute('data-env', localDev ? 'local' : liveDomain ? 'production' : 'other');
+        menu.classList.toggle('is-admin', admin);
+        menu.classList.toggle('is-instructor', instructor);
+
+        menu.querySelectorAll('.user-menu__item--admin, [data-admin-only]').forEach(function (el) {
+          if (!admin) {
+            el.remove();
+          } else {
+            el.style.setProperty('display', 'flex', 'important');
+            el.setAttribute('aria-hidden', 'false');
+          }
+        });
+        menu.querySelectorAll('.user-menu__item--instructor').forEach(function (el) {
+          if (!instructor) {
+            el.remove();
+          } else {
+            el.style.setProperty('display', 'flex', 'important');
+            el.setAttribute('aria-hidden', 'false');
+          }
+        });
+
+        function insertMenuItem(el, beforeSelector) {
+          var drop = menu.querySelector('#userMenuDropdown, .user-menu__dropdown');
+          var before = beforeSelector ? menu.querySelector(beforeSelector) : null;
+          if (before && before.parentNode) {
+            before.parentNode.insertBefore(el, before);
+            return;
+          }
+          if (drop) drop.appendChild(el);
+        }
+
+        if (instructor && !menu.querySelector('.user-menu__item--instructor')) {
+          var item = document.createElement('a');
+          item.href = 'instructor.html';
+          item.id = 'instructor-dashboard';
+          item.className = 'user-menu__item user-menu__item--instructor';
+          item.setAttribute('role', 'menuitem');
+          item.textContent = 'لوحة المدرب';
+          item.style.setProperty('display', 'flex', 'important');
+          insertMenuItem(
+            item,
+            '[data-join-instructor], .user-menu__item--join, [data-auth-logout], .user-menu__item--logout'
+          );
+        }
+
+        if (admin && !menu.querySelector('.user-menu__item--admin, [data-admin-only]')) {
+          var adminItem = document.createElement('a');
+          adminItem.href = 'admin.html';
+          adminItem.id = 'admin-dashboard';
+          adminItem.className = 'user-menu__item user-menu__item--admin';
+          adminItem.setAttribute('role', 'menuitem');
+          adminItem.setAttribute('data-admin-only', '');
+          adminItem.textContent = 'لوحة الإدارة';
+          adminItem.style.setProperty('display', 'flex', 'important');
+          var afterInst = menu.querySelector('.user-menu__item--instructor');
+          if (afterInst && afterInst.parentNode) {
+            afterInst.parentNode.insertBefore(adminItem, afterInst.nextSibling);
+          } else {
+            insertMenuItem(
+              adminItem,
+              '[data-join-instructor], .user-menu__item--join, [data-auth-logout], .user-menu__item--logout'
+            );
+          }
+        }
+      }
+
+      window.applyRoleMenuVisibility = applyRoleMenuVisibility;
+      applyRoleMenuVisibility();
+      window.addEventListener('load', applyRoleMenuVisibility);
+      window.addEventListener('focus', applyRoleMenuVisibility);
+      window.addEventListener('pageshow', applyRoleMenuVisibility);
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') applyRoleMenuVisibility();
+      });
+      window.addEventListener('storage', function (e) {
+        if (
+          !e.key ||
+          e.key === 'ifa_auth_user' ||
+          e.key === 'ifa_session_email' ||
+          e.key === 'approvedInstructorEmail' ||
+          e.key === 'isInstructorApproved' ||
+          e.key === 'ifa_approved_instructors'
+        ) {
+          applyRoleMenuVisibility();
+        }
+      });
+      document.addEventListener('ifa:local-auth-changed', applyRoleMenuVisibility);
+
+      var authSlot = document.querySelector('[data-auth-slot]');
+      if (authSlot && typeof MutationObserver !== 'undefined') {
+        var timer = null;
+        new MutationObserver(function () {
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(applyRoleMenuVisibility, 0);
+        }).observe(authSlot, { childList: true, subtree: true });
+      }
+    })();
+
+    (function markAdminPreviewAnatomyLink() {
+      function isAdminPreviewContext() {
+        try {
+          if (window.self !== window.top) return true;
+        } catch (err) {
+          return true;
+        }
+        try {
+          return new URLSearchParams(window.location.search).get('mode') === 'admin-preview';
+        } catch (err2) {
+          return false;
+        }
+      }
+      if (!isAdminPreviewContext()) return;
+      var anatomy = document.querySelector('[data-anatomy-simulator-card]');
+      if (anatomy) anatomy.setAttribute('data-simulator-href', 'fiber-3d-simulator.html?mode=admin-preview');
+      var labCard = document.querySelector('[data-ftth-lab-card]');
+      if (labCard) labCard.setAttribute('data-simulator-href', 'ftth-lab.html?mode=admin-preview');
+      var splicerCard = document.querySelector('[data-fusion-splicer-card]');
+      if (splicerCard) splicerCard.setAttribute('data-simulator-href', 'fusion-splicer.html?mode=admin-preview');
+      var ftth = document.querySelector('[data-simulator-id="ftth-simulator"]');
+      if (ftth) ftth.setAttribute('data-simulator-href', 'simulator.html?mode=admin-preview');
+      var powerMeter = document.querySelector('[data-simulator-id="power-meter"]');
+      if (powerMeter) powerMeter.setAttribute('data-simulator-href', 'power-meter.html?mode=admin-preview');
+      if (window.PlatformSimulators && typeof window.PlatformSimulators.applyPublicSimulatorGates === 'function') {
+        window.PlatformSimulators.applyPublicSimulatorGates();
+      }
+
+      function forwardLabConfigToFrames(data) {
+        if (!data || data.type !== 'ifa:lab-config-apply' || data._ifaRouted) return;
+        var payload = Object.assign({}, data, { _ifaRouted: true });
+        document.querySelectorAll('iframe').forEach(function (frameEl) {
+          if (!frameEl.contentWindow) return;
+          try {
+            frameEl.contentWindow.postMessage(payload, '*');
+          } catch (errFrame) { /* ignore */ }
+        });
+      }
+
+      window.addEventListener('message', function (ev) {
+        forwardLabConfigToFrames(ev.data);
+      });
+      window.addEventListener('ifa:lab-config-apply-local', function (ev) {
+        forwardLabConfigToFrames((ev && ev.detail) || null);
+      });
+
+      window.addEventListener('message', function (ev) {
+        var data = ev.data;
+        if (!data || data.type !== 'UPDATE_CLAMP_LIMITS') return;
+        try {
+          localStorage.setItem('ifa:splicer_clamp_limits_live', JSON.stringify({
+            type: data.type,
+            forward: data.forward,
+            backward: data.backward,
+            ts: Date.now(),
+          }));
+        } catch (err) { /* ignore */ }
+
+        function forwardClampLimits(rootWindow, seen) {
+          if (!rootWindow || seen[rootWindow]) return;
+          seen[rootWindow] = true;
+          try {
+            rootWindow.postMessage(data, '*');
+          } catch (err2) { /* ignore */ }
+          var doc;
+          try {
+            doc = rootWindow.document;
+          } catch (err3) {
+            return;
+          }
+          if (!doc || !doc.querySelectorAll) return;
+          doc.querySelectorAll('iframe').forEach(function (frameEl) {
+            try {
+              forwardClampLimits(frameEl.contentWindow, seen);
+            } catch (err4) { /* ignore */ }
+          });
+        }
+
+        forwardClampLimits(window, {});
+      });
+    })();
+  </script>
+  <script src="js/navigation.js?v=20260921"></script>
+  <script src="js/animations.js?v=20260921"></script>
+  <script src="js/main.js?v=20261014d"></script>
+  <script src="js/platform-notifications.js?v=20260921"></script>
+  <script type="module" src="js/platform-notifications-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20261014b"></script>
+</body>
+</html>

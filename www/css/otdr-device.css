@@ -1,0 +1,2765 @@
+/* ── Canvas layer ── */
+
+.lab-otdr-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.lab-otdr-layer > * {
+  pointer-events: auto;
+}
+
+/* ── Toolbox card (lab-rail) ── */
+
+.lab-tool--otdr .lab-tool__copy strong {
+  color: #c4b5fd;
+}
+
+.lab-tool__mark--otdr {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #302c7c, #1e1b52);
+  color: #00c851;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.lab-tool__mark--otdr svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── VIAVI SmartOTDR — modular physical device UI ── */
+
+.lab-otdr-device.is-dragging,
+.lab-otdr-device.is-selected {
+  z-index: 14;
+}
+
+.lab-otdr-device.is-selected .otdr-device-shell {
+  outline: 1.5px solid rgba(196, 181, 253, 0.85);
+  outline-offset: 2px;
+}
+
+.lab-otdr-device {
+  --otdr-chassis: #302c7c;
+  --otdr-chassis-dark: #1e1b52;
+  --otdr-chassis-light: #3d3894;
+  --otdr-bumper: #8e949a;
+  --otdr-bumper-dark: #6b7178;
+  --otdr-btn-grey: #4a4f56;
+  --otdr-btn-grey-top: #5c6269;
+  --otdr-btn-text: #e8eaed;
+  --otdr-start-green: #00c851;
+  --otdr-start-green-dark: #00a040;
+  --otdr-apc-green: #00c851;
+  --otdr-port-gold: #c9a227;
+  --otdr-port-gold-dark: #9a7b1a;
+  --otdr-label-green: #00c851;
+  --otdr-label-bg: #0a0a12;
+  --otdr-screen-bg: #000000;
+  --otdr-design-w: 400px;
+  --otdr-port-protrude: 25px;
+  --otdr-viavi-fit: 0.5454545455;
+  --otdr-ols-port-w: 54px;
+  --otdr-ols-port-h: 46px;
+  --otdr-opm-port-w: 48px;
+  --otdr-opm-port-h: 34px;
+  --otdr-port-w: calc(var(--otdr-ols-port-w) * var(--otdr-viavi-fit));
+  --otdr-port-h: calc(var(--otdr-ols-port-h) * var(--otdr-viavi-fit));
+  --otdr-vfl-port-w: calc(var(--otdr-opm-port-w) * var(--otdr-viavi-fit));
+  --otdr-vfl-port-h: calc(var(--otdr-opm-port-h) * var(--otdr-viavi-fit));
+  --otdr-vfl-nudge-x: 12px;
+  --otdr-vfl-nudge-y: 8px;
+
+  position: absolute;
+  left: 120px;
+  top: 80px;
+  width: var(--otdr-design-w);
+  padding-top: var(--otdr-port-protrude, 42px);
+  box-sizing: border-box;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--otdr-btn-text);
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.55));
+  z-index: 12;
+  user-select: none;
+}
+
+.lab-otdr-device *,
+.lab-otdr-device *::before,
+.lab-otdr-device *::after {
+  box-sizing: border-box;
+}
+
+/* ── Chassis with rubber bumpers ── */
+
+.lab-otdr-device .otdr-device-shell {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    var(--otdr-chassis-light) 0%,
+    var(--otdr-chassis) 18%,
+    var(--otdr-chassis-dark) 100%
+  );
+  border-radius: 15px;
+  border-left: 14px solid var(--otdr-bumper);
+  border-right: 14px solid var(--otdr-bumper);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset -14px 0 0 var(--otdr-bumper-dark),
+    inset 14px 0 0 var(--otdr-bumper-dark),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
+  overflow: visible;
+}
+
+.lab-otdr-device .otdr-device-shell::before,
+.lab-otdr-device .otdr-device-shell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04) 0,
+    rgba(255, 255, 255, 0.04) 3px,
+    transparent 3px,
+    transparent 7px
+  );
+  z-index: 2;
+}
+
+.lab-otdr-device .otdr-device-shell::before {
+  left: -14px;
+}
+
+.lab-otdr-device .otdr-device-shell::after {
+  right: -14px;
+}
+
+/* ── North-facing protruding ports ── */
+
+.lab-otdr-device .otdr-protruding-ports {
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: var(--otdr-port-protrude);
+  display: grid;
+  grid-template-columns: var(--otdr-vfl-port-w) 1fr var(--otdr-port-w) var(--otdr-port-w);
+  align-items: end;
+  column-gap: 8px;
+  padding: 0 28px 0 20px;
+  z-index: 10;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.lab-otdr-device .protruding-port {
+  position: relative;
+  flex-shrink: 0;
+  pointer-events: auto;
+  cursor: crosshair;
+  z-index: 10;
+}
+
+/* Let plugged fiber connectors receive unplug clicks above the port housing */
+.lab-otdr-device .protruding-port.is-occupied,
+.lab-otdr-device .protruding-port.is-occupied .lab-ols-port,
+.lab-otdr-device .protruding-port.is-occupied .lab-opm-port,
+.lab-otdr-device .lab-otdr-port.is-occupied {
+  pointer-events: none;
+}
+
+.lab-otdr-device .protruding-port--vfl {
+  grid-column: 1;
+  justify-self: center;
+  align-self: end;
+  /* Nudge right (away from bumper) + sink into purple chassis lip */
+  transform: translate(var(--otdr-vfl-nudge-x), var(--otdr-vfl-nudge-y));
+  z-index: 11;
+}
+
+.lab-otdr-device .protruding-port--apc {
+  grid-column: 3;
+  justify-self: center;
+}
+
+.lab-otdr-device .protruding-port--apc-live {
+  grid-column: 4;
+  justify-self: center;
+}
+
+/* Re-use OLS-35 metallic SC adapter visuals (ftth-lab.css) — scaled to OLS canvas size */
+.lab-otdr-device .protruding-port--optical .lab-ols-port.lab-ols-port--metal {
+  top: auto;
+  bottom: 0;
+  left: 50%;
+  width: var(--otdr-ols-port-w);
+  height: var(--otdr-ols-port-h);
+  transform: translateX(-50%) scale(var(--otdr-viavi-fit));
+  transform-origin: bottom center;
+  pointer-events: auto;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Hide OLS recessed well — merges adapter flange with purple chassis edge */
+.lab-otdr-device .protruding-port--optical .lab-ols__well {
+  display: none !important;
+}
+
+.lab-otdr-device .protruding-port--optical .lab-ols__sc {
+  bottom: 0;
+  filter: none;
+}
+
+.lab-otdr-device .protruding-port--optical .lab-ols__adapter-slot {
+  pointer-events: auto;
+}
+
+/* Re-use OLP-38 SC adapter visuals (ftth-lab.css) for VFL port — scaled to OLP canvas size */
+.lab-otdr-device .protruding-port--opm .lab-opm-port {
+  top: auto;
+  bottom: 0;
+  left: 50%;
+  width: var(--otdr-opm-port-w);
+  height: var(--otdr-opm-port-h);
+  transform: translateX(-50%) scale(var(--otdr-viavi-fit));
+  transform-origin: bottom center;
+  pointer-events: auto;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* VFL: match OLP-38 — silver adapter-base overlaps chassis top edge */
+.lab-otdr-device .protruding-port--vfl .viavi__adapter-base {
+  bottom: 2px;
+  box-shadow: none;
+}
+
+.lab-otdr-device .protruding-port--opm .viavi__adapter-base {
+  box-shadow: none;
+}
+
+.lab-otdr-device .protruding-port--opm .viavi__adapter-knurl,
+.lab-otdr-device .protruding-port--opm .viavi__adapter-bore {
+  pointer-events: auto;
+}
+
+.lab-otdr-device .otdr-port-labels {
+  display: grid;
+  grid-template-columns: var(--otdr-vfl-port-w) 1fr var(--otdr-port-w) var(--otdr-port-w);
+  align-items: center;
+  column-gap: 8px;
+  padding: 10px 28px 6px 20px;
+  min-height: 18px;
+  border-bottom: none;
+  background: transparent;
+}
+
+.lab-otdr-device .label-vfl {
+  grid-column: 1;
+  justify-self: center;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 8px;
+  transform: translateX(var(--otdr-vfl-nudge-x));
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #f0f2f5;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .label-vfl__warn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: #facc15;
+  color: #1a1a1a;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.lab-otdr-device .label-apc,
+.lab-otdr-device .label-live {
+  position: relative;
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 5px 2px 8px;
+  border-radius: 2px;
+  background: #7fff00;
+  color: #0a0a12;
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  justify-self: center;
+}
+
+.lab-otdr-device .label-apc {
+  grid-column: 3;
+}
+
+.lab-otdr-device .label-live {
+  grid-column: 4;
+  font-size: 5.5px;
+  padding: 2px 4px 2px 7px;
+}
+
+.lab-otdr-device .label-apc::before,
+.lab-otdr-device .label-live::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Brand bar ── */
+
+.lab-otdr-device .otdr-brand-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px 6px;
+}
+
+.lab-otdr-device .otdr-viavi-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 4px 8px;
+  background: #ffffff;
+  color: var(--otdr-chassis);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  border-radius: 2px;
+}
+
+.lab-otdr-device .otdr-model-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #f0f2f5;
+}
+
+/* ── Touchscreen display ── */
+
+.lab-otdr-device .otdr-screen {
+  margin: 0 10px;
+  height: 248px;
+  border-radius: 4px;
+  border: 2px solid #0a0a0a;
+  box-shadow:
+    inset 0 0 0 1px #1a1a1a,
+    inset 0 4px 20px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.lab-otdr-device .otdr-screen-power-off {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: #000000;
+  pointer-events: none;
+}
+
+.lab-otdr-device.is-powered-off .otdr-screen,
+.lab-otdr-device .otdr-screen.is-powered-off {
+  pointer-events: none;
+  background: #000000;
+}
+
+.lab-otdr-device.is-powered-off .otdr-screen > :not(.otdr-screen-power-off) {
+  visibility: hidden;
+}
+
+.lab-otdr-device .otdr-power-btn.is-pressed {
+  background: linear-gradient(180deg, #2a2e33 0%, #121417 100%);
+  color: rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
+.lab-otdr-device .otdr-os-home {
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* ── Top status bar ── */
+
+.lab-otdr-device .os-top-bar {
+  height: 18px;
+  background-color: #e6e6e6;
+  color: #000000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 6px;
+  font-size: 8px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .bar-left,
+.lab-otdr-device .bar-right {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.lab-otdr-device .home-icon {
+  font-size: 9px;
+  line-height: 1;
+  color: #302c7c;
+}
+
+.lab-otdr-device .bt-icon,
+.lab-otdr-device .wifi-icon {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.lab-otdr-device .battery-icon {
+  font-size: 8px;
+  line-height: 1;
+  filter: hue-rotate(80deg) saturate(2);
+}
+
+.lab-otdr-device .time-date {
+  font-size: 7px;
+  font-weight: 700;
+  margin-left: 2px;
+  white-space: nowrap;
+}
+
+/* ── App grid ── */
+
+.lab-otdr-device .os-app-grid {
+  flex: 1;
+  padding: 5px 3px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.lab-otdr-device .app-row {
+  display: flex;
+  gap: 3px;
+  justify-content: flex-start;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .vfl-row {
+  padding-left: 0;
+}
+
+.lab-otdr-device .app-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  width: 54px;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .app-icon-box,
+.lab-otdr-device .app-label-box {
+  width: 38px;
+  height: 38px;
+  background-color: #ffffff;
+  border-radius: 7px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .app-icon-box .icon,
+.lab-otdr-device .app-label-box .icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.lab-otdr-device .app-icon-box.bg-yellow {
+  background-color: #f5d000;
+}
+
+.lab-otdr-device .app-label {
+  color: #ffffff;
+  font-size: 5.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 2px;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.lab-otdr-device .app-btn[data-app="smart-access"] .app-label,
+.lab-otdr-device .app-btn[data-app="settings"] .app-label {
+  text-transform: none;
+}
+
+.lab-otdr-device .app-label.text-green {
+  color: #00a040;
+  background-color: #ffffff;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-top: 1px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.lab-otdr-device .app-btn.is-selected .app-icon-box {
+  box-shadow: 0 0 0 1.5px #ffffff;
+}
+
+.lab-otdr-device .app-btn:hover .app-icon-box,
+.lab-otdr-device .app-btn:hover .app-label-box {
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
+}
+
+/* ── SMART TEST app screen ── */
+
+.lab-otdr-device .otdr-smart-test-app {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+
+.lab-otdr-device .otdr-screen.is-smart-test .otdr-os-home {
+  display: none;
+}
+
+.lab-otdr-device .otdr-screen.is-smart-test .otdr-smart-test-app {
+  display: flex;
+}
+
+.lab-otdr-device .st-top-bar {
+  height: 18px;
+  background: #ffffff;
+  flex-shrink: 0;
+  border-bottom: 1px solid #d8d8d8;
+}
+
+.lab-otdr-device .st-bar-icons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  padding: 0 2px 0 6px;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.lab-otdr-device .st-time {
+  background: #1a2a44;
+  color: #ffffff;
+  font-size: 7px;
+  font-weight: 700;
+  padding: 3px 6px 3px 12px;
+  margin-right: 0;
+  clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%);
+  white-space: nowrap;
+}
+
+.lab-otdr-device .st-title-bar {
+  background: #555555;
+  color: #ffffff;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 600;
+  padding: 5px 6px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.lab-otdr-device .st-config-list {
+  flex: 1;
+  background: #f0f0f0;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.lab-otdr-device .st-list-item {
+  padding: 7px 8px;
+  font-size: 8px;
+  font-weight: 600;
+  color: #000000;
+  background: #ffffff;
+  border-bottom: 1px solid #d0d0d0;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.lab-otdr-device .st-list-item.selected {
+  background: #550085;
+  color: #ffffff;
+  font-weight: 700;
+  border-bottom-color: #550085;
+}
+
+.lab-otdr-device .st-bottom-bar {
+  display: flex;
+  align-items: stretch;
+  background: #555555;
+  flex-shrink: 0;
+  min-height: 30px;
+}
+
+.lab-otdr-device .st-path {
+  flex: 1;
+  color: #ffffff;
+  font-size: 7px;
+  font-style: italic;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  border-right: 2px solid #3a3a3a;
+  line-height: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .st-actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .st-btn {
+  background: #550085;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-left: 1px solid #44006a;
+}
+
+.lab-otdr-device .st-btn-icon {
+  width: 34px;
+  padding: 4px 5px;
+}
+
+.lab-otdr-device .st-btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.lab-otdr-device .st-btn-text {
+  padding: 0 12px;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.lab-otdr-device .st-btn:hover {
+  background: #660099;
+}
+
+/* ── SMART TEST setup screen (light theme) ── */
+
+.lab-otdr-device .otdr-smart-test-setup {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #e6e6e6;
+  overflow: hidden;
+  color: #000000;
+}
+
+.lab-otdr-device .otdr-screen.is-smart-test-setup .otdr-os-home,
+.lab-otdr-device .otdr-screen.is-smart-test-setup .otdr-smart-test-app {
+  display: none;
+}
+
+.lab-otdr-device .otdr-screen.is-smart-test-setup .otdr-smart-test-setup {
+  display: flex;
+}
+
+.lab-otdr-device .sts-top-bar {
+  height: 18px;
+  background: linear-gradient(90deg, #ffffff 0%, #d8e8f4 55%, #8eb4d4 100%);
+  flex-shrink: 0;
+  border-bottom: 1px solid #c5d5e3;
+}
+
+.lab-otdr-device .sts-bar-icons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  padding: 0 6px;
+  gap: 5px;
+  font-size: 8px;
+  line-height: 1;
+  width: 100%;
+}
+
+.lab-otdr-device .sts-time {
+  font-size: 7px;
+  font-weight: 700;
+  color: #ffffff;
+  background: #1a2a44;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .sts-settings,
+.lab-otdr-device .setup-content {
+  flex: 1;
+  background: #e6e6e6;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 2px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.lab-otdr-device .sts-row,
+.lab-otdr-device .setup-row {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  flex: 1;
+}
+
+.lab-otdr-device .sts-label,
+.lab-otdr-device .setup-label {
+  width: 78px;
+  flex-shrink: 0;
+  font-size: 8px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  padding-left: 2px;
+}
+
+.lab-otdr-device .sts-options,
+.lab-otdr-device .setup-options {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 4px;
+}
+
+.lab-otdr-device .sts-opt,
+.lab-otdr-device .opt-btn {
+  appearance: none;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #000000;
+  font-family: inherit;
+  font-size: 7.5px;
+  font-weight: 600;
+  padding: 8px 10px;
+  cursor: pointer;
+  line-height: 1.2;
+  white-space: nowrap;
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.lab-otdr-device .sts-opt.is-active,
+.lab-otdr-device .sts-opt.selected,
+.lab-otdr-device .opt-btn.is-active,
+.lab-otdr-device .opt-btn.selected {
+  background: #2e2a85;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.lab-otdr-device .sts-live-note,
+.lab-otdr-device .setup-live-note {
+  color: #00a040;
+  font-style: italic;
+  font-size: 7.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: transparent;
+  padding: 8px 6px;
+  flex: 0 1 auto;
+}
+
+.lab-otdr-device .sts-opt--live {
+  color: #007a32;
+  font-weight: 600;
+}
+
+.lab-otdr-device .sts-opt--live.is-active,
+.lab-otdr-device .sts-opt--live.selected {
+  background: #00a040;
+  color: #ffffff;
+}
+
+.lab-otdr-device .sts-opt--default,
+.lab-otdr-device .setup-default-btn {
+  position: relative;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #333333;
+  font-weight: 600;
+  min-width: 52px;
+  padding: 8px 16px 14px 10px;
+  flex: 0 0 auto;
+}
+
+.lab-otdr-device .sts-opt--default.is-active,
+.lab-otdr-device .sts-opt--default.selected {
+  background: #ffffff;
+  color: #000000;
+}
+
+.lab-otdr-device .sts-gear {
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  font-size: 6px;
+  line-height: 1;
+  color: #000000;
+}
+
+.lab-otdr-device .sts-bottom-bar {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  min-height: 38px;
+  background: #555555;
+}
+
+.lab-otdr-device .sts-config-name {
+  flex: 1;
+  background: #555555;
+  color: #ffffff;
+  font-size: 7.5px;
+  font-style: italic;
+  font-weight: 600;
+  padding: 8px 8px;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .sts-actions {
+  display: flex;
+  flex-shrink: 0;
+  background: #2e2a85;
+}
+
+.lab-otdr-device .sts-action-btn {
+  appearance: none;
+  border: none;
+  background: #2e2a85;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  min-width: 44px;
+  line-height: 1.1;
+}
+
+.lab-otdr-device .sts-action-btn + .sts-action-btn {
+  border-left: 1px solid #ffffff;
+}
+
+.lab-otdr-device .sts-action-btn:hover:not(:disabled) {
+  background: #3a3599;
+}
+
+.lab-otdr-device .sts-action-btn.is-active,
+.lab-otdr-device .sts-action-btn.active {
+  background: #6b4fd4;
+  box-shadow: inset 0 0 0 2px #ffffff;
+  color: #ffffff;
+}
+
+.lab-otdr-device .sts-action-label {
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.lab-otdr-device .sts-action-stack {
+  font-size: 7px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.lab-otdr-device .sts-action-icon {
+  font-size: 11px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.lab-otdr-device .sts-action-btn--disabled,
+.lab-otdr-device .sts-action-btn:disabled {
+  background: #9a9a9a;
+  color: #e0e0e0;
+  cursor: default;
+}
+
+.lab-otdr-device .sts-action-btn--disabled + .sts-action-btn,
+.lab-otdr-device .sts-action-btn:disabled + .sts-action-btn {
+  border-left-color: #ffffff;
+}
+
+/* ── SMART TEST running screen (SmartLink) ── */
+
+.lab-otdr-device .otdr-smart-test-running {
+  display: none;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  background-color: #e6e6e6;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  color: #000000;
+}
+
+.lab-otdr-device .otdr-screen.is-smart-test-running .otdr-os-home,
+.lab-otdr-device .otdr-screen.is-smart-test-running .otdr-smart-test-app,
+.lab-otdr-device .otdr-screen.is-smart-test-running .otdr-smart-test-setup {
+  display: none;
+}
+
+.lab-otdr-device .otdr-screen.is-smart-test-running .otdr-smart-test-running {
+  display: flex;
+}
+
+.lab-otdr-device .str-top-bar {
+  height: 18px;
+  background: linear-gradient(110deg, #ffffff 45%, #1a3b5c 45.1%);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .str-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 7px;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.lab-otdr-device .str-time {
+  font-size: 7px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .running-workspace {
+  display: flex;
+  flex-grow: 1;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.lab-otdr-device .running-main-content {
+  flex-grow: 1;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  border-right: 1px solid #cccccc;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.lab-otdr-device .running-main-content > .running-viewport,
+.lab-otdr-device .running-main-content > .trace-view-container {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.lab-otdr-device .running-tabs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 6px 0;
+  background: #e6e6e6;
+  flex-shrink: 0;
+  border-bottom: 1px solid #cccccc;
+  min-height: 22px;
+}
+
+.lab-otdr-device .tabs-left {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.lab-otdr-device .running-tabs-header .tab {
+  font-size: 8px;
+  font-weight: 600;
+  color: #888888;
+  cursor: pointer;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+  line-height: 1.1;
+}
+
+.lab-otdr-device .running-tabs-header .tab.active {
+  color: #2d2966;
+  font-weight: 700;
+  border-bottom-color: #2d2966;
+}
+
+.lab-otdr-device .tabs-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 6.5px;
+  color: #888888;
+}
+
+.lab-otdr-device .event-line-text,
+.lab-otdr-device .info-text {
+  white-space: nowrap;
+}
+
+.lab-otdr-device .toggle-switch {
+  width: 22px;
+  height: 11px;
+  background: #cccccc;
+  border-radius: 6px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .toggle-switch.active {
+  background: #2d2966;
+}
+
+.lab-otdr-device .toggle-circle {
+  width: 9px;
+  height: 9px;
+  background: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  transition: left 0.15s;
+}
+
+.lab-otdr-device .toggle-switch.active .toggle-circle {
+  left: 12px;
+}
+
+.lab-otdr-device .running-viewport {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #e6e6e6;
+}
+
+.lab-otdr-device .running-viewport.smartlink-view {
+  position: relative;
+}
+
+.lab-otdr-device .viewport-top {
+  flex: 1.2;
+  background: #e6e6e6;
+  border-bottom: 1px solid #cccccc;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.lab-otdr-device .smartlink-view.is-link-ready .viewport-top {
+  flex: 1;
+  border-bottom: none;
+}
+
+.lab-otdr-device .smartlink-view.is-link-ready .viewport-bottom {
+  display: none;
+}
+
+.lab-otdr-device .smartlink-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.lab-otdr-device .smartlink-schematic {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 16px 14px;
+  background: #f5f5f5;
+  min-height: 0;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.lab-otdr-device .smartlink-schematic::-webkit-scrollbar {
+  display: none;
+}
+
+.lab-otdr-device .smartlink-schematic.active-drag {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.lab-otdr-device .smartlink-empty-state {
+  width: 100%;
+  text-align: center;
+  font-size: 8px;
+  color: #666666;
+  padding: 12px;
+}
+
+.lab-otdr-device .sl-chain {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-width: min-content;
+  padding: 4px 0;
+}
+
+.lab-otdr-device .sl-fiber-section,
+.lab-otdr-device .sl-fiber {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 0 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.lab-otdr-device .sl-fiber-line {
+  width: 100%;
+  min-width: 44px;
+  height: 3px;
+  background: linear-gradient(180deg, #ffd54f 0%, #f9a825 55%, #f57f17 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: height 0.12s ease, background 0.12s ease;
+}
+
+.lab-otdr-device .sl-fiber-line.active {
+  background: #1b1b3a;
+  height: 4px;
+}
+
+.lab-otdr-device .sl-fiber-dist {
+  margin-bottom: 3px;
+  font-size: 7px;
+  font-weight: 600;
+  color: #333333;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .sl-event-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding-top: 6px;
+}
+
+.lab-otdr-device .sl-event-num {
+  font-size: 8px;
+  font-weight: 700;
+  color: #333333;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.lab-otdr-device .sl-event-box,
+.lab-otdr-device .sl-event {
+  position: relative;
+  width: 54px;
+  min-width: 54px;
+  height: 54px;
+  background: #ffffff;
+  border: 2px solid #2d2966;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.lab-otdr-device .sl-event-box.active,
+.lab-otdr-device .sl-event.active {
+  background: #1b1b3a;
+  border-color: #1b1b3a;
+  color: #ffffff;
+}
+
+.lab-otdr-device .sl-event-box.active svg,
+.lab-otdr-device .sl-event.active svg {
+  fill: #ffffff;
+}
+
+.lab-otdr-device .sl-event-box.is-failed:not(.active),
+.lab-otdr-device .sl-event.is-failed:not(.active) {
+  border-color: #d32f2f;
+}
+
+.lab-otdr-device .sl-event-wrapper.is-failed .sl-event-num,
+.lab-otdr-device .sl-event-wrapper:has(.is-failed) .sl-event-num {
+  color: #d32f2f;
+}
+
+.lab-otdr-device .sl-event-dist {
+  margin-top: 3px;
+  font-size: 7px;
+  font-weight: 600;
+  color: #333333;
+  line-height: 1;
+}
+
+.lab-otdr-device .sl-chain-unit {
+  align-self: flex-end;
+  font-size: 7px;
+  font-weight: 600;
+  color: #666666;
+  margin-left: 6px;
+  padding-bottom: 2px;
+}
+
+.lab-otdr-device .sl-event-status {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.lab-otdr-device .sl-event-status--pass {
+  background: #4caf50;
+}
+
+.lab-otdr-device .sl-event-status--fail {
+  background: #d32f2f;
+}
+
+.lab-otdr-device .sl-event-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+  width: 100%;
+  min-height: 22px;
+  flex: 1 1 auto;
+}
+
+.lab-otdr-device .sl-event-icon svg,
+.lab-otdr-device .sl-event-icon img {
+  width: 32px;
+  height: 32px;
+  fill: #5c3a92;
+}
+
+.lab-otdr-device .sl-event-icon .sl-event-icon-svg {
+  width: 32px;
+  height: auto;
+  max-height: 32px;
+}
+
+.lab-otdr-device .smartlink-detail {
+  flex: 0 0 auto;
+  min-height: 58px;
+  background: #e0e0e0;
+  border-top: 1px solid #cccccc;
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+.lab-otdr-device .smartlink-detail-status {
+  flex: 1 1 42%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-right: 1px solid #cccccc;
+  min-width: 0;
+}
+
+.lab-otdr-device .sl-detail-status-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .sl-detail-status-icon--pass {
+  background: #4caf50;
+}
+
+.lab-otdr-device .sl-detail-status-icon--fail {
+  background: #d32f2f;
+}
+
+.lab-otdr-device .sl-detail-status-icon--info {
+  background: #5c6bc0;
+}
+
+.lab-otdr-device .sl-detail-info {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #5c6bc0;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.lab-otdr-device .sl-detail-title {
+  font-size: 8px;
+  font-weight: 600;
+  color: #000000;
+  line-height: 1.25;
+}
+
+.lab-otdr-device .smartlink-detail-metrics {
+  flex: 1 1 58%;
+  display: flex;
+  align-items: stretch;
+}
+
+.lab-otdr-device .smartlink-metric-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 3px;
+  border-right: 1px solid #cccccc;
+  min-width: 0;
+}
+
+.lab-otdr-device .smartlink-metric-col:last-child {
+  border-right: none;
+}
+
+.lab-otdr-device .smartlink-metric-label {
+  font-size: 6px;
+  font-weight: 700;
+  color: #333333;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.lab-otdr-device .smartlink-metric-val {
+  font-size: 8px;
+  font-weight: 700;
+  color: #000000;
+  margin-top: 3px;
+  text-align: center;
+}
+
+.lab-otdr-device .smartlink-metric-val.is-alarm {
+  color: #d32f2f;
+}
+
+.lab-otdr-device .viewport-bottom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  min-height: 0;
+}
+
+.lab-otdr-device .connection-indicator {
+  width: 100%;
+  text-align: center;
+}
+
+.lab-otdr-device .conn-title {
+  font-size: 8px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.lab-otdr-device .conn-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lab-otdr-device .conn-label {
+  font-size: 7px;
+  font-weight: 600;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .conn-boxes {
+  display: flex;
+  flex: 1;
+  max-width: 240px;
+}
+
+.lab-otdr-device .conn-box {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 28px;
+  height: 12px;
+  border: 1px solid #999999;
+  border-right: none;
+  background-color: transparent;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.lab-otdr-device .conn-box:last-child {
+  border-right: 1px solid #999999;
+}
+
+.lab-otdr-device .conn-box.bg-orange {
+  background-color: #c98236;
+}
+
+.lab-otdr-device .conn-box.bg-green {
+  background-color: #4caf50;
+}
+
+.lab-otdr-device .conn-box.bg-red {
+  background-color: #d32f2f;
+}
+
+.lab-otdr-device .acquisition-indicator {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 8px 4px;
+}
+
+.lab-otdr-device .acquisition-indicator[hidden] {
+  display: none;
+}
+
+.lab-otdr-device .connection-indicator[hidden] {
+  display: none;
+}
+
+.lab-otdr-device .acq-panel {
+  width: 100%;
+  text-align: center;
+}
+
+.lab-otdr-device .acq-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 5px;
+  line-height: 1.2;
+}
+
+.lab-otdr-device .acq-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.lab-otdr-device .acq-timer {
+  font-size: 8px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1;
+  min-width: 26px;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .acq-progress-track {
+  width: 220px;
+  height: 15px;
+  background: #d3d3d3;
+  border: 1px solid #999999;
+  border-radius: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.lab-otdr-device .acq-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: #302060;
+  transition: width 0.5s linear;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.lab-otdr-device .acq-progress-pct {
+  color: #ffffff;
+  font-size: 7px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Trace view (OTDR graph + event table) ── */
+
+.lab-otdr-device .trace-view-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #e6e6e6;
+}
+
+.lab-otdr-device .trace-view-container[hidden] {
+  display: none;
+}
+
+.lab-otdr-device .running-viewport.smartlink-view[hidden] {
+  display: none;
+}
+
+.lab-otdr-device .trace-linear-view {
+  flex: 0 0 auto;
+  height: 20px;
+  padding: 2px 8px 0;
+  background: #f0f0f0;
+  border-bottom: 1px solid #cccccc;
+  box-sizing: border-box;
+}
+
+.lab-otdr-device .trace-linear-track {
+  position: relative;
+  height: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
+  border: 1px solid #bbbbbb;
+  border-radius: 2px;
+}
+
+.lab-otdr-device .trace-linear-icon {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8px;
+  line-height: 1;
+  color: #302060;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.lab-otdr-device .trace-linear-icon--start {
+  color: #2d2966;
+}
+
+.lab-otdr-device .trace-linear-icon--splice {
+  font-size: 7px;
+  color: #555555;
+}
+
+.lab-otdr-device .trace-linear-icon--end {
+  font-size: 7px;
+  color: #c62828;
+}
+
+.lab-otdr-device .trace-graph-area {
+  height: 65%;
+  flex: 0 0 auto;
+  min-height: 0;
+  position: relative;
+  transition: height 0.1s ease-out;
+  overflow: hidden;
+  margin: 0;
+  background-color: #ffffff;
+  border: 1px solid #bbbbbb;
+  border-top: none;
+  box-sizing: border-box;
+  isolation: isolate;
+}
+
+.lab-otdr-device .trace-graph-area.is-graph-collapsed {
+  height: 0 !important;
+  min-height: 0 !important;
+  flex: 0 0 0 !important;
+  border: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lab-otdr-device .realtime-hud {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  padding: 8px 12px 10px;
+  background: #f3f3f3;
+  border-top: 1px solid #bbbbbb;
+  box-sizing: border-box;
+}
+
+.lab-otdr-device .realtime-hud.hidden {
+  display: none !important;
+}
+
+.lab-otdr-device .rt-connection-title {
+  text-align: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.lab-otdr-device .rt-connection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.lab-otdr-device .rt-connection-label {
+  font-size: 7px;
+  font-weight: 700;
+  color: #000000;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .rt-track {
+  flex: 1 1 auto;
+  margin: 0 6px;
+  height: 16px;
+  background: #e0e0e0;
+  border: 1px solid #999999;
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.lab-otdr-device .rt-thumb {
+  width: 24px;
+  height: 12px;
+  background: #2ecc71;
+  position: absolute;
+  top: 1px;
+  left: 80%;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+  transition: left 0.1s ease, background-color 0.1s ease;
+}
+
+.lab-otdr-device .rt-thumb.is-red {
+  background: #e74c3c;
+}
+
+.lab-otdr-device .rt-thumb.is-orange {
+  background: #d35400;
+}
+
+.lab-otdr-device .rt-thumb.is-green {
+  background: #2ecc71;
+}
+
+.lab-otdr-device .trace-view-container.is-realtime-mode .trace-graph-area.is-realtime-expanded {
+  flex: 1 1 auto;
+  height: auto !important;
+  min-height: 0;
+}
+
+.lab-otdr-device .trace-view-container.is-realtime-mode .trace-resizer,
+.lab-otdr-device .trace-view-container.is-realtime-mode .trace-summary-bar,
+.lab-otdr-device .trace-view-container.is-realtime-mode .trace-event-table-wrap {
+  display: none !important;
+}
+
+.lab-otdr-device .trace-view-container.is-realtime-mode .realtime-hud:not(.hidden) {
+  display: flex !important;
+}
+
+.lab-otdr-device .otdr-trace-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  cursor: grab;
+  touch-action: none;
+}
+
+.lab-otdr-device .otdr-trace-canvas.is-panning {
+  cursor: grabbing;
+}
+
+.trace-floating-controls {
+  position: absolute !important;
+  top: 8px !important;
+  right: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  z-index: 9999 !important;
+}
+
+.trace-floating-controls button {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  background-color: rgba(245, 245, 245, 0.9) !important;
+  color: #302060 !important;
+  border: 1px solid rgba(0, 0, 0, 0.3) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  cursor: pointer !important;
+}
+
+.trace-floating-controls .cursor-a-btn {
+  margin-left: 8px !important;
+}
+
+.lab-otdr-device .trace-floating-controls .cursor-a-btn.is-active {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #302060 !important;
+  border-color: rgba(48, 32, 96, 0.35) !important;
+}
+
+.lab-otdr-device .trace-resizer {
+  flex: 0 0 auto;
+  min-height: max-content;
+  height: 12px;
+  background-color: #f2f2f2;
+  cursor: row-resize;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 50;
+  position: relative;
+  user-select: none;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .purple-scroll-indicator {
+  height: 6px;
+  width: 40%;
+  background-color: #4a2377;
+  position: relative;
+  border-radius: 0 0 4px 4px;
+}
+
+.lab-otdr-device .purple-scroll-indicator::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #ffffff;
+}
+
+.lab-otdr-device .trace-summary-bar {
+  flex: 0 0 auto;
+  min-height: max-content;
+  z-index: 50;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #f4f4f0;
+  padding: 2px 8px;
+  margin: 0;
+  font-size: 9px;
+  font-family: Arial, sans-serif;
+  color: #000000;
+  font-weight: bold;
+  border-bottom: 1px solid #cccccc;
+  box-sizing: border-box;
+  gap: 6px;
+  line-height: 1.1;
+}
+
+.lab-otdr-device .trace-summary-item {
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.lab-otdr-device .trace-summary-orl {
+  color: #6da363;
+}
+
+.lab-otdr-device .trace-event-table-wrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  height: 100%;
+  background-color: #f4f4f0;
+  box-sizing: border-box;
+  min-height: 0;
+  overflow-x: hidden;
+  border-top: none;
+  scrollbar-width: thin;
+  scrollbar-color: #888888 #e6e6e6;
+}
+
+.lab-otdr-device .trace-event-table {
+  position: relative;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0;
+  background-color: #f4f4f0;
+}
+
+.lab-otdr-device .trace-event-table-wrap::-webkit-scrollbar,
+.lab-otdr-device .trace-event-table::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lab-otdr-device .trace-event-table-wrap::-webkit-scrollbar-track,
+.lab-otdr-device .trace-event-table::-webkit-scrollbar-track {
+  background: #e6e6e6;
+}
+
+.lab-otdr-device .trace-event-table-wrap::-webkit-scrollbar-thumb,
+.lab-otdr-device .trace-event-table::-webkit-scrollbar-thumb {
+  background: #888888;
+  border-radius: 4px;
+}
+
+.lab-otdr-device .trace-view-container.is-table-only .trace-linear-view,
+.lab-otdr-device .trace-view-container.is-table-only .trace-graph-area,
+.lab-otdr-device .trace-view-container.is-table-only .trace-resizer {
+  display: none;
+}
+
+.lab-otdr-device .trace-view-container.is-table-only .trace-event-table-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  max-height: none;
+}
+
+.lab-otdr-device .trace-view-container.is-graph-collapsed .trace-event-table-wrap {
+  flex: 1 1 auto;
+}
+
+.lab-otdr-device .trace-event-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f4f4f0;
+  color: #000000;
+  font-size: 9px;
+  font-weight: bold;
+  text-align: center;
+  padding: 6px 4px !important;
+  border-bottom: 1px solid #999999;
+  border-right: none;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.15;
+}
+
+.lab-otdr-device .trace-event-table thead th:last-child {
+  border-right: none;
+}
+
+.lab-otdr-device .trace-event-table tbody td {
+  text-align: center;
+  padding: 6px 2px;
+  border-bottom: 1px solid #e0e0e0;
+  border-right: none;
+  color: #000000;
+  font-size: 11px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  background-color: #f4f4f0;
+  vertical-align: middle;
+}
+
+.lab-otdr-device .trace-event-table tbody tr.selected td {
+  background-color: #302060;
+  color: #ffffff;
+}
+
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-num {
+  color: #ffffff;
+}
+
+.lab-otdr-device .trace-event-table .trace-ev-icon line,
+.lab-otdr-device .trace-event-table .trace-ev-icon rect,
+.lab-otdr-device .trace-event-table .trace-ev-icon polyline,
+.lab-otdr-device .trace-event-table .trace-ev-icon path[stroke] {
+  stroke: #302060;
+  stroke-width: 1.5;
+}
+
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-icon line,
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-icon rect,
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-icon polyline,
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-icon path[stroke] {
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
+
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-icon rect {
+  fill: #302060;
+}
+
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-icon rect[fill="currentColor"] {
+  fill: #ffffff;
+}
+
+.lab-otdr-device .trace-event-table tbody td:last-child {
+  border-right: none;
+}
+
+.lab-otdr-device .trace-event-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  padding: 6px 4px !important;
+  text-align: left;
+  color: inherit;
+}
+
+.lab-otdr-device .trace-ev-num {
+  font-weight: 700;
+  color: #000000;
+  min-width: 8px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-ev-num {
+  color: #ffffff;
+}
+
+.lab-otdr-device .trace-event-cell .trace-ev-icon {
+  color: #302060;
+}
+
+.lab-otdr-device .trace-event-table tbody tr.selected .trace-event-cell .trace-ev-icon {
+  color: #ffffff;
+}
+
+.lab-otdr-device .trace-ev-icon {
+  width: 24px;
+  height: 12px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* ── SmartLink live-traffic warning popup (FO-1202) ── */
+
+.lab-otdr-device .smartlink-live-warning-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #f5f5f5;
+  border: 1px solid #cccccc;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 250;
+  width: 300px;
+  padding: 15px;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.lab-otdr-device .smartlink-live-warning-popup.hidden {
+  display: none;
+}
+
+.lab-otdr-device .smartlink-live-warning-popup__code {
+  font-size: 10px;
+  color: #555555;
+  margin-bottom: 5px;
+  margin-left: 45px;
+}
+
+.lab-otdr-device .smartlink-live-warning-popup__row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.lab-otdr-device .smartlink-live-warning-popup__warn {
+  font-size: 24px;
+  margin-right: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .smartlink-live-warning-popup__title {
+  font-size: 13px;
+  color: #000000;
+  line-height: 1.3;
+}
+
+.lab-otdr-device .smartlink-live-warning-popup__footer {
+  text-align: center;
+  font-size: 10px;
+  color: #666666;
+  margin-top: 10px;
+}
+
+/* ── SmartLink pass/fail status popup ── */
+
+.lab-otdr-device .smartlink-status-popup {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.lab-otdr-device .smartlink-status-popup.hidden {
+  display: none;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-modal {
+  width: 72%;
+  max-width: 280px;
+  background: #f5f5f5;
+  border: 1px solid #888888;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 6px;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.lab-otdr-device .smartlink-status-popup.is-pass .popup-icon {
+  background: #4caf50;
+}
+
+.lab-otdr-device .smartlink-status-popup.is-pass .popup-icon::after {
+  content: '✓';
+}
+
+.lab-otdr-device .smartlink-status-popup.is-fail .popup-icon {
+  background: #d32f2f;
+}
+
+.lab-otdr-device .smartlink-status-popup.is-fail .popup-icon::after {
+  content: '✕';
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.lab-otdr-device .smartlink-status-popup.is-pass .popup-title {
+  color: #2e7d32;
+}
+
+.lab-otdr-device .smartlink-status-popup.is-fail .popup-title {
+  color: #d32f2f;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-body {
+  padding: 2px 12px 8px;
+  color: #000000;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-body p {
+  margin: 0 0 4px;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-body p:last-child {
+  margin-bottom: 0;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-footer {
+  border-top: 1px solid #dddddd;
+  padding: 5px 8px 6px;
+  text-align: center;
+}
+
+.lab-otdr-device .smartlink-status-popup .popup-footer small {
+  font-size: 7px;
+  color: #888888;
+}
+
+/* ── Live traffic confirmation popup (FD-1200) ── */
+
+.lab-otdr-device .traffic-detected-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #f0f0f0;
+  border: 1px solid #999999;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  z-index: 300;
+  width: 320px;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.lab-otdr-device .traffic-detected-popup.hidden {
+  display: none;
+}
+
+.lab-otdr-device .traffic-detected-popup__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.lab-otdr-device .traffic-detected-popup__warn {
+  font-size: 28px;
+  color: #f1c40f;
+  margin-right: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .traffic-detected-popup__text {
+  text-align: left;
+  font-size: 13px;
+  color: #000000;
+}
+
+.lab-otdr-device .traffic-detected-popup__code {
+  display: block;
+  font-size: 10px;
+  color: #555555;
+  margin-bottom: 2px;
+}
+
+.lab-otdr-device .traffic-detected-popup__message {
+  display: block;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.lab-otdr-device .traffic-detected-popup__actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.lab-otdr-device .traffic-detected-popup__btn {
+  background: #2c2c54;
+  color: #ffffff;
+  border: none;
+  padding: 8px 30px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}
+
+.lab-otdr-device .traffic-detected-popup__btn:hover {
+  background: #3d3d72;
+}
+
+/* ── SMART TEST connection error popup ── */
+
+.lab-otdr-device .otdr-error-popup {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+.lab-otdr-device .otdr-error-popup[hidden] {
+  display: none;
+}
+
+.lab-otdr-device .otdr-error-modal {
+  width: 88%;
+  max-width: 300px;
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.lab-otdr-device .otdr-error-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 10px 8px;
+}
+
+.lab-otdr-device .otdr-error-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lab-otdr-device .otdr-error-text {
+  flex: 1;
+  min-width: 0;
+  color: #000000;
+}
+
+.lab-otdr-device .otdr-error-code {
+  font-size: 8px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.lab-otdr-device .otdr-error-title {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.lab-otdr-device .otdr-error-desc {
+  font-size: 7px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #222222;
+}
+
+.lab-otdr-device .otdr-error-footer {
+  border-top: 1px solid #dddddd;
+  padding: 5px 8px;
+  text-align: center;
+  font-size: 7px;
+  font-weight: 600;
+  color: #333333;
+  background: #f5f5f5;
+}
+
+.lab-otdr-device .running-sidebar {
+  width: 58px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #302060;
+}
+
+.lab-otdr-device .sidebar-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border-bottom: 1px solid #ffffff;
+  cursor: pointer;
+  padding: 2px 3px;
+  min-height: 0;
+  text-align: center;
+  line-height: 1.1;
+  background: #302060;
+}
+
+.lab-otdr-device .sidebar-btn-start {
+  gap: 2px;
+  padding: 4px 2px;
+}
+
+.lab-otdr-device .sidebar-btn-start .btn-text {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.lab-otdr-device .sidebar-btn-start .btn-icon-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  line-height: 1;
+}
+
+.lab-otdr-device .sidebar-btn-start .play-triangle {
+  display: block;
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid #4da3ff;
+  filter: drop-shadow(0 0 1px rgba(77, 163, 255, 0.45));
+}
+
+.lab-otdr-device .sidebar-btn-start.btn-stop .btn-text {
+  letter-spacing: 0.04em;
+}
+
+.lab-otdr-device .sidebar-btn-start .btn-icon-stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.lab-otdr-device .sidebar-btn:last-child {
+  border-bottom: none;
+}
+
+.lab-otdr-device .sidebar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lab-otdr-device .sidebar-btn.is-active,
+.lab-otdr-device .sidebar-btn.active,
+.lab-otdr-device .sidebar-btn-realtime.is-active,
+.lab-otdr-device .sidebar-btn-realtime.active {
+  background: #6b4fd4;
+  box-shadow: inset 0 0 0 2px #ffffff;
+  color: #ffffff;
+}
+
+.lab-otdr-device .sidebar-btn .btn-text {
+  font-size: 6.5px;
+  font-weight: 700;
+}
+
+.lab-otdr-device .sidebar-btn .btn-icon {
+  font-size: 11px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.lab-otdr-device .sidebar-btn .btn-icon-play {
+  font-size: 12px;
+  filter: saturate(1.4);
+}
+
+.lab-otdr-device .sidebar-btn.empty {
+  cursor: default;
+}
+
+.lab-otdr-device .sidebar-btn.btn-stop .btn-text {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.lab-otdr-device .sidebar-btn .red-square {
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: #e74c3c;
+  margin-top: 3px;
+}
+
+.lab-otdr-device .sidebar-btn .icon {
+  font-size: 11px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.lab-otdr-device .sidebar-btn.btn-stop:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body.trace-resizing,
+body.trace-resizing * {
+  cursor: row-resize !important;
+  user-select: none !important;
+}
+
+body.trace-resizing .lab-otdr-device .trace-graph-area {
+  transition: none;
+}
+
+/* ── Physical controls ── */
+
+.lab-otdr-device .otdr-controls {
+  padding: 10px 12px 16px;
+}
+
+.lab-otdr-device .otdr-controls__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lab-otdr-device .otdr-led-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 48px;
+}
+
+.lab-otdr-device .otdr-led {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lab-otdr-device .otdr-led__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.lab-otdr-device .otdr-led.is-on .otdr-led__dot {
+  background: var(--otdr-start-green);
+  box-shadow: 0 0 6px var(--otdr-start-green);
+}
+
+.lab-otdr-device .otdr-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+}
+
+.lab-otdr-device .otdr-btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--otdr-btn-text);
+  background: linear-gradient(180deg, var(--otdr-btn-grey-top) 0%, var(--otdr-btn-grey) 100%);
+  border-radius: 50px;
+  padding: 7px 10px;
+  min-width: 52px;
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.lab-otdr-device .otdr-btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.lab-otdr-device .otdr-btn--start {
+  background: linear-gradient(180deg, #00e060 0%, var(--otdr-start-green) 50%, var(--otdr-start-green-dark) 100%);
+  color: #0a1a0a;
+  font-size: 7px;
+  min-width: 64px;
+  padding: 10px 8px;
+  font-weight: 800;
+}
+
+.lab-otdr-device .otdr-btn--results {
+  min-width: 64px;
+}
+
+/* ── D-Pad ── */
+
+.lab-otdr-device .otdr-dpad {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+
+.lab-otdr-device .otdr-dpad__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #5c6269 0%, #3a3f45 100%);
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.lab-otdr-device .otdr-dpad__btn {
+  position: absolute;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--otdr-btn-text);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.lab-otdr-device .otdr-dpad__btn--up {
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.lab-otdr-device .otdr-dpad__btn--down {
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.lab-otdr-device .otdr-dpad__btn--left {
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lab-otdr-device .otdr-dpad__btn--right {
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lab-otdr-device .otdr-dpad__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(180deg, #6b7178 0%, #4a4f56 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Right column (start / results / testing led) ── */
+
+.lab-otdr-device .otdr-controls__right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.lab-otdr-device .otdr-power-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.lab-otdr-device .otdr-power-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #3a3f45;
+  background: linear-gradient(180deg, #5c6269 0%, #3a3f45 100%);
+  font-size: 5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.lab-otdr-device .otdr-speaker {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #2a2a30 0%, #1a1a1e 70%);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  margin-top: auto;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+#lab-2d-mount .trace-floating-controls {
+  position: absolute !important;
+  top: 8px !important;
+  right: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  z-index: 9999 !important;
+}
+
+#lab-2d-mount .trace-floating-controls button {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  background-color: rgba(245, 245, 245, 0.9) !important;
+  color: #302060 !important;
+  border: 1px solid rgba(0, 0, 0, 0.3) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  cursor: pointer !important;
+}
+
+#lab-2d-mount .trace-floating-controls .cursor-a-btn {
+  margin-left: 8px !important;
+}
+
+.lab-otdr-device .trace-graph-area #otdrTraceCanvas,
+.lab-otdr-device .trace-graph-area .otdr-trace-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}

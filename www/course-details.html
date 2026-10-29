@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-i18n-document-title="page.title.courseDetails">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>تفاصيل الكورس | مسار المهندس ‎°360</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=20260921">
+  <link rel="stylesheet" href="css/header.css?v=20260921">
+  <link rel="stylesheet" href="css/footer.css?v=20260921">
+  <link rel="stylesheet" href="css/notifications.css?v=20260921">
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" crossorigin="anonymous" />
+  <script src="js/course-details-page-guard.js?v=20260921"></script>
+  <script defer src="js/i18n.js?v=20260921"></script>
+  <script defer src="js/settings-manager.js?v=20260921"></script>
+</head>
+<body>
+  <header class="header" id="header">
+    <div class="header__inner">
+      <div class="header-right">
+        <a href="index.html" class="logo">
+          <img class="logo__img" src="images/logo.png" alt="Engineer Path °360 Logo" width="42" height="42" />
+          <div class="logo__text">
+            <span class="logo__text-main" data-i18n="logo.main">مسار المهندس ‎°360</span>
+            <span class="logo__text-sub" data-i18n="logo.sub">منصة المسار المهني الهندسي</span>
+          </div>
+        </a>
+        <a href="index.html#courses" class="header-btn-back">← العودة للكورسات</a>
+      </div>
+      <div class="header__actions">
+        <div class="auth-slot" data-auth-slot data-auth-variant="landing"></div>
+        <a href="index.html#plans" class="header__cta" data-i18n="nav.plans">الباقات</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="course-details" style="padding-top: 6rem;">
+    <div id="courseDetailsRoot"></div>
+  </main>
+
+  <script src="js/env-access.js?v=20260921"></script>
+  <script src="js/platform-footer.js?v=20260921"></script>
+  <script type="module" src="js/platform-footer-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-simulators.js?v=20260921"></script>
+  <script src="js/platform-courses.js?v=20260921"></script>
+  <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-plans.js?v=20260921"></script>
+  <script type="module" src="js/platform-plans-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-plans-public.js?v=20260921"></script>
+  <script src="https://cdn.plyr.io/3.7.8/plyr.js" crossorigin="anonymous"></script>
+  <script src="js/platform-courses-public.js?v=20260921"></script>
+  <script src="js/platform-notifications.js?v=20260921"></script>
+  <script type="module" src="js/platform-notifications-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20260921"></script>
+</body>
+</html>

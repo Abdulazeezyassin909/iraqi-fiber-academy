@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FTTH Network Simulator | مسار المهندس ‎°360 — Engineer Path °360</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/simulator.css?v=20260921">
+  <script>
+    if (typeof tailwind !== 'undefined') {
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              fiber: {
+                bg: '#0a0e17',
+                panel: '#111827',
+                card: '#1a2332',
+                elevated: '#1e2a3a',
+                cyan: '#00e5ff',
+                phosphor: '#39ff14',
+                blue: '#3b82f6',
+                border: 'rgba(0, 229, 255, 0.12)',
+              }
+            },
+            fontFamily: {
+              sans: ['Segoe UI', 'Tahoma', 'Arial', 'sans-serif'],
+              mono: ['Cascadia Code', 'Consolas', 'monospace'],
+            },
+            boxShadow: {
+              glow: '0 0 30px rgba(0, 229, 255, 0.25)',
+            }
+          }
+        }
+      };
+    }
+  </script>
+  <style>
+    .grid-cell.drop-target { background: rgba(0, 229, 255, 0.08); border-color: rgba(0, 229, 255, 0.4); }
+    .grid-cell.occupied { /* nodes handle their own events */ }
+    .placed-node { cursor: grab; user-select: none; }
+    .placed-node.selected { outline: none; box-shadow: none; }
+    .placed-node.connect-source { outline: 2px solid #39ff14; outline-offset: 2px; }
+    .toolbox-item:active { cursor: grabbing; }
+    .toolbox-item[draggable="true"] { cursor: grab; }
+    #global-drawing-layer { pointer-events: none; }
+    .street-h { background: linear-gradient(180deg, transparent 45%, rgba(100,116,139,0.15) 45%, rgba(100,116,139,0.15) 55%, transparent 55%); }
+    .street-v { background: linear-gradient(90deg, transparent 45%, rgba(100,116,139,0.15) 45%, rgba(100,116,139,0.15) 55%, transparent 55%); }
+    .feedback-enter { animation: fadeSlide 0.35s ease; }
+    @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Collapsible side panels */
+    .side-panel {
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 0.35s ease;
+    }
+    .side-panel--left  { width: 16rem; }
+    .side-panel--right { width: 16rem; }
+
+    /* Toolbox — THE ULTIMATE LOCK (see simulator.css) */
+    #toolbox.collapsed {
+      width: 60px !important;
+      flex: 0 0 auto !important;
+      min-width: 60px !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      transition: none !important;
+      opacity: 1;
+      pointer-events: auto;
+      border-color: rgba(0, 229, 255, 0.12) !important;
+    }
+
+    #toolbox.toolbox {
+      width: 250px !important;
+      flex: 0 0 auto !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      transition: none !important;
+    }
+
+    #toolbox::-webkit-scrollbar,
+    #toolbox.collapsed::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    /* Map-edge toggle stays visible when toolbox is collapsed */
+    #toggle-toolbox {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    #toolbox .toolbox-collapsible-text {
+      opacity: 1;
+      max-width: 12rem;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: opacity 0.28s ease, max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s ease, padding 0.35s ease;
+    }
+
+    #toolbox .toolbox-header-icon {
+      display: none;
+    }
+
+    #toolbox .toolbox-footer-hint {
+      transition: opacity 0.28s ease, color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      margin-inline: auto;
+    }
+
+    #toolbox .toolbox-footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    #toolbox .toolbox-footer-icon { display: none; }
+
+    /* Evaluation panel — full hide when collapsed */
+    #evaluation-panel.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      opacity: 0;
+      border-color: transparent !important;
+      pointer-events: none;
+    }
+
+    body.ftth-fake-fullscreen-active #evaluation-panel.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+    }
+
+    .toolbox-item {
+      transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  gap 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  justify-content 0.35s ease;
+    }
+
+    /* FDT Head: keep quick-switcher label intact when toolbox is narrowed */
+    #toolbox .toolbox-item--fdt-head > .toolbox-item__text.toolbox-collapsible-text {
+      max-width: none;
+      min-width: 0;
+    }
+
+    #toolbox .toolbox-fdt-head__label {
+      overflow: visible;
+      text-overflow: clip;
+      white-space: nowrap;
+    }
+
+    .toolbox-item__icon {
+      transition: transform 0.25s ease;
+    }
+
+    #toolbox.collapsed .toolbox-item:hover .toolbox-item__icon {
+      transform: scale(1.08);
+    }
+
+    /* Panel toggles — toolbox toggle lives on canvas seam (avoids overflow clip) */
+    #canvas-main {
+      position: relative;
+    }
+
+    .panel-toggle {
+      position: absolute;
+      top: 50%;
+      width: 22px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a2332;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      color: #00e5ff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      z-index: 999;
+    }
+    .panel-toggle:hover {
+      background: #1e2a3a;
+      border-color: rgba(0, 229, 255, 0.5);
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+    }
+    /* Centered on seam; keep fully inside canvas-main to avoid overflow clip */
+    .panel-toggle--left {
+      left: 0;
+      transform: translateY(-50%);
+      border-radius: 0 8px 8px 0;
+      border-left: none;
+    }
+    .panel-toggle--right {
+      right: 0;
+      transform: translateY(-50%);
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+    }
+
+    /* Zoom & grid controls — scale map + all placed nodes together */
+    #canvas-zoom-inner,
+    .workspace-container {
+      flex-shrink: 0;
+      transform-origin: center center;
+      will-change: transform;
+      margin: 0;
+      position: relative;
+    }
+    #canvas-zoom-inner.ftth-world-root {
+      transform-origin: 0 0 !important;
+    }
+    #canvas-wrapper.is-wheel-zooming #canvas-zoom-inner,
+    #canvas-wrapper.is-wheel-zooming .workspace-container,
+    #canvas-wrapper.is-wheel-zooming #canvas-zoom-inner.ftth-world-root {
+      transition: none;
+    }
+    #canvas-wrapper.is-panning #canvas-zoom-inner,
+    #canvas-wrapper.is-panning .workspace-container {
+      transition: none;
+    }
+    #canvas-wrapper.map-rotation-active #canvas-zoom-inner,
+    #canvas-wrapper.map-rotation-active .workspace-container {
+      transition: none !important;
+    }
+    #canvas-wrapper:not(.is-panning) #canvas-zoom-inner,
+    #canvas-wrapper:not(.is-panning) .workspace-container {
+      transition: transform 0.18s ease;
+    }
+    #canvas-wrapper.is-panning {
+      cursor: grabbing;
+    }
+
+    .map-layer-toggles { pointer-events: auto; }
+    .map-layer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(100, 116, 139, 0.35);
+      background: rgba(15, 23, 42, 0.55);
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+      user-select: none;
+    }
+    .map-layer-btn__swatch {
+      flex-shrink: 0;
+      display: block;
+    }
+    .map-layer-btn:hover {
+      border-color: rgba(0, 229, 255, 0.35);
+      color: #94a3b8;
+    }
+    .map-layer-btn--active {
+      border-color: rgba(0, 229, 255, 0.55);
+      background: rgba(0, 229, 255, 0.1);
+      color: #e2e8f0;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.12);
+    }
+    .map-layer-btn:not(.map-layer-btn--active) {
+      opacity: 0.55;
+    }
+    .map-layer-btn:not(.map-layer-btn--active) .map-layer-btn__swatch {
+      opacity: 0.45;
+    }
+    .map-layer-btn--disabled {
+      opacity: 0.3 !important;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .map-tool-bar { pointer-events: auto; }
+    .map-tool-btn {
+      width: 30px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .map-tool-btn:hover { background: rgba(0, 229, 255, 0.08); }
+    .map-tool-btn--active {
+      background: rgba(0, 229, 255, 0.14);
+      border-color: rgba(0, 229, 255, 0.35);
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.15);
+    }
+    .map-tool-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .map-history-bar {
+      z-index: 1200;
+      position: relative;
+      pointer-events: auto;
+    }
+
+    /* Fullscreen workspace — flex layout only (no overlay stacking) */
+    #simulator-container {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    body.ftth-fake-fullscreen-active #main-layout {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    body.ftth-fake-fullscreen-active #simulator-container {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    body.ftth-fake-fullscreen-active #evaluation-panel {
+      flex-shrink: 0;
+      width: 16rem;
+      min-width: 16rem;
+      height: 100%;
+    }
+
+    body.ftth-fake-fullscreen-active > header {
+      display: none !important;
+    }
+
+    #simulator-container:fullscreen,
+    #simulator-container.is-fullscreen {
+      width: 100%;
+      height: 100%;
+      background: #0a0e17;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    #simulator-container:fullscreen #toolbox,
+    #simulator-container.is-fullscreen #toolbox {
+      height: 100%;
+      flex-shrink: 0;
+    }
+
+    #simulator-container:fullscreen #canvas-main,
+    #simulator-container.is-fullscreen #canvas-main {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #simulator-container:fullscreen #canvas-wrapper,
+    #simulator-container.is-fullscreen #canvas-wrapper {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden !important;
+      padding: 0;
+    }
+
+    #simulator-container:fullscreen #canvas-zoom-inner,
+    #simulator-container:fullscreen .workspace-container,
+    #simulator-container.is-fullscreen #canvas-zoom-inner,
+    #simulator-container.is-fullscreen .workspace-container {
+      flex: 0 0 auto;
+      flex-shrink: 0;
+      min-height: 0;
+      width: auto;
+      display: block;
+    }
+
+    #simulator-container:fullscreen #city-canvas,
+    #simulator-container.is-fullscreen #city-canvas {
+      min-width: 0 !important;
+      min-height: 0 !important;
+    }
+
+    #simulator-container:fullscreen #toggle-toolbox,
+    #simulator-container:fullscreen #toggle-eval,
+    #simulator-container.is-fullscreen #toggle-toolbox,
+    #simulator-container.is-fullscreen #toggle-eval {
+      display: flex;
+    }
+
+    #canvas-wrapper,
+    #canvas-wrapper.map-container,
+    #map-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+    }
+
+    #canvas-zoom-inner.map-canvas-inner,
+    .map-canvas-inner {
+      position: relative !important;
+      left: auto !important;
+      top: auto !important;
+    }
+
+    .grid-cell {
+      pointer-events: auto;
+      position: relative;
+    }
+
+    .placed-node {
+      pointer-events: auto;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      overflow: visible;
+    }
+
+    .placed-node--pole_foundation,
+    .placed-node--foundation-pole {
+      overflow: visible;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .placed-node--pole_foundation.selected,
+    .placed-node--foundation-pole.selected {
+      outline: none;
+      outline-offset: 0;
+    }
+
+    .field-icon {
+      display: block;
+      overflow: visible;
+    }
+
+    #canvas-wrapper.map-mode-hand .placed-node {
+      pointer-events: none;
+    }
+    .field-node-label { font-size: 7px; font-weight: 800; pointer-events: none; }
+
+    #canvas-wrapper.map-mode-hand #city-grid {
+      pointer-events: none;
+    }
+
+    /* Panel toggle position when evaluation hidden */
+    #canvas-main.eval-is-hidden .panel-toggle--right {
+      right: 0;
+    }
+  </style>
+</head>
+<body class="bg-fiber-bg text-slate-100 font-sans h-screen flex flex-col overflow-hidden simulator-page-active">
+
+  <!-- Subscriber access gate (overlay only — does not remove canvas / workspace). Hidden immediately on local file:// / localhost. -->
+  <script src="js/env-access.js?v=20260921"></script>
+  <script>
+    (function () {
+      var bypass = window.IFA_ENV && window.IFA_ENV.shouldBypassAccessControl && window.IFA_ENV.shouldBypassAccessControl();
+      if (bypass) document.documentElement.setAttribute('data-ifa-access', 'local-bypass');
+    })();
+  </script>
+  <div id="subscriber-gate" class="subscriber-gate subscriber-gate--visible" role="dialog" aria-modal="true" aria-labelledby="subscriber-gate-title" aria-hidden="false">
+    <div class="subscriber-gate__backdrop" aria-hidden="true"></div>
+    <div class="subscriber-gate__card" dir="rtl">
+      <img class="subscriber-gate__logo" src="images/logo.png" alt="Engineer Path °360 Logo" width="56" height="56" />
+      <h2 id="subscriber-gate-title" class="subscriber-gate__title">الوصول للمشتركين فقط</h2>
+      <p class="subscriber-gate__message">عذراً، محاكي الفايبر متاح فقط للمشتركين الفعّالين في الأكاديمية.</p>
+      <p class="subscriber-gate__status" data-subscriber-gate-status>جاري التحقق من حالة الاشتراك…</p>
+      <div class="subscriber-gate__actions">
+        <button type="button" class="subscriber-gate__btn subscriber-gate__btn--primary" data-subscriber-login>تسجيل الدخول / تفعيل الاشتراك</button>
+        <a href="index.html" class="subscriber-gate__btn subscriber-gate__btn--ghost" data-subscriber-home>العودة للرئيسية</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      if (!window.IFA_ENV || !window.IFA_ENV.shouldBypassAccessControl || !window.IFA_ENV.shouldBypassAccessControl()) return;
+      var gate = document.getElementById('subscriber-gate');
+      if (!gate) return;
+      gate.hidden = true;
+      gate.setAttribute('aria-hidden', 'true');
+      gate.classList.remove('subscriber-gate--visible');
+      document.body.classList.remove('subscriber-gate-active');
+    })();
+  </script>
+
+  <!-- Startup / Welcome (entry gate — map engine loads after project selection) -->
+  <div id="startup-view" class="startup-view" role="main" aria-label="Welcome">
+    <header class="startup-view__hero">
+      <div class="startup-view__brand">
+        <img class="startup-view__logo" src="images/logo.png" alt="Engineer Path °360 Logo" width="42" height="42" />
+        <div>
+          <h1 class="startup-view__title">FTTH Network Simulator</h1>
+          <p class="startup-view__subtitle">ENGINEER PATH °360 — Engineering Career Path Platform — Open a recent project or start from a template</p>
+        </div>
+      </div>
+      <div class="startup-view__hero-actions">
+        <div class="auth-slot auth-slot--sim" data-auth-slot data-auth-variant="simulator">
+          <button type="button" class="auth-login-btn auth-login-btn--sim" data-auth-login>تسجيل الدخول</button>
+        </div>
+        <a href="index.html" class="startup-view__home-link">← Back to Home</a>
+      </div>
+    </header>
+    <div class="startup-view__panels">
+      <section class="startup-view__panel startup-view__panel--recent" aria-labelledby="startup-recent-heading">
+        <h2 id="startup-recent-heading" class="startup-view__panel-title">Recent Projects</h2>
+        <ul id="startup-recent-list" class="startup-view__recent-list" role="list"></ul>
+      </section>
+      <section class="startup-view__panel startup-view__panel--templates" aria-labelledby="startup-templates-heading">
+        <h2 id="startup-templates-heading" class="startup-view__panel-title">Project Templates</h2>
+        <div id="startup-templates-grid" class="startup-view__templates-grid"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Project setup overlay (training city — available from startup and workspace) -->
+  <div id="project-setup-modal" class="project-setup-modal" role="dialog" aria-modal="true" aria-labelledby="project-setup-title" aria-hidden="true" hidden>
+    <div class="project-setup-modal__backdrop" aria-hidden="true"></div>
+    <div class="project-setup-modal__card">
+      <h2 id="project-setup-title" class="project-setup-modal__title">Project Setup</h2>
+      <p class="project-setup-modal__subtitle">Select a training city layout for this session</p>
+      <div class="project-setup-modal__field">
+        <label for="layout-select" class="project-setup-modal__label">Training City</label>
+        <select id="layout-select" class="project-setup-modal__select" aria-label="Training city">
+          <option value="training_city_1">Training City 1 — Dubai Style (Beginner · ~4 FDT)</option>
+          <option value="training_city_2">Training City 2 — Abu Dhabi Style (Intermediate · ~8 FDT)</option>
+          <option value="training_city_3">Training City 3 — Smart City (Advanced · ~16 FDT)</option>
+        </select>
+      </div>
+      <button type="button" id="project-setup-start" class="project-setup-modal__start">Start Project</button>
+    </div>
+  </div>
+
+  <!-- App shell: header (toolbar) | main (sidebar + map + eval) | footer (status) -->
+  <div id="app-shell" class="app-workspace app-shell flex-1 min-h-0 overflow-hidden" hidden aria-hidden="true">
+
+  <header id="app-workspace-chrome" class="app-workspace-chrome" role="banner">
+
+  <!-- Branding header (row 1) -->
+  <header id="workspace-title-bar" class="workspace-title-bar app-surface-panel h-14 shrink-0 flex items-center justify-between px-4 z-20">
+    <div class="flex items-center gap-3 min-w-0">
+      <a href="index.html" class="flex items-center gap-2 text-slate-300 hover:text-fiber-cyan transition-colors" title="العودة للصفحة الرئيسية">
+        <img class="workspace-brand-logo" src="images/logo.png" alt="Engineer Path °360 Logo" width="42" height="42" />
+        <span class="font-semibold text-sm hidden sm:inline">ENGINEER PATH °360</span>
+      </a>
+      <a href="index.html" class="hidden md:inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-fiber-border text-slate-400 hover:border-fiber-cyan hover:text-fiber-cyan transition-all">
+        ← Back to Home
+      </a>
+      <nav class="sim-switcher hidden md:flex items-center gap-2 flex-wrap" data-sim-switcher data-sim-switcher-class="hidden md:inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-fiber-border text-slate-400 hover:border-fiber-cyan hover:text-fiber-cyan transition-all" aria-label="Other simulators"></nav>
+      <span class="text-slate-600">|</span>
+      <div>
+        <h1 class="text-sm font-bold text-white">FTTH Network Simulator</h1>
+        <p class="text-[10px] text-fiber-cyan font-mono">v3.5 — Dropdown Toolbox</p>
+      </div>
+    </div>
+    <div class="auth-slot auth-slot--sim shrink-0" data-auth-slot data-auth-variant="simulator">
+      <button type="button" class="auth-login-btn auth-login-btn--sim" data-auth-login>تسجيل الدخول</button>
+    </div>
+  </header>
+
+  <!-- Menu + tools bar (row 2 — single horizontal strip) -->
+  <div id="main-action-bar" class="main-action-bar app-surface-panel shrink-0">
+    <nav id="app-menu-bar" class="app-menu-bar" aria-label="Application menu">
+      <ul class="app-menu-bar__list">
+        <li class="app-menu-bar__item" data-menu="file">
+          <button type="button" class="app-menu-bar__trigger" aria-haspopup="true" aria-expanded="false">File</button>
+          <ul class="app-menu-bar__dropdown" role="menu" aria-label="File menu">
+            <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="new">New <span class="app-menu-bar__shortcut">Ctrl+N</span></button></li>
+            <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="open">Open… <span class="app-menu-bar__shortcut">Ctrl+O</span></button></li>
+            <li class="app-menu-bar__separator" role="separator"></li>
+            <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="save">Save <span class="app-menu-bar__shortcut">Ctrl+S</span></button></li>
+            <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="save-as">Save As… <span class="app-menu-bar__shortcut">Ctrl+Shift+S</span></button></li>
+            <li class="app-menu-bar__separator" role="separator"></li>
+            <li class="app-menu-bar__subhead">Recent Projects</li>
+            <ul id="file-menu-recent-list" class="app-menu-bar__recent-list"></ul>
+            <li class="app-menu-bar__separator" role="separator"></li>
+            <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="close">Close</button></li>
+          </ul>
+        </li>
+        <li class="app-menu-bar__item app-menu-bar__item--disabled" data-menu="edit">
+          <button type="button" class="app-menu-bar__trigger" disabled>Edit</button>
+        </li>
+        <li class="app-menu-bar__item app-menu-bar__item--disabled" data-menu="view">
+          <button type="button" class="app-menu-bar__trigger" disabled>View</button>
+        </li>
+      </ul>
+    </nav>
+    <span class="main-action-bar__sep" aria-hidden="true"></span>
+    <div id="action-toolbar" class="action-toolbar action-toolbar--flat" role="toolbar" aria-label="Workspace actions">
+      <div class="action-toolbar__nav-group action-toolbar__nav-group--navigation" role="group" aria-label="Navigation tools">
+        <button type="button" id="tool-hand" class="map-tool-btn action-toolbar__btn" title="Hand Tool" aria-label="Hand Tool" aria-pressed="false">🖐️</button>
+        <button type="button" id="tool-select" class="map-tool-btn action-toolbar__btn" title="Selection Tool" aria-label="Selection Tool" aria-pressed="false">🖱️</button>
+      </div>
+      <button type="button" id="btn-undo" class="map-tool-btn action-toolbar__btn" title="Undo" aria-label="Undo" disabled>↩</button>
+      <button type="button" id="btn-redo" class="map-tool-btn action-toolbar__btn" title="Redo" aria-label="Redo" disabled>↪</button>
+      <button type="button" id="btn-fullscreen" class="map-tool-btn action-toolbar__btn" title="Full Screen" aria-label="Full Screen" aria-pressed="false">🖥️</button>
+      <button type="button" id="btn-zoom-in" class="map-tool-btn action-toolbar__btn" title="Zoom In" aria-label="Zoom In">+</button>
+      <button type="button" id="btn-zoom-out" class="map-tool-btn action-toolbar__btn" title="Zoom Out" aria-label="Zoom Out">−</button>
+      <span id="zoom-label" class="action-toolbar__zoom-label action-toolbar__zoom-label--sr" aria-live="polite">100%</span>
+      <button type="button" id="btn-toolbar-measure" class="map-tool-btn action-toolbar__btn" title="Measure Tool" aria-label="Measure Tool">📏</button>
+      <button type="button" id="btn-toolbar-copy" class="map-tool-btn action-toolbar__btn" title="Copy" aria-label="Copy">📋</button>
+      <button type="button" id="btn-toolbar-paste" class="map-tool-btn action-toolbar__btn" title="Paste" aria-label="Paste">📥</button>
+      <button type="button" id="btn-toolbar-cut" class="map-tool-btn action-toolbar__btn" title="Cut Tool" aria-label="Cut Tool">✂️</button>
+      <button type="button" id="btn-toolbar-vertex" class="map-tool-btn action-toolbar__btn" title="Vertex Tool" aria-label="Vertex Tool">◇</button>
+      <button type="button" id="btn-toolbar-move-node" class="map-tool-btn action-toolbar__btn" title="Toggle Click-to-Move Mode">⬌</button>
+      <button type="button" id="btn-toolbar-delete" class="map-tool-btn action-toolbar__btn" title="Delete" aria-label="Delete">🗑️</button>
+      <div id="sim-settings-anchor" class="sim-settings-anchor">
+        <button type="button" id="btn-sim-settings" class="map-tool-btn sim-settings-btn action-toolbar__btn" title="Settings" aria-label="Settings" aria-expanded="false" aria-controls="sim-settings-panel" aria-haspopup="dialog">⚙</button>
+      </div>
+      <button type="button" id="btn-refresh-workspace" class="map-tool-btn action-toolbar__btn" title="Refresh" aria-label="Refresh">🔄</button>
+      <button type="button" id="btn-toolbar-splicing" class="map-tool-btn action-toolbar__btn action-toolbar__btn--text action-toolbar__btn--disabled" title="Splicing — pulse Closure markers (visual only)" aria-label="Splicing Action" aria-disabled="true">-o-</button>
+      <button type="button" id="btn-toolbar-fiber-matrix" class="map-tool-btn action-toolbar__btn" title="Fiber Design Matrix (floating)" aria-label="Full Fiber Design">▦</button>
+    </div>
+    <div class="main-action-bar__meta">
+      <span id="save-status" class="save-status app-menu-bar__save-status">—</span>
+      <span id="app-menu-project-name" class="app-menu-bar__project" title="Current project">Untitled Project</span>
+    </div>
+    <div id="sim-settings-backdrop" class="sim-settings-backdrop" aria-hidden="true"></div>
+    <div id="sim-settings-panel" class="sim-settings-panel" aria-hidden="true" role="dialog" aria-labelledby="sim-settings-title">
+      <div class="sim-settings-panel__header">
+        <h3 id="sim-settings-title" class="sim-settings-panel__title">Settings</h3>
+        <button type="button" id="btn-sim-settings-close" class="sim-settings-panel__close" aria-label="Close settings">×</button>
+      </div>
+      <div class="sim-settings-panel__body">
+        <div class="sim-settings-field">
+          <label for="settings-label-size" class="sim-settings-field__label">Label Size</label>
+          <div class="sim-settings-field__row">
+            <input type="range" id="settings-label-size" min="9" max="18" step="1" value="11" aria-valuemin="9" aria-valuemax="18">
+            <span id="settings-label-size-value" class="sim-settings-field__value">11px</span>
+          </div>
+        </div>
+        <div class="sim-settings-field">
+          <label for="settings-label-color" class="sim-settings-field__label">Label Color</label>
+          <div class="sim-settings-field__row">
+            <input type="color" id="settings-label-color" value="#ffffff" aria-label="Label color">
+            <span id="settings-label-color-value" class="sim-settings-field__value">#FFFFFF</span>
+          </div>
+        </div>
+        <div class="sim-settings-field">
+          <label for="settings-tool-label-zoom" class="sim-settings-field__label">Show Tool Labels From Zoom</label>
+          <div class="sim-settings-field__row">
+            <input type="range" id="settings-tool-label-zoom" min="50" max="1000" step="10" value="100" aria-valuemin="50" aria-valuemax="1000">
+            <span id="settings-tool-label-zoom-value" class="sim-settings-field__value">100%</span>
+          </div>
+        </div>
+        <div class="sim-settings-field">
+          <label for="settings-cable-label-zoom" class="sim-settings-field__label">Show Cable Labels From Zoom</label>
+          <div class="sim-settings-field__row">
+            <input type="range" id="settings-cable-label-zoom" min="50" max="1000" step="10" value="150" aria-valuemin="50" aria-valuemax="1000">
+            <span id="settings-cable-label-zoom-value" class="sim-settings-field__value">150%</span>
+          </div>
+        </div>
+        <div class="sim-settings-field sim-settings-field--save">
+          <button type="button" id="settings-save" class="sim-settings-save-btn">Save Settings</button>
+        </div>
+        <div class="sim-settings-field">
+          <label class="sim-settings-toggle" for="settings-map-rotation">
+            <span class="sim-settings-toggle__label">Enable Map Rotation</span>
+            <input type="checkbox" id="settings-map-rotation" class="sim-settings-toggle__input">
+            <span class="sim-settings-toggle__track" aria-hidden="true"></span>
+          </label>
+        </div>
+        <div id="settings-rotation-controls" class="sim-settings-field sim-settings-rotation hidden" aria-hidden="true">
+          <label for="settings-map-rotation-deg" class="sim-settings-field__label">Rotation Angle</label>
+          <div class="sim-settings-field__row">
+            <input type="range" id="settings-map-rotation-deg" min="0" max="360" step="1" value="0">
+            <span id="settings-map-rotation-value" class="sim-settings-field__value">0°</span>
+          </div>
+          <div class="sim-settings-rotation__btns">
+            <button type="button" id="settings-rotate-left" class="sim-settings-rotate-btn" title="Rotate -15°">↺ −15°</button>
+            <button type="button" id="settings-rotate-right" class="sim-settings-rotate-btn" title="Rotate +15°">↻ +15°</button>
+          </div>
+          <p class="sim-settings-hint">Shift + mouse wheel rotates when enabled.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </header><!-- /#app-workspace-chrome — top toolbar -->
+
+  <!-- Main content: toolbox + map zone + evaluation sidebar -->
+  <div id="main-layout" class="app-main-content flex flex-1 min-w-0 overflow-hidden">
+
+    <div id="simulator-container" class="simulator-wrapper fullscreen-zone flex flex-1 min-w-0 overflow-hidden" tabindex="0">
+
+    <!-- LEFT: Toolbox -->
+    <aside id="toolbox" class="toolbox side-panel side-panel--left app-surface-panel border-r border-fiber-border flex flex-col overflow-hidden min-h-0">
+      <div id="tools-library-header" class="toolbox-header toolbox-header--tools-library p-4 border-b shrink-0" role="button" tabindex="0" aria-expanded="true" aria-controls="toolbox-items" aria-label="Tools Library">
+        <span class="tools-library-tooltip" role="tooltip">Tools Library</span>
+        <div class="toolbox-header-icon" aria-hidden="true">🧰</div>
+        <div class="toolbox-collapsible-text flex-1 min-w-0">
+          <h2 class="toolbox-header__title text-xs font-semibold tracking-wide text-white">Tool Box 🧰</h2>
+          <p class="text-[11px] text-slate-400 mt-1" dir="rtl">اسحب العناصر إلى شبكة المدينة</p>
+        </div>
+        <span class="toolbox-header__chevron toolbox-collapsible-text" aria-hidden="true">▾</span>
+      </div>
+      <div id="toolbox-body" class="toolbox-body flex-1 min-h-0 relative flex flex-col overflow-hidden">
+        <div class="p-3 space-y-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden" id="toolbox-items">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="toolbox-footer p-3 border-t border-fiber-border shrink-0">
+        <p id="toolbox-footer-hint" class="toolbox-footer-hint text-[10px] text-slate-500 leading-snug m-0" dir="rtl">
+          💡 على الرصيف فقط · FAT Pole فوق المثلث → <strong class="text-white">FAT1</strong>
+        </p>
+        <span class="toolbox-footer-icon" title="Cable Mode">💡</span>
+      </div>
+    </aside>
+
+    <!-- CENTER: Canvas / City Grid -->
+    <main id="canvas-main" class="flex-1 flex flex-col overflow-hidden relative min-w-0">
+      <button id="toggle-toolbox" type="button" class="panel-toggle panel-toggle--left" aria-label="Toggle Toolbox" title="Toggle Toolbox (compact)">◀</button>
+      <button id="toggle-eval" type="button" class="panel-toggle panel-toggle--right" aria-label="Toggle Evaluation" title="Toggle Evaluation">▶</button>
+
+      <!-- Virtual City grid workspace -->
+      <div id="virtual-city-view" class="simulator-view simulator-view--virtual flex flex-col flex-1 min-h-0" style="display:block">
+
+      <div id="canvas-wrapper" class="map-viewport map-container flex-1 relative">
+
+        <div id="canvas-zoom-inner" class="workspace-container map-canvas-inner ftth-world-root">
+          <div id="ftth-world-grid" class="ftth-world-grid" aria-hidden="true"></div>
+          <div id="ftth-template-sheet" class="ftth-template-sheet">
+          <div id="city-canvas" class="map-canvas relative" style="overflow: visible;">
+            <div id="satellite-bg-layer" class="satellite-bg-layer" aria-hidden="true"></div>
+            <canvas id="image-map-grid-overlay" class="image-map-grid-overlay" aria-hidden="true"></canvas>
+            <div id="street-layer" class="map-street-layer absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+            <div id="city-grid" class="relative z-20 grid gap-0"></div>
+            <div id="workspace-items-layer" class="workspace-items-layer" aria-hidden="false"></div>
+            <div id="free-nodes-layer" class="free-nodes-layer" aria-hidden="true"></div>
+            <svg id="global-drawing-layer" class="global-drawing-layer" aria-hidden="true"></svg>
+          </div>
+          </div><!-- /ftth-template-sheet -->
+        </div>
+        <div id="pathway-panel-host" class="pathway-panel-host pathway-panel-host--retired" aria-hidden="true"></div>
+      </div>
+
+      </div><!-- /virtual-city-view -->
+    </main>
+
+    <!-- Workspace overlays (inside fullscreen subtree) -->
+    <div id="sim-workspace-overlays" class="sim-workspace-overlays" aria-hidden="false">
+      <div id="path-context-menu" class="sim-context-menu hidden" role="menu" aria-hidden="true"></div>
+    </div>
+
+    </div><!-- /simulator-container -->
+
+    <!-- RIGHT: Unified Evaluation + Features Sidebar -->
+    <aside id="evaluation-panel" class="side-panel side-panel--right bg-fiber-panel border-l border-fiber-border flex flex-col overflow-hidden sidebar--idle">
+      <div class="evaluation-panel__header p-4 border-b border-fiber-border">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-fiber-cyan">Evaluation</h2>
+        <p class="text-[11px] text-slate-400 mt-1" dir="rtl">لوحة التقييم والتحقق</p>
+      </div>
+
+      <div id="evaluation-panel-inner" class="p-4 space-y-3 flex-1 flex flex-col min-h-0">
+        <!-- Unified Features & Properties (selection mode) -->
+        <div id="property-panel" class="property-panel property-panel--unified rounded-xl border border-fiber-border bg-fiber-card p-3 hidden">
+          <div id="property-panel-body" class="property-panel__body"></div>
+        </div>
+
+        <!-- Evaluation content (idle mode) -->
+        <div id="evaluation-content" class="evaluation-content space-y-3 flex-1">
+        <!-- Score -->
+        <div class="rounded-xl border border-fiber-border bg-fiber-card p-4 text-center">
+          <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Design Score</p>
+          <p id="score-value" class="text-4xl font-bold font-mono text-fiber-cyan">—</p>
+          <p id="score-label" class="text-[11px] text-slate-500 mt-1">Not evaluated yet</p>
+        </div>
+
+        <!-- Metrics -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-xs py-2 border-b border-fiber-border/50">
+            <span class="text-slate-400">Components</span>
+            <span id="metric-components" class="font-mono text-white">0</span>
+          </div>
+          <div class="flex justify-between items-center text-xs py-2 border-b border-fiber-border/50">
+            <span class="text-slate-400">Connections</span>
+            <span id="metric-connections" class="font-mono text-white">0</span>
+          </div>
+          <div class="flex justify-between items-center text-xs py-2 border-b border-fiber-border/50">
+            <span class="text-slate-400">OLT Status</span>
+            <span id="metric-olt" class="font-mono text-slate-500">—</span>
+          </div>
+          <div class="flex justify-between items-center text-xs py-2 border-b border-fiber-border/50">
+            <span class="text-slate-400">ONT / Buildings</span>
+            <span id="metric-homes" class="font-mono text-white">0 / 0</span>
+          </div>
+          <div class="flex justify-between items-center text-xs py-2">
+            <span class="text-slate-400">Fiber Length</span>
+            <span id="metric-length" class="font-mono text-fiber-phosphor">0 m</span>
+          </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="rounded-xl border border-fiber-border bg-fiber-card p-3">
+          <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Checklist</p>
+          <ul id="checklist" class="space-y-1.5 text-[11px]">
+            <li class="flex items-start gap-2 text-slate-500"><span>○</span><span dir="rtl">أضف OLT في المدينة</span></li>
+            <li class="flex items-start gap-2 text-slate-500"><span>○</span><span dir="rtl">وصّل OLT بـ Splitter</span></li>
+            <li class="flex items-start gap-2 text-slate-500"><span>○</span><span dir="rtl">اربط ONT بمنزل مشترك</span></li>
+            <li class="flex items-start gap-2 text-slate-500"><span>○</span><span dir="rtl">أكمل مسار FTTH كاملاً</span></li>
+            <li class="flex items-start gap-2 text-slate-500"><span>○</span><span>① Handhole / FAT Handhole → ② Closure → ③ Splitter on FDT</span></li>
+          </ul>
+        </div>
+
+        <!-- Field Rules -->
+        <div class="rounded-xl border border-red-500/25 bg-red-500/5 p-3">
+          <p class="text-[10px] font-bold text-red-400 uppercase mb-2">Field Rules — قواعد ميدانية</p>
+          <p class="text-[11px] text-slate-400 leading-relaxed" dir="rtl">
+            <strong class="text-yellow-300">Closure:</strong> drop onto <strong class="text-slate-300">Handhole</strong> or <strong class="text-slate-300">FAT Handhole</strong>.
+            <br>
+            <strong class="text-yellow-300">Splitter:</strong> drop onto <strong class="text-slate-300">FDT</strong> or <strong class="text-slate-300">FAT Pole</strong> (white box).
+            <br>
+            <strong class="text-yellow-300">FAT Pole (LM_Poles):</strong> drop onto <strong class="text-slate-300">FAT Handhole (LM_Holes)</strong> only.
+            <br>
+            <strong class="text-yellow-300">Handhole / FAT Handhole / FDT:</strong> sidewalk only — not on asphalt or buildings.
+          </p>
+        </div>
+
+        <!-- Feedback -->
+        <div id="feedback-area" class="rounded-xl border border-fiber-border bg-fiber-elevated p-3 min-h-[80px] hidden">
+          <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Feedback</p>
+          <ul id="feedback-list" class="space-y-1 text-[11px] text-slate-300"></ul>
+        </div>
+        </div><!-- /evaluation-content -->
+      </div><!-- /evaluation-panel-inner -->
+
+      <div class="evaluation-panel__footer">
+        <button id="btn-check-design" type="button" class="evaluation-panel__check-btn">
+          ✓ Check Design
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <footer id="smart-status-bar" class="smart-status-bar gis-status-bar" aria-live="polite">
+    <div class="gis-status-bar__group">
+      <span class="gis-status-bar__label">Coordinates:</span>
+      <span id="status-bar-coords" class="gis-status-bar__value gis-status-bar__value--coords gis-status-bar__value--coords-idle" title="Canvas coordinates">X: 000.0 Y: 000.0</span>
+    </div>
+    <span class="gis-status-bar__sep" aria-hidden="true"></span>
+    <div class="gis-status-bar__group">
+      <span class="gis-status-bar__label">Scale:</span>
+      <span id="status-bar-scale" class="gis-status-bar__value" title="Map scale">1:1000</span>
+    </div>
+    <span class="gis-status-bar__sep" aria-hidden="true"></span>
+    <div class="gis-status-bar__group">
+      <span class="gis-status-bar__label">Zoom:</span>
+      <span id="status-bar-zoom" class="gis-status-bar__value" title="Zoom level">100%</span>
+    </div>
+    <span class="gis-status-bar__sep" aria-hidden="true"></span>
+    <div class="gis-status-bar__group gis-status-bar__group--rotation">
+      <span class="gis-status-bar__label">Rotation:</span>
+      <div class="gis-status-bar__rotation-control" title="Map rotation">
+        <button type="button" id="status-bar-rotation-down" class="gis-status-bar__spin-btn" aria-label="Decrease rotation" tabindex="-1">▼</button>
+        <div class="gis-status-bar__rotation-field">
+          <input type="text" id="status-bar-rotation" class="gis-status-bar__rotation-input" value="0.0" inputmode="decimal" aria-label="Map rotation (degrees)" autocomplete="off" spellcheck="false">
+          <span class="gis-status-bar__rotation-unit" aria-hidden="true">°</span>
+          <button type="button" id="status-bar-rotation-reset" class="gis-status-bar__rotation-reset" aria-label="Reset rotation to 0°" title="Reset to 0°">×</button>
+        </div>
+        <button type="button" id="status-bar-rotation-up" class="gis-status-bar__spin-btn" aria-label="Increase rotation" tabindex="-1">▲</button>
+      </div>
+      <span class="gis-status-bar__sep gis-status-bar__sep--hint" aria-hidden="true"></span>
+      <div class="gis-status-bar__push-hint" id="status-bar-push-hint" title="Status">
+        <span id="status-bar-active-fdt" class="gis-status-bar__active-fdt" hidden aria-hidden="true"></span>
+        <span id="status-bar-fdt-sep" class="gis-status-bar__fdt-sep" hidden aria-hidden="true">|</span>
+        <span id="status-bar-active-path" class="gis-status-bar__active-path">Active Path · ...</span>
+        <span id="status-bar-dup-badge" class="gis-status-bar__dup-badge" hidden aria-hidden="true"></span>
+      </div>
+    </div>
+    <span id="field-status-summary" class="field-status-summary" hidden aria-hidden="true"></span>
+    <span id="workspace-status" class="smart-status-bar__message" hidden aria-hidden="true"></span>
+  </footer>
+
+  </div><!-- /#app-shell -->
+
+  <script>window.FTTH_DEBUG = false;</script>
+  <script src="js/drawingEngine.js?v=20260921"></script>
+  <script src="js/pathwayEditor.js?v=20260921"></script>
+  <script src="js/PathwayPropertiesModal.js?v=20260921"></script>
+  <script src="js/LabelManager.js?v=20260921"></script>
+  <script src="js/uiController.js?v=20260921"></script>
+  <script src="js/settings/SimulatorSettings.js?v=20260921"></script>
+  <script src="js/labels/LabelDataProviders.js?v=20260921"></script>
+  <script src="js/FiberDesignManager.js?v=20260921"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="js/FiberDesignUI.js?v=20260921"></script>
+  <script src="js/FiberDesignMatrixModal.js?v=20260921"></script>
+  <script src="js/SplicingActionUI.js?v=20260921"></script>
+  <script src="js/toolboxInventoryPanel.js?v=20260921"></script>
+  <script src="js/VisibilityManager.js?v=20260921"></script>
+  <script src="js/toolboxManager.js?v=20260921"></script>
+  <script src="js/fileMenuBar.js?v=20260921"></script>
+  <script src="js/projectSetupModal.js?v=20260921"></script>
+  <script src="js/startupView.js?v=20260921"></script>
+  <script src="js/imageMapProject.js?v=20260921"></script>
+  <script src="js/ftth-simulator-core.js?v=20260921"></script>
+  <script src="js/main.js?v=20260921"></script>
+  <script src="js/platform-simulators.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20260921"></script>
+  <script type="module" src="js/simulator-access.js?v=20260921"></script>
+</body>
+</html>

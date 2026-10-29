@@ -1,0 +1,31 @@
+{
+  "name": "fiber_academy_platform",
+  "version": "1.0.0",
+  "description": "",
+  "main": "firebase-messaging-sw.js",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "playwright": "^1.62.1",
+    "playwright-core": "^1.62.1",
+    "pngjs": "^7.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azooz909sara/iraqi-fiber-academy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/azooz909sara/iraqi-fiber-academy/issues"
+  },
+  "homepage": "https://github.com/azooz909sara/iraqi-fiber-academy#readme",
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0"
+  }
+}

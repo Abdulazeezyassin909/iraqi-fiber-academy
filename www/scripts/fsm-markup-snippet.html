@@ -1,0 +1,299 @@
+<div class="fusion-splicer-machine" data-fusion-ui-root="1" role="application" aria-label="Fusion splicer machine">
+<div  class="fsm-toast"></div>
+
+<div  class="fsm-machine-body">
+
+  <!-- ===== HEAT OVEN MODULE (Sleeve Heater) ===== -->
+  <div  class="fsm-heat-oven-module">
+    <div  class="fsm-heat-oven-housing">
+      <div  class="fsm-heat-oven-step-left"></div>
+      <div  class="fsm-heat-oven-step-right"></div>
+      <div  class="fsm-heat-oven-channel">
+        <div  class="fsm-heat-oven-plate">
+          <div  data-oven-slot="1" class="fsm-heat-oven-slot"></div>
+        </div>
+        <div  class="fsm-heat-oven-glow"></div>
+      </div>
+      <!-- Interactive lid over heating compartment -->
+      <div  role="button" tabindex="0" aria-label="Toggle heat oven lid" class="fsm-heat-oven-lid">
+        <div  class="fsm-heat-oven-lid-face"></div>
+        <div  class="fsm-heat-oven-lid-handle"></div>
+      </div>
+    </div>
+    <div  class="fsm-heat-oven-lid-btn">LID</div>
+    <div  class="fsm-heat-oven-led"></div>
+    <div  class="fsm-heat-oven-label">HEAT OVEN</div>
+  </div>
+
+  <!-- ===== TOP SCREEN ===== -->
+  <div  class="fsm-screen-section">
+    <div  class="fsm-screen-housing">
+      <div class="status-bar">
+        <div class="left-icons">
+          <span class="mode-label fsm-mode-label" >SM AUTO</span>
+          <div class="icon-signal"><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="right-icons">
+          <div class="icon-battery"></div>
+        </div>
+      </div>
+
+      <div class="camera-views">
+        <div class="camera-panel fsm-cam-x" >
+          <div class="camera-label">X-AXIS</div>
+          <div class="alignment-overlay">
+            <div class="val"><span>X:</span> <span  class="fsm-x-val">0.002</span> mm</div>
+          </div>
+          <canvas  class="fsm-canvas-x"></canvas>
+        </div>
+        <div class="camera-panel fsm-cam-y" >
+          <div class="camera-label">Y-AXIS</div>
+          <div class="alignment-overlay">
+            <div class="val"><span>Y:</span> <span  class="fsm-y-val">0.005</span> mm</div>
+          </div>
+          <canvas  class="fsm-canvas-y"></canvas>
+        </div>
+      </div>
+
+      <div class="screen-info">
+        <span class="splice-mode fsm-splice-mode" >AUTO SPLICE</span>
+        <span class="status-text fsm-status-text" >READY</span>
+        <span class="loss-est fsm-loss-est" >EST.LOSS: 0.02 dB</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FUSION CHAMBER ===== -->
+  <div  class="fsm-fusion-chamber">
+    <div  class="fsm-chamber-label">Fusion Chamber</div>
+    <div  class="fsm-chamber-panel">
+
+      <!-- Chamber panel corner Phillips screws -->
+      <div class="phillips-screw screw-tl"></div>
+      <div class="phillips-screw screw-tr"></div>
+      <div class="phillips-screw screw-bl"></div>
+      <div class="phillips-screw screw-br"></div>
+
+      <!-- Clamp status indicators -->
+      <div class="clamp-indicator fsm-clamp-ind-l" ></div>
+      <div class="clamp-indicator fsm-clamp-ind-r" ></div>
+
+      <!-- D-pad movement indicator & clamp selector display -->
+      <div  class="fsm-move-indicator">ALIGN MODE</div>
+      <div  class="fsm-offset-display">X:+0.000 Y:+0.000</div>
+      <div  class="fsm-clamp-select-display">SEL: L-CLAMP</div>
+
+      <!-- Recessed cavity -->
+      <div  class="fsm-chamber-cavity">
+
+        <!-- Fiber entry ports -->
+        <div class="fiber-entry fsm-fiber-entry-left" ></div>
+        <div class="fiber-entry fsm-fiber-entry-right" ></div>
+
+        <!-- ========== LEFT CLAMP ========== -->
+        <div class="clamp-assembly fsm-clamp-assembly-l" >
+          <div class="clamp-base">
+            <div class="clamp-base-groove">
+              <div class="clamp-base-groove-inner"></div>
+              <div class="clamp-base-groove-cut"></div>
+            </div>
+            <div class="hex-screw hs-l1"></div>
+            <div class="hex-screw hs-l2"></div>
+            <div class="hex-screw hs-l3"></div>
+            <div class="hex-screw hs-l4"></div>
+            <!-- External fiber mount points (empty until injected) -->
+            <div class="clamp-fiber fsm-clamp-fiber-l"  data-fiber-slot="L" hidden></div>
+            <div class="clamp-fiber-lock fsm-clamp-fiber-lock-l"  data-fiber-lock="L" hidden></div>
+          </div>
+          <div class="clamp-latch"></div>
+          <div class="clamp-lid fsm-clamp-lid-l" >
+            <div class="clamp-lid-exterior">
+              <div class="ribbed-pad">
+                <div class="rib"></div><div class="rib"></div><div class="rib"></div>
+                <div class="rib"></div><div class="rib"></div><div class="rib"></div>
+                <div class="rib"></div><div class="rib"></div>
+              </div>
+              <div class="lid-grip">
+                <div class="grip-line"></div><div class="grip-line"></div>
+                <div class="grip-line"></div><div class="grip-line"></div>
+                <div class="grip-line"></div>
+              </div>
+            </div>
+            <div class="clamp-lid-interior">
+              <div class="inner-rubber-pad"></div>
+            </div>
+          </div>
+          <div class="clamp-hinge-barrel">
+            <div class="hinge-ring" style="top:8px"></div>
+            <div class="hinge-ring" style="top:22px"></div>
+            <div class="hinge-ring" style="top:36px"></div>
+            <div class="hinge-ring" style="top:50px"></div>
+            <div class="hinge-ring" style="top:64px"></div>
+            <div class="hinge-ring" style="top:78px"></div>
+            <div class="hinge-ring" style="top:92px"></div>
+            <div class="hinge-ring" style="top:106px"></div>
+            <div class="hinge-ring" style="top:120px"></div>
+            <div class="hinge-ring" style="top:134px"></div>
+            <div class="hinge-ring" style="top:148px"></div>
+            <div class="hinge-ring" style="top:162px"></div>
+            <div class="hinge-ring" style="top:176px"></div>
+          </div>
+          <div class="clamp-label">L-CLAMP</div>
+        </div>
+
+        <!-- ========== CENTRAL ELECTRODE / V-GROOVE ZONE ========== -->
+        <div  class="fsm-alignment-stage">
+          <div  class="fsm-alignment-crosshair"></div>
+          <div class="electrode-label">ARC ZONE</div>
+
+          <div  class="fsm-electrode-top">
+            <div class="electrode-mount"></div>
+            <div class="electrode-rod"></div>
+            <div class="electrode-tip"></div>
+          </div>
+
+          <div  class="fsm-electrode-bottom">
+            <div class="electrode-tip-up"></div>
+            <div class="electrode-rod-b"></div>
+            <div class="electrode-mount-b"></div>
+          </div>
+
+          <div  class="fsm-v-groove">
+            <div class="v-groove-body">
+              <div class="v-groove-channel"></div>
+              <div class="v-groove-highlight"></div>
+            </div>
+          </div>
+
+          <div  class="fsm-arc-glow"></div>
+
+          <!-- Chamber fiber hooks (empty at boot; external scripts may reveal) -->
+          <div class="groove-fiber fsm-groove-fiber-l"  data-groove-fiber="L" hidden></div>
+          <div class="groove-fiber fsm-groove-fiber-r"  data-groove-fiber="R" hidden></div>
+          <div class="fiber-lock fsm-fiber-lock-l"  data-fiber-lock-zone="L" hidden></div>
+          <div class="fiber-lock fsm-fiber-lock-r"  data-fiber-lock-zone="R" hidden></div>
+        </div>
+
+        <!-- ========== RIGHT CLAMP ========== -->
+        <div class="clamp-assembly fsm-clamp-assembly-r" >
+          <div class="clamp-base">
+            <div class="clamp-base-groove">
+              <div class="clamp-base-groove-inner"></div>
+              <div class="clamp-base-groove-cut"></div>
+            </div>
+            <div class="hex-screw hs-r1"></div>
+            <div class="hex-screw hs-r2"></div>
+            <div class="hex-screw hs-r3"></div>
+            <div class="hex-screw hs-r4"></div>
+            <div class="clamp-fiber fsm-clamp-fiber-r"  data-fiber-slot="R" hidden></div>
+            <div class="clamp-fiber-lock fsm-clamp-fiber-lock-r"  data-fiber-lock="R" hidden></div>
+          </div>
+          <div class="clamp-latch"></div>
+          <div class="clamp-lid fsm-clamp-lid-r" >
+            <div class="clamp-lid-exterior">
+              <div class="ribbed-pad">
+                <div class="rib"></div><div class="rib"></div><div class="rib"></div>
+                <div class="rib"></div><div class="rib"></div><div class="rib"></div>
+                <div class="rib"></div><div class="rib"></div>
+              </div>
+              <div class="lid-grip">
+                <div class="grip-line"></div><div class="grip-line"></div>
+                <div class="grip-line"></div><div class="grip-line"></div>
+                <div class="grip-line"></div>
+              </div>
+            </div>
+            <div class="clamp-lid-interior">
+              <div class="inner-rubber-pad"></div>
+            </div>
+          </div>
+          <div class="clamp-hinge-barrel">
+            <div class="hinge-ring" style="top:8px"></div>
+            <div class="hinge-ring" style="top:22px"></div>
+            <div class="hinge-ring" style="top:36px"></div>
+            <div class="hinge-ring" style="top:50px"></div>
+            <div class="hinge-ring" style="top:64px"></div>
+            <div class="hinge-ring" style="top:78px"></div>
+            <div class="hinge-ring" style="top:92px"></div>
+            <div class="hinge-ring" style="top:106px"></div>
+            <div class="hinge-ring" style="top:120px"></div>
+            <div class="hinge-ring" style="top:134px"></div>
+            <div class="hinge-ring" style="top:148px"></div>
+            <div class="hinge-ring" style="top:162px"></div>
+            <div class="hinge-ring" style="top:176px"></div>
+          </div>
+          <div class="clamp-label">R-CLAMP</div>
+        </div>
+
+      </div><!-- /chamberCavity -->
+
+    </div><!-- /chamberPanel -->
+
+    <!-- Sleeve UI reserved for external sleeve tool — machine boots empty -->
+    <div  hidden aria-hidden="true" class="fsm-sleeve-indicator">
+      <div  class="fsm-sleeve-icon"></div>
+      <span  class="fsm-sleeve-text">SLEEVE EMPTY</span>
+      <div  class="fsm-heat-bar"><div  class="fsm-heat-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- ===== BOTTOM CONTROL PANEL ===== -->
+  <div  class="fsm-control-panel">
+    <div  class="fsm-power-section">
+      <div  class="fsm-power-btn">
+        <div  class="on fsm-power-led"></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" style="position:absolute;top:8px;left:50%;transform:translateX(-50%)">
+          <path d="M12 2v8M6.34 7.34a8 8 0 1 0 11.32 0" stroke="#888" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="power-label">POWER</span>
+      <div  class="fsm-status-leds">
+        <div class="led green-on fsm-led-pwr"  title="Power"></div>
+        <div class="led fsm-led-arc"  title="Arc"></div>
+        <div class="led fsm-led-err"  title="Error"></div>
+      </div>
+    </div>
+
+    <div  class="fsm-dpad-section">
+      <div  class="fsm-dpad">
+        <!-- Up -->
+        <div class="dpad-btn fsm-dpad-up" >
+          <svg class="arrow-icon" viewBox="0 0 24 24"><polygon points="12,4 20,16 4,16"/></svg>
+        </div>
+        <!-- Left -->
+        <div class="dpad-btn fsm-dpad-left" >
+          <svg class="arrow-icon" viewBox="0 0 24 24"><polygon points="4,12 16,4 16,20"/></svg>
+        </div>
+        <!-- Center/OK -->
+        <div  class="fsm-dpad-center">
+          <svg class="check-icon" viewBox="0 0 24 24"><polyline points="6,12 10,16 18,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <!-- Right -->
+        <div class="dpad-btn fsm-dpad-right" >
+          <svg class="arrow-icon" viewBox="0 0 24 24"><polygon points="20,12 8,4 8,20"/></svg>
+        </div>
+        <!-- Down -->
+        <div class="dpad-btn fsm-dpad-down" >
+          <svg class="arrow-icon" viewBox="0 0 24 24"><polygon points="12,20 4,8 20,8"/></svg>
+        </div>
+      </div>
+      <div class="dpad-label">Navigation</div>
+    </div>
+
+    <div  class="fsm-xo-section">
+      <div class="xo-btn fsm-x-btn" >✕</div>
+      <div class="xo-btn fsm-o-btn" >○</div>
+    </div>
+
+    <div  class="fsm-func-section">
+      <div class="func-btn fsm-heat-btn" >HEAT</div>
+      <div class="func-btn fsm-alm-btn" >ALM</div>
+      <div class="func-btn fsm-and-btn" >AND</div>
+      <div class="func-btn fsm-reset-btn" >RESET</div>
+      <div class="func-btn fsm-set-btn" >SET</div>
+    </div>
+  </div>
+
+  <div  class="fsm-brand-plate">FIBER OPTIC FUSION SPLICER — INDUSTRIAL SERIES</div>
+
+</div>
+</div>

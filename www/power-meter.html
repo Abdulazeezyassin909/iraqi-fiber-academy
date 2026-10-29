@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Optical Power Meter trainer — live fiber bench, dBm LCD, GPON/EPON Pass·Warning·Fail | Engineer Path °360">
+  <title>Optical Power Meter | Engineer Path °360</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="css/header.css?v=20260921">
+  <link rel="stylesheet" href="css/ftth-lab.css?v=20260921">
+  <link rel="stylesheet" href="css/power-meter.css?v=20260921">
+  <script src="js/env-access.js?v=20260921"></script>
+</head>
+<body class="opm-page opm-page--workspace">
+
+  <div id="opm-startup-view" class="startup-view" role="main" aria-label="Welcome">
+    <header class="startup-view__hero">
+      <div class="startup-view__brand">
+        <img class="startup-view__logo" src="images/logo.png" alt="Engineer Path °360 Logo" width="42" height="42" />
+        <div>
+          <h1 class="startup-view__title">Optical Power Meter</h1>
+          <p class="startup-view__subtitle">ENGINEER PATH °360 — Engineering Career Path Platform — Open a recent project or start from a template</p>
+        </div>
+      </div>
+      <div class="startup-view__hero-actions">
+        <button type="button" id="opm-startup-back" class="startup-view__home-link" hidden>Back to workspace</button>
+        <a href="index.html" class="startup-view__home-link">← Back to Home</a>
+      </div>
+    </header>
+    <div class="startup-view__panels">
+      <section class="startup-view__panel startup-view__panel--recent" aria-labelledby="opm-startup-recent-heading">
+        <h2 id="opm-startup-recent-heading" class="startup-view__panel-title">Recent Projects</h2>
+        <ul id="opm-startup-recent-list" class="startup-view__recent-list" role="list"></ul>
+      </section>
+      <section class="startup-view__panel startup-view__panel--templates" aria-labelledby="opm-startup-templates-heading">
+        <h2 id="opm-startup-templates-heading" class="startup-view__panel-title">Project Templates</h2>
+        <div id="opm-startup-templates-grid" class="startup-view__templates-grid"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="opm-app" id="opm-app" hidden aria-hidden="true">
+    <header class="opm-header">
+      <a class="opm-brand" href="index.html" title="Engineer Path °360">
+        <img src="images/logo.png" alt="Engineer Path °360 Logo" width="36" height="36" />
+        <div class="opm-brand__meta">
+          <h1>Optical Power Meter</h1>
+          <p>Live fiber bench · Viavi OLP-38</p>
+        </div>
+      </a>
+      <div class="opm-header__actions">
+        <button type="button" id="opm-admin-settings-btn" class="anatomy-top-btn admin-only-btn" style="display: none;" hidden>
+          <i class="icon-settings" aria-hidden="true"></i> الإعدادات
+        </button>
+        <a class="opm-nav-link" href="index.html">← Back to Home</a>
+        <nav class="sim-switcher" data-sim-switcher data-sim-switcher-class="opm-nav-link" aria-label="Other simulators"></nav>
+        <div class="auth-slot auth-slot--sim shrink-0" data-auth-slot data-auth-variant="simulator">
+          <button type="button" class="auth-login-btn auth-login-btn--sim" data-auth-login>تسجيل الدخول</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="opm-menubar-row">
+      <nav id="opm-app-menu-bar" class="app-menu-bar" aria-label="Application menu">
+        <ul class="app-menu-bar__list">
+          <li class="app-menu-bar__item" data-menu="file">
+            <button type="button" class="app-menu-bar__trigger" aria-haspopup="true" aria-expanded="false">File</button>
+            <ul class="app-menu-bar__dropdown" role="menu" aria-label="File menu">
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="new">New <span class="app-menu-bar__shortcut">Ctrl+N</span></button></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="open">Open… <span class="app-menu-bar__shortcut">Ctrl+O</span></button></li>
+              <li class="app-menu-bar__separator" role="separator"></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="save">Save <span class="app-menu-bar__shortcut">Ctrl+S</span></button></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="save-as">Save As… <span class="app-menu-bar__shortcut">Ctrl+Shift+S</span></button></li>
+              <li class="app-menu-bar__separator" role="separator"></li>
+              <li class="app-menu-bar__subhead">Recent Projects</li>
+              <ul id="opm-file-menu-recent-list" class="app-menu-bar__recent-list"></ul>
+              <li class="app-menu-bar__separator" role="separator"></li>
+              <li><button type="button" class="app-menu-bar__menu-item" role="menuitem" data-file-action="close">Close</button></li>
+            </ul>
+          </li>
+          <li class="app-menu-bar__item app-menu-bar__item--disabled" data-menu="edit">
+            <button type="button" class="app-menu-bar__trigger" disabled>Edit</button>
+          </li>
+          <li class="app-menu-bar__item app-menu-bar__item--disabled" data-menu="view">
+            <button type="button" class="app-menu-bar__trigger" disabled>View</button>
+          </li>
+        </ul>
+      </nav>
+      <div class="opm-menubar-row__meta">
+        <span id="opm-save-status" class="save-status app-menu-bar__save-status">—</span>
+        <span id="opm-menu-project-name" class="app-menu-bar__project" title="Current project">Untitled Project</span>
+      </div>
+    </div>
+
+    <main class="opm-workspace" aria-label="FTTH lab workspace">
+      <aside class="opm-sidebar opm-sidebar--toolbox lab-rail" aria-label="Toolbox">
+        <h2 class="lab-rail__title">Toolbox</h2>
+        <div class="lab-rail__panel">
+          <section class="lab-rail__group">
+            <h3 class="lab-rail__cat">Source</h3>
+            <div id="lab-hw-tree" class="lab-hw-tree"></div>
+          </section>
+          <section class="lab-rail__group">
+            <h3 class="lab-rail__cat">Split</h3>
+            <div id="lab-splitter-tree" class="lab-hw-tree"></div>
+          </section>
+          <section class="lab-rail__group">
+            <h3 class="lab-rail__cat">Fiber</h3>
+            <div id="lab-patchcord-tree" class="lab-hw-tree"></div>
+            <div id="lab-pigtail-tree" class="lab-hw-tree"></div>
+            <div id="lab-spool-tree" class="lab-hw-tree" aria-label="Fiber spool pin tools"></div>
+            <div id="lab-bendjig-tree" class="lab-hw-tree" aria-label="Macro-Bend Tester"></div>
+          </section>
+          <section class="lab-rail__group">
+            <h3 class="lab-rail__cat">Adapt</h3>
+            <div id="lab-coupler-tree" class="lab-hw-tree"></div>
+          </section>
+          <section class="lab-rail__group">
+            <h3 class="lab-rail__cat">TEST EQUIPMENT</h3>
+            <div id="lab-opm-tree" class="lab-hw-tree" aria-label="Optical Power Meter"></div>
+            <div id="lab-ols-tree" class="lab-hw-tree" aria-label="Optical Laser Source"></div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="opm-stage" aria-label="Interactive bench">
+        <div class="opm-stage-head">
+          <div class="opm-stage-head__copy">
+            <h2 class="opm-stage-head__title">Workspace</h2>
+            <p class="opm-stage-head__tip">SFP → patch → spool wind (manual) → dock SC into OLP-38</p>
+          </div>
+          <div class="opm-bench-toolbar" role="toolbar" aria-label="Bench tools">
+            <button type="button" class="lab-toggle-btn lab-icon-btn" id="lab-btn-undo" data-lab-undo title="Undo (Ctrl+Z)" aria-label="Undo" disabled>↩️</button>
+            <button type="button" class="lab-toggle-btn lab-icon-btn" id="lab-btn-redo" data-lab-redo title="Redo (Ctrl+Y)" aria-label="Redo" disabled>↪️</button>
+            <button type="button" class="lab-toggle-btn lab-icon-btn lab-icon-btn--delete" id="lab-btn-delete" data-lab-delete title="Delete (Del)" aria-label="Delete selected">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9zm-1 12h12a1 1 0 0 0 1-1V8H5v12a1 1 0 0 0 1 1z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="opm-stage__canvas" id="opm-bench">
+          <div class="lab-app lab-app--2d opm-bench__app" id="lab-app">
+            <section class="lab-stage-wrap opm-bench__stage" aria-label="Bench canvas">
+              <div id="lab-canvas-2d" class="lab-2d-stage">
+                <div class="lab-2d-world" id="lab-2d-world">
+                  <div class="lab-2d-grid" aria-hidden="true"></div>
+                  <div class="lab-2d-origin" title="Origin" aria-hidden="true"></div>
+                  <div id="lab-2d-mount" class="lab-2d-mount" data-lab-mount="2d"></div>
+                </div>
+              </div>
+              <div id="lab-canvas-3d" hidden data-lab-mount="3d"></div>
+              <div class="lab-stage-hud">
+                <span class="lab-hud-chip" id="lab-hud-zoom">Zoom 100%</span>
+                <span class="lab-hud-chip" id="lab-hud-budget">Budget · —</span>
+              </div>
+            </section>
+            <footer class="lab-footer opm-bench__footer">
+              <span id="lab-status">Bench ready</span>
+            </footer>
+          </div>
+        </div>
+      </section>
+
+      <aside class="opm-sidebar opm-sidebar--props lab-inspector" aria-label="Properties">
+        <h2 class="lab-inspector__label">Properties</h2>
+
+        <div class="lab-inspector__card" id="lab-inspector-card">
+          <h2>No selection</h2>
+          <p>Select equipment on the canvas, or drag an item from the toolbox.</p>
+        </div>
+        <div id="lab-inspector-detail" class="lab-inspector__detail" hidden></div>
+      </aside>
+    </main>
+
+    <footer class="smart-status-bar opm-smart-bar" id="opm-smart-bar" role="status" aria-live="polite">
+      <div class="smart-status-bar__cluster smart-status-bar__cluster--grow">
+        <span class="smart-status-bar__label">Path</span>
+        <span class="smart-status-bar__path" id="opm-bar-path">No active optical path</span>
+      </div>
+      <div class="smart-status-bar__cluster">
+        <span class="smart-status-bar__metric" title="Cumulative attenuation on active / linked topology">
+          <span class="smart-status-bar__label">Loss</span>
+          <strong id="opm-bar-loss">— dB</strong>
+        </span>
+        <span class="smart-status-bar__alert" id="opm-bar-alert" aria-live="assertive">
+          <span aria-hidden="true">⚠</span>
+          <span id="opm-bar-alert-text">Mating OK</span>
+        </span>
+      </div>
+      <div class="smart-status-bar__cluster">
+        <div class="smart-status-bar__battery" id="opm-bar-battery" data-level="ok" title="Simulated OPM battery">
+          <span class="smart-status-bar__batt-shell" aria-hidden="true">
+            <span class="smart-status-bar__batt-fill" id="opm-bar-batt-fill" style="width:92%"></span>
+          </span>
+          <span id="opm-bar-batt-pct">92%</span>
+        </div>
+      </div>
+    </footer>
+    <div class="smart-status-bar__toast" id="opm-bar-toast" role="status" aria-live="polite"></div>
+
+    <!-- Hidden controls kept for JS API compatibility -->
+    <div class="opm-hidden-api" hidden aria-hidden="true">
+      <div class="viavi" id="viavi-trainer" data-docked="0" data-mismatch="0" data-warning="0">
+        <span id="viavi-timer">00:00</span>
+        <span id="opm-lcd-value">SIGNAL LOW</span>
+        <span id="opm-lcd-unit" hidden></span>
+        <span id="opm-lcd-lambda">1490 nm</span>
+        <span id="viavi-unit-soft">dBm</span>
+        <span id="opm-lcd-lambda-hint"></span>
+        <div id="viavi-lcd-main"></div>
+      </div>
+      <input id="opm-power-input" type="number" value="" />
+      <button type="button" data-opm-unit="dbm" class="is-active"></button>
+      <button type="button" data-opm-unit="mw"></button>
+      <button type="button" data-opm-wave="850"></button>
+      <button type="button" data-opm-wave="980"></button>
+      <button type="button" data-opm-wave="1310"></button>
+      <button type="button" data-opm-wave="1490" class="is-active"></button>
+      <button type="button" data-opm-wave="1550"></button>
+      <button type="button" data-opm-wave="1625"></button>
+      <button type="button" data-opm-std="gpon" class="is-active"></button>
+      <button type="button" data-opm-std="epon"></button>
+      <button type="button" data-opm-wave-cycle></button>
+      <button type="button" data-opm-std-cycle></button>
+      <button type="button" id="opm-btn-ref" title="Set REF"></button>
+      <button type="button" id="opm-btn-mode" title="MODE"></button>
+      <button type="button" id="opm-btn-snapshot" title="SAVE"></button>
+      <button type="button" id="opm-btn-rel"></button>
+      <button type="button" id="opm-btn-clear-ref"></button>
+      <button type="button" id="opm-btn-snapshot-bar"></button>
+      <button type="button" id="opm-btn-clear-ws"></button>
+      <div id="opm-verdict" data-status="idle" hidden>
+        <span id="opm-verdict-badge">IDLE</span>
+        <strong id="opm-stat-loss">—</strong>
+        <strong id="opm-stat-mw">—</strong>
+        <span id="opm-verdict-title">Dock SC cable</span>
+      </div>
+      <span id="opm-live-badge" hidden></span>
+      <span id="opm-lcd-mw"></span>
+      <span id="opm-lcd-rel" hidden></span>
+      <span id="opm-th-pass"></span>
+      <span id="opm-th-warn"></span>
+      <span id="opm-th-fail"></span>
+      <span id="opm-meter-needle"></span>
+      <span id="opm-bar-snap-count">(0)</span>
+    </div>
+  </div>
+
+  <script src="js/settings/FtthLabSettings.js?v=20260921"></script>
+  <script src="js/settings/OpmSettings.js?v=20260921"></script>
+  <script src="js/power-meter.js?v=20260921"></script>
+  <script src="js/ftth-lab.js?v=20260921"></script>
+  <script src="js/ftth-lab-olt-fx16.js?v=20260921"></script>
+  <script src="js/ftth-lab-splitter.js?v=20260921"></script>
+  <script src="js/ftth-lab-patch-cord.js?v=20260921"></script>
+  <script src="js/ftth-lab-canvas.js?v=20260921"></script>
+  <script src="js/ftth-lab-bend-jig.js?v=20260921"></script>
+  <script src="js/ftth-lab-pigtail.js?v=20260921"></script>
+  <script src="js/ftth-lab-coupler.js?v=20260921"></script>
+  <script src="js/ftth-lab-opm.js?v=20260921"></script>
+  <script src="js/ftth-lab-ols.js?v=20260921"></script>
+  <script src="js/ftth-lab-settings-cms.js?v=20260921"></script>
+  <script src="js/ftth-lab-project-manager.js?v=20260921"></script>
+  <script>
+    (function bridgeOpmBench() {
+      function hook() {
+        if (!window.FtthLab || !window.PowerMeterTrainer) return false;
+        if (FtthLab._opmTrainerHooked) return true;
+        var orig = FtthLab.probeOpticalAt;
+        if (typeof orig !== 'function') return false;
+        FtthLab._opmTrainerHooked = true;
+        FtthLab.probeOpticalAt = function (x, y) {
+          var reading = orig.call(FtthLab, x, y);
+          if (reading && window.PowerMeterTrainer) {
+            PowerMeterTrainer.applyLiveReading(reading);
+          }
+          return reading;
+        };
+        var prevNotify = FtthLab.notifyLayoutChange;
+        FtthLab.notifyLayoutChange = function (payload) {
+          if (typeof prevNotify === 'function') prevNotify.call(FtthLab, payload);
+          if (window.PowerMeterTrainer && PowerMeterTrainer.refreshStatusBar) {
+            PowerMeterTrainer.refreshStatusBar();
+          }
+        };
+        if (typeof FtthLab.registerOpmRefresh === 'function') {
+          FtthLab.registerOpmRefresh(function () {
+            if (window.PowerMeterTrainer && PowerMeterTrainer.refreshStatusBar) {
+              PowerMeterTrainer.refreshStatusBar();
+            }
+          });
+        }
+        if (typeof FtthLab.setOpmWavelength === 'function' &&
+            window.PowerMeterTrainer && typeof PowerMeterTrainer.getWavelength === 'function') {
+          FtthLab.setOpmWavelength(PowerMeterTrainer.getWavelength());
+        }
+        if (typeof FtthLab.centerWorldInView === 'function') {
+          setTimeout(function () { FtthLab.centerWorldInView(); }, 80);
+        }
+        setTimeout(function () {
+          var landing = document.getElementById('opm-startup-view');
+          if (landing && !landing.hidden) return;
+          var btn = document.querySelector('#lab-opm-tree [data-lab-tool="opm"]');
+          if (btn) btn.click();
+          if (window.PowerMeterTrainer && PowerMeterTrainer.refreshStatusBar) {
+            PowerMeterTrainer.refreshStatusBar();
+          }
+        }, 220);
+        if (FtthLab.setStatus) FtthLab.setStatus('Dock SC Patch/Pigtail into OLP-38 adapter');
+        return true;
+      }
+      if (!hook()) {
+        var n = 0;
+        var t = setInterval(function () {
+          if (hook() || ++n > 60) clearInterval(t);
+        }, 50);
+      }
+    })();
+  </script>
+  <script src="js/platform-simulators.js?v=20260921"></script>
+  <script type="module" src="js/platform-opm-config-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20260921"></script>
+</body>
+</html>

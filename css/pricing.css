@@ -72,3 +72,8 @@
   .pricing__grid { grid-template-columns: 1fr; max-width: 420px; margin-inline: auto; }
   .pricing-card--featured { order: -1; }
 }
+
+@media (max-width: 768px) {
+  .pricing__grid { max-width: 100%; }
+  .pricing-card__btn { min-height: 44px; }
+}

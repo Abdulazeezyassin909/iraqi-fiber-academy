@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="لوحة المدرب — Engineer Path °360 | منصة المسار المهني الهندسي">
+  <title>لوحة المدرب | Engineer Path °360</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121824">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('PWA ServiceWorker registered successfully');
+        }).catch(err => {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=20260921">
+  <link rel="stylesheet" href="css/admin.css?v=20260921">
+  <link rel="stylesheet" href="css/instructor.css?v=20260921">
+</head>
+<body class="inst-body">
+
+  <div id="instructorApp">
+    <div class="admin-overlay" id="instOverlay" aria-hidden="true"></div>
+
+    <aside class="admin-sidebar" id="instSidebar" aria-label="قائمة لوحة المدرب">
+      <a href="index.html" class="admin-sidebar__brand">
+        <img class="admin-sidebar__brand-img" src="images/logo.png" alt="Engineer Path °360" width="40" height="40" />
+        <div class="admin-sidebar__brand-text">
+          <span class="admin-sidebar__brand-name">ENGINEER PATH °360</span>
+          <span class="admin-sidebar__brand-role inst-role">INSTRUCTOR DASHBOARD</span>
+        </div>
+      </a>
+
+      <nav class="admin-sidebar__nav">
+        <p class="admin-sidebar__label">مساحة المدرب</p>
+        <a href="#overview" class="admin-nav__link active" data-inst-section="overview">نظرة عامة</a>
+        <a href="#courses" class="admin-nav__link" data-inst-section="courses">كورساتي</a>
+        <a href="#orders" class="admin-nav__link" data-inst-section="orders">طلبات الشراء</a>
+        <a href="#qa" class="admin-nav__link" data-inst-section="qa">أسئلة وتعليقات الطلاب</a>
+        <a href="#analytics" class="admin-nav__link" data-inst-section="analytics">التقدم والإحصائيات</a>
+        <a href="#profile" class="admin-nav__link" data-inst-section="profile">بياناتي الشخصية</a>
+      </nav>
+
+      <p class="inst-scope-note">نطاق صلاحيات محدود: يمكنك إدارة كورساتك فقط. لا يوجد وصول إلى لوحة الإدارة أو بيانات المدربين الآخرين.</p>
+
+      <div class="admin-sidebar__footer">
+        <a href="index.html" class="admin-sidebar__back">العودة للموقع</a>
+      </div>
+    </aside>
+
+    <div class="inst-main">
+      <header class="admin-topbar">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <button class="admin-menu-toggle" id="instMenuToggle" type="button" aria-label="فتح القائمة">☰</button>
+          <div>
+            <h1 class="admin-topbar__title">لوحة المدرب</h1>
+            <p class="admin-topbar__subtitle" id="instSubtitle">إدارة كورساتك وحلقاتك وامتحاناتك</p>
+          </div>
+        </div>
+        <div class="admin-topbar__actions">
+          <div class="admin-user-chip">
+            <div class="admin-user-chip__avatar">م</div>
+            <div class="admin-user-chip__meta">
+              <div class="admin-user-chip__name" id="instNameChip">مدرب</div>
+              <div class="admin-user-chip__role" id="instEmailChip">—</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="inst-content">
+        <!-- Overview -->
+        <section class="inst-section active" id="section-overview">
+          <div class="admin-stats" id="instStats"></div>
+          <div class="inst-panel">
+            <div class="inst-panel__header">
+              <div>
+                <h2 class="inst-panel__title">مرحباً بك في لوحة المدرب</h2>
+                <p class="inst-panel__desc">أنشئ الكورسات، أضف الحلقات والفيديوهات والقوالب، وابنِ امتحانات MCQ، ورد على أسئلة الطلاب.</p>
+              </div>
+            </div>
+            <div class="inst-panel__body">
+              <div class="inst-actions">
+                <button type="button" class="admin-btn admin-btn--primary" data-goto="courses">إدارة الكورسات</button>
+                <button type="button" class="admin-btn admin-btn--ghost" data-goto="qa">الرد على الأسئلة</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Courses -->
+        <section class="inst-section" id="section-courses">
+          <div class="inst-panel">
+            <div class="inst-panel__header">
+              <div>
+                <h2 class="inst-panel__title">كورساتي</h2>
+                <p class="inst-panel__desc">إدارة كورساتك فقط — أضف فيديوهات وقوالب لكل حلقة</p>
+              </div>
+            </div>
+            <div class="inst-panel__body">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; flex-wrap: wrap;">
+                <h3 class="inst-panel__title" style="margin: 0;">كورساتي</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <button type="button" id="btnInstructorDraftsToggle" class="admin-btn admin-btn--ghost">مسودة</button>
+                  <button type="button" id="btnOpenCourseBuilder" class="admin-btn admin-btn--primary">+ إضافة كورس</button>
+                </div>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>الكورس</th>
+                      <th>السعر</th>
+                      <th>المدة</th>
+                      <th>الحالة</th>
+                      <th>الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody id="instructorCoursesTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="coursesList" hidden></div>
+        </section>
+
+        <div class="admin-modal" id="instructorCourseModal" hidden>
+          <div class="admin-modal__backdrop" data-close-instructor-course></div>
+          <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="instructorCourseModalTitle">
+            <div class="admin-modal__header">
+              <h3 class="admin-modal__title" id="instructorCourseModalTitle">إضافة / تعديل كورس</h3>
+              <button class="admin-modal__close" type="button" data-close-instructor-course aria-label="إغلاق">×</button>
+            </div>
+            <form class="admin-modal__body admin-modal__body--course" id="instructorCourseForm">
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">عنوان الكورس</span>
+                  <input class="admin-field__input" type="text" id="instructorCourseTitle" required />
+                </label>
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">الوصف</span>
+                  <textarea class="admin-field__input admin-field__textarea" id="instructorCourseDescription" rows="3"></textarea>
+                </label>
+                <div class="admin-field admin-field--full">
+                  <span class="admin-field__label">صورة الكورس</span>
+                  <input type="file" id="instructor-course-image-input" accept="image/*" />
+                  <input type="hidden" id="instructorCourseImageUrl" value="" />
+                  <img id="instructor-course-image-preview" class="course-image-preview" alt="" hidden />
+                </div>
+                <label class="admin-field">
+                  <span class="admin-field__label">سعر الكورس</span>
+                  <input class="admin-field__input admin-field__input--price" type="text" inputmode="numeric" id="instructorCoursePrice" placeholder="مثال: 150,000" autocomplete="off" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">العملة</span>
+                  <select class="admin-field__input" id="instructorCourseCurrency">
+                    <option value="IQD" selected>د.ع</option>
+                    <option value="USD">$</option>
+                  </select>
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">المدة بالساعات</span>
+                  <input class="admin-field__input" type="number" min="0" step="1" id="instructorCourseHours" placeholder="مثال: 24" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">المدة بالأسابيع</span>
+                  <input class="admin-field__input" type="number" min="0" step="1" id="instructorCourseWeeks" placeholder="مثال: 3" />
+                </label>
+                <label class="admin-field">
+                  <span class="admin-field__label">تاريخ البدء (اختياري)</span>
+                  <input class="admin-field__input" type="date" id="courseStartDate" />
+                </label>
+                <label class="admin-field admin-field--full">
+                  <span class="admin-field__label">الجدول الأسبوعي</span>
+                  <input class="admin-field__input" type="text" id="instructorCourseSchedule" placeholder="مثال: سبت وثلاثاء — ساعتان لكل جلسة" />
+                </label>
+                <fieldset class="admin-field admin-field--full admin-field--fieldset" id="instructorCourseSimulators">
+                  <legend class="admin-field__label">المحاكيات المطلوبة للكورس (تخضع لموافقة الإدارة)</legend>
+                  <div class="admin-simulator-checklist">
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="ftth-simulator" /><span>محاكي FTTH متكامل</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="otdr-simulator" /><span>محاكي OTDR افتراضي</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="power-meter" /><span>قياس القدرة البصرية</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="fusion-splicer" /><span>مختبر لحام الألياف الضوئية</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="fiber-anatomy" /><span>تشريح الألياف 3D / 2D</span></label>
+                    <label><input type="checkbox" name="instructorCourseSimulator" value="patch-panel-lab" /><span>محاكي FTTH Network &amp; Patch Panel</span></label>
+                  </div>
+                </fieldset>
+                <div class="admin-lessons-panel admin-field--full">
+                  <div class="admin-lessons-panel__header">
+                    <div>
+                      <h4 class="admin-lessons-panel__title">محتوى الدروس والفيديوهات</h4>
+                      <p class="admin-lessons-panel__hint">أضف دروساً مع رابط فيديو. يُرسل الكورس للمراجعة قبل النشر.</p>
+                    </div>
+                    <button class="admin-btn admin-btn--ghost admin-btn--sm" type="button" id="instructorAddLessonBtn">+ إضافة درس</button>
+                  </div>
+                  <div id="instructorModulesList" class="admin-lessons-list"></div>
+                </div>
+                <div class="admin-modal__actions">
+                  <button class="admin-btn admin-btn--ghost" type="button" id="btnInstructorSaveDraft">حفظ كمسودة</button>
+                  <button class="admin-btn admin-btn--primary" type="button" id="btnInstructorSubmitPending">إرسال للإدارة</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        <section class="inst-section" id="section-orders">
+          <div class="inst-panel">
+            <div class="inst-panel__header">
+              <div>
+                <h2 class="inst-panel__title">طلبات الشراء</h2>
+                <p class="inst-panel__desc">متابعة طلبات شراء كورساتك وحالة الدفع والموافقة الإدارية</p>
+              </div>
+            </div>
+            <div class="inst-panel__body">
+              <div class="table-filter-container" style="margin-bottom: 15px;">
+                <label for="instructorOrderStatusFilter" style="margin-left: 10px; color: var(--color-text-muted);">الحالة:</label>
+                <select id="instructorOrderStatusFilter" class="admin-filter__select" style="padding: 8px 12px; background: #fff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px;">
+                  <option value="all">كل الطلبات</option>
+                  <option value="pending" selected>قيد المراجعة</option>
+                  <option value="approved">مقبولة</option>
+                  <option value="rejected">مرفوضة</option>
+                </select>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>الوصل</th>
+                      <th>الطالب</th>
+                      <th>المنتج (الكورس)</th>
+                      <th>المبلغ</th>
+                      <th>طريقة الدفع</th>
+                      <th>التاريخ</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="instructorOrdersTableBody">
+                    <tr><td colspan="7" class="admin-empty-cell">جاري تحميل الطلبات…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Q&A -->
+        <section class="inst-section" id="section-qa">
+          <div class="inst-panel">
+            <div class="inst-panel__header">
+              <div>
+                <h2 class="inst-panel__title">أسئلة وتعليقات الطلاب</h2>
+                <p class="inst-panel__desc">اعرض تعليقات طلابك على حلقاتك وردّ عليها مباشرة</p>
+              </div>
+            </div>
+            <div class="inst-panel__body" id="qaList"></div>
+          </div>
+        </section>
+
+        <!-- Analytics -->
+        <section class="inst-section" id="section-analytics">
+          <div class="admin-stats" id="analyticsStats"></div>
+          <div class="inst-panel">
+            <div class="inst-panel__header">
+              <div>
+                <h2 class="inst-panel__title">تقدم الطلاب</h2>
+                <p class="inst-panel__desc">ملخص سريع للتسجيل والمشاهدات ومعدلات الإكمال لكورساتك فقط</p>
+              </div>
+            </div>
+            <div class="inst-panel__body" id="analyticsTable"></div>
+          </div>
+        </section>
+
+        <section class="inst-section" id="section-profile">
+          <div class="inst-panel">
+            <div class="inst-panel__header">
+              <div>
+                <h2 class="inst-panel__title">بياناتي الشخصية</h2>
+                <p class="inst-panel__desc">أرسل ملفك للظهور في قسم مدربونا بعد موافقة الإدارة</p>
+              </div>
+              <span class="admin-badge admin-badge--pending" id="instProfileStatus">لم يُرسل بعد</span>
+            </div>
+            <form id="instProfileForm" class="inst-panel__body">
+              <div class="inst-field" style="margin-bottom:0.75rem;">
+                <label class="inst-label" for="instProfileName">الاسم</label>
+                <input class="inst-input" id="instProfileName" type="text" required />
+              </div>
+              <div class="inst-field" style="margin-bottom:0.75rem;">
+                <label class="inst-label" for="instProfileTitle">الاختصاص / المسمى الوظيفي</label>
+                <input class="inst-input" id="instProfileTitle" type="text" required />
+              </div>
+              <div class="inst-field" style="margin-bottom:0.75rem;">
+                <label class="inst-label" for="instProfileBio">نبذة مختصرة</label>
+                <textarea class="inst-input" id="instProfileBio" rows="4" required></textarea>
+              </div>
+              <div class="inst-field" style="margin-bottom:0.75rem;">
+                <label class="inst-label" for="instProfilePhoto">صورة المدرب</label>
+                <input class="inst-input" id="instProfilePhoto" type="file" accept="image/*" />
+                <div id="instProfilePhotoPreview" style="margin-top:10px;"></div>
+              </div>
+              <button type="submit" class="admin-btn admin-btn--primary" id="instProfileSubmit">إرسال للموافقة</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Instructor receipt -->
+  <div class="admin-modal" id="instructorOrderReceiptModal" hidden>
+    <div class="admin-modal__backdrop" data-close-instructor-receipt></div>
+    <div class="admin-modal__dialog admin-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="instructorOrderReceiptTitle">
+      <div class="admin-modal__header">
+        <h3 class="admin-modal__title" id="instructorOrderReceiptTitle">صورة الوصل</h3>
+        <button class="admin-modal__close" type="button" data-close-instructor-receipt aria-label="إغلاق">×</button>
+      </div>
+      <div class="admin-modal__scroll admin-order-receipt-view">
+        <p class="admin-panel__meta" id="instructorOrderReceiptCaption"></p>
+        <img id="instructorOrderReceiptImage" alt="صورة وصل الدفع" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Lesson modal -->
+  <div class="instructor-modal" id="lessonModal" hidden>
+    <div class="instructor-modal__backdrop" data-close-lesson-modal></div>
+    <div class="instructor-modal__dialog" role="dialog" aria-modal="true" style="max-width:520px;">
+      <div class="instructor-modal__header">
+        <div>
+          <h2 class="instructor-modal__title">إضافة / تعديل حلقة</h2>
+          <p class="instructor-modal__subtitle">عنوان الفيديو، ملف الفيديو، وقوالب مرفقة</p>
+        </div>
+        <button type="button" class="instructor-modal__close" data-close-lesson-modal aria-label="إغلاق">×</button>
+      </div>
+      <form id="lessonForm">
+        <input type="hidden" id="lessonCourseId" />
+        <input type="hidden" id="lessonId" />
+        <div class="inst-field" style="margin-bottom:0.75rem;">
+          <label class="inst-label" for="lessonTitle">عنوان الحلقة</label>
+          <input class="inst-input" id="lessonTitle" required />
+        </div>
+        <div class="inst-field" style="margin-bottom:0.75rem;">
+          <label class="inst-label" for="lessonVideoTitle">عنوان الفيديو</label>
+          <input class="inst-input" id="lessonVideoTitle" placeholder="عنوان يظهر للطالب" />
+        </div>
+        <div class="inst-field" style="margin-bottom:0.75rem;">
+          <label class="inst-label" for="lessonVideoFile">ملف الفيديو</label>
+          <input class="inst-input" id="lessonVideoFile" type="file" accept="video/*" />
+          <p class="instructor-form__hint" id="lessonVideoFileName" style="margin-top:0.35rem;font-size:0.75rem;color:var(--color-text-muted);">لم يتم اختيار ملف</p>
+        </div>
+        <div class="inst-field" style="margin-bottom:0.75rem;">
+          <label class="inst-label" for="lessonTemplates">ملفات القوالب (PDF / DOC / ZIP)</label>
+          <input class="inst-input" id="lessonTemplates" type="file" multiple accept=".pdf,.doc,.docx,.zip,.xlsx,.ppt,.pptx" />
+          <p class="instructor-form__hint" id="lessonTemplatesNames" style="margin-top:0.35rem;font-size:0.75rem;color:var(--color-text-muted);">لا توجد قوالب</p>
+        </div>
+        <div class="inst-actions">
+          <button type="submit" class="admin-btn admin-btn--primary">حفظ الحلقة</button>
+          <button type="button" class="admin-btn admin-btn--ghost" data-close-lesson-modal>إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="css/instructor-apply.css?v=20260921">
+  <script src="js/ifa-toast.js?v=20261015a"></script>
+  <script src="js/env-access.js?v=20260921"></script>
+  <script src="js/instructor-applications.js?v=20261014b"></script>
+  <script src="js/platform-courses.js?v=20260921"></script>
+  <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/auth-manager.js?v=20261014b"></script>
+  <script src="js/instructor-dashboard-data.js?v=20261014b"></script>
+  <script src="js/instructor-dashboard-ui.js?v=20261014b"></script>
+</body>
+</html>
