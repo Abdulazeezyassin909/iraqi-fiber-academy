@@ -175,86 +175,39 @@
     return amount + ' ' + label;
   }
 
-  var CATEGORY_LABELS = {
-    individual: 'فردي',
-    program: 'شبكات',
-    master: 'اتصالات',
-    ftth: 'FTTH',
-    civil: 'مدني',
-    electrical: 'كهرباء',
-    telecom: 'اتصالات',
-    networks: 'شبكات',
-  };
-
-  function categoryKey(course) {
-    return String((course && course.category) || 'individual').trim().toLowerCase();
+  function publicCategory(course) {
+    var raw = String((course && course.category) || '').trim();
+    var lower = raw.toLowerCase();
+    if (raw === 'individual' || lower === 'individual' || raw === 'general' || raw === '') return 'عام';
+    if (raw === 'program' || lower === 'program') return 'شبكات';
+    if (raw === 'master' || lower === 'master') return 'اتصالات';
+    if (lower === 'ftth') return 'FTTH';
+    return raw;
   }
 
-  function categoryLabel(key) {
-    if (!key || key === 'all') return 'الكل';
-    if (CATEGORY_LABELS[key]) return CATEGORY_LABELS[key];
-    return key;
-  }
-
-  function renderCategoryChips(courses) {
-    var box =
-      document.getElementById('categoryChips') ||
-      document.querySelector('.category-chips-container');
-    if (!box) return;
-    var seen = { all: true };
-    var keys = ['all'];
-    (courses || []).forEach(function (course) {
-      var key = categoryKey(course);
-      if (seen[key]) return;
-      seen[key] = true;
-      keys.push(key);
-    });
-    var selected = box.getAttribute('data-selected') || 'all';
-    if (keys.indexOf(selected) === -1) selected = 'all';
-    box.setAttribute('data-selected', selected);
-    box.innerHTML = keys
-      .map(function (key) {
-        var active = key === selected ? ' is-active active' : '';
-        return (
-          '<button type="button" class="mobile-chip' +
-          active +
-          '" data-category="' +
-          escapeHtml(key) +
-          '">' +
-          escapeHtml(categoryLabel(key)) +
-          '</button>'
-        );
-      })
-      .join('');
-    if (box.dataset.filterBound !== '1') {
-      box.dataset.filterBound = '1';
-      box.addEventListener('click', function (event) {
-        var chip = event.target.closest('[data-category]');
-        if (!chip || !box.contains(chip)) return;
-        applyCategoryFilter(chip.getAttribute('data-category') || 'all');
+  function bindCategoryChips() {
+    var box = document.getElementById('categoryChips');
+    if (!box || box.dataset.filterBound === '1') return;
+    box.dataset.filterBound = '1';
+    box.addEventListener('click', function (event) {
+      var chip = event.target.closest('.mobile-chip');
+      if (!chip || !box.contains(chip)) return;
+      var label = (chip.getAttribute('data-category') || chip.textContent || '').trim();
+      box.querySelectorAll('.mobile-chip').forEach(function (item) {
+        var on = item === chip;
+        item.classList.toggle('is-active', on);
+        item.classList.toggle('active', on);
       });
-    }
-  }
-
-  function applyCategoryFilter(key) {
-    var box =
-      document.getElementById('categoryChips') ||
-      document.querySelector('.category-chips-container');
-    var grid = document.getElementById(GRID_ID);
-    if (box) {
-      box.setAttribute('data-selected', key || 'all');
-      box.querySelectorAll('[data-category]').forEach(function (chip) {
-        var on = chip.getAttribute('data-category') === (key || 'all');
-        chip.classList.toggle('is-active', on);
-        chip.classList.toggle('active', on);
+      var grid = document.getElementById(GRID_ID);
+      if (!grid) return;
+      grid.querySelectorAll('.custom-course-card').forEach(function (card) {
+        var show = label === 'الكل' || card.getAttribute('data-category') === label;
+        card.style.display = show ? 'block' : 'none';
       });
-    }
-    if (!grid) return;
-    grid.querySelectorAll('.custom-course-card').forEach(function (card) {
-      var match = !key || key === 'all' || card.getAttribute('data-category') === key;
-      card.style.display = match ? '' : 'none';
     });
   }
+
+  function renderCourseCard(course, index) {
     var title = course.title || 'كورس بدون عنوان';
     var description = course.shortDescription || course.description || '';
     var imageUrl = course.imageUrl || course.thumbnailUrl || '';
@@ -270,7 +223,7 @@
       '<article class="custom-course-card" data-course-id="' +
       escapeHtml(course.id) +
       '" data-category="' +
-      escapeHtml(categoryKey(course)) +
+      escapeHtml(publicCategory(course)) +
       '" style="--card-index:' +
       index +
       '">' +
@@ -345,12 +298,7 @@
     }
 
     grid.innerHTML = courses.map(renderCourseCard).join('');
-    renderCategoryChips(courses);
-    applyCategoryFilter(
-      (document.getElementById('categoryChips') || {}).getAttribute
-        ? document.getElementById('categoryChips').getAttribute('data-selected') || 'all'
-        : 'all'
-    );
+    bindCategoryChips();
     revealCards(grid);
   }
 

@@ -78,9 +78,26 @@
     return VALID_STATUS[s] ? s : 'draft';
   }
 
+  var PUBLIC_CATEGORY = {
+    'اتصالات': true,
+    'شبكات': true,
+    'مدني': true,
+    'كهرباء': true,
+    'FTTH': true,
+    'فايبر': true,
+    'عام': true,
+  };
+
   function normalizeCategory(category) {
-    var c = String(category || '').toLowerCase();
-    return VALID_CATEGORY[c] ? c : 'individual';
+    var raw = String(category || '').trim();
+    if (PUBLIC_CATEGORY[raw]) return raw;
+    var c = raw.toLowerCase();
+    if (c === 'ftth') return 'FTTH';
+    if (c === 'master') return 'اتصالات';
+    if (c === 'program') return 'شبكات';
+    if (c === 'individual' || c === 'general' || raw === '') return 'عام';
+    if (VALID_CATEGORY[c]) return c;
+    return raw || 'عام';
   }
 
   function normalizeCurrency(value) {

@@ -587,12 +587,23 @@
           </div>
           <form class="admin-modal__body admin-modal__body--course" id="courseEditorForm">
             <input type="hidden" id="courseEditorId" value="" />
-            <input type="hidden" id="courseEditorCategory" value="individual" />
 
             <div class="admin-form-grid">
               <label class="admin-field admin-field--full">
                 <span class="admin-field__label">عنوان الكورس</span>
                 <input class="admin-field__input" type="text" id="courseEditorName" required />
+              </label>
+              <label class="admin-field admin-field--full">
+                <span class="admin-field__label">تصنيف الكورس</span>
+                <select class="admin-field__input" id="courseEditorCategory">
+                  <option value="اتصالات">اتصالات</option>
+                  <option value="شبكات">شبكات</option>
+                  <option value="مدني">مدني</option>
+                  <option value="كهرباء">كهرباء</option>
+                  <option value="FTTH">FTTH</option>
+                  <option value="فايبر">فايبر</option>
+                  <option value="عام" selected>عام</option>
+                </select>
               </label>
               <label class="admin-field admin-field--full">
                 <span class="admin-field__label">الوصف</span>

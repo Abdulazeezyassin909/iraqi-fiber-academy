@@ -690,9 +690,16 @@
     if (notifyEl) {
       notifyEl.checked = !course || course.status !== 'published';
     }
-    document.getElementById('courseEditorCategory').value = course
-      ? course.category || 'individual'
-      : 'individual';
+    var categorySelect = document.getElementById('courseEditorCategory');
+    if (categorySelect) {
+      var savedCategory = course ? String(course.category || '').trim() : '';
+      if (savedCategory === 'individual' || savedCategory === 'general') savedCategory = 'عام';
+      if (savedCategory === 'program') savedCategory = 'شبكات';
+      if (savedCategory === 'master') savedCategory = 'اتصالات';
+      if (savedCategory.toLowerCase() === 'ftth') savedCategory = 'FTTH';
+      categorySelect.value = savedCategory || 'عام';
+      if (categorySelect.value !== (savedCategory || 'عام')) categorySelect.value = 'عام';
+    }
     writeSimulatorChecks(course ? course.allowedSimulators : []);
     writeGeneratePlanCheck(course);
 
@@ -1313,7 +1320,7 @@
           requiredPlanId: '',
           weeklySchedule: (document.getElementById('courseEditorSchedule') || {}).value,
           status: (document.getElementById('courseEditorStatus') || {}).value,
-          category: (document.getElementById('courseEditorCategory') || {}).value || 'individual',
+          category: (document.getElementById('courseEditorCategory') || {}).value || 'عام',
           allowedSimulators: readSimulatorChecks(),
           autoPricingPlan: autoPricingPlan,
           suppressPricingPlan: autoPricingPlan ? false : undefined,
