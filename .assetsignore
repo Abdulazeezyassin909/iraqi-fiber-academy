@@ -1,0 +1,9 @@
+node_modules
+android
+.git
+www
+.cursor
+fiber_academy_platform
+functions/node_modules
+**/*.apk
+**/.gradle

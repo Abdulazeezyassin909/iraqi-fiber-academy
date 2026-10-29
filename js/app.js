@@ -106,6 +106,8 @@
     var loggedIn = isLoggedIn();
     var target = tab;
     if ((tab === 'profile' || tab === 'my-courses') && !loggedIn) target = 'auth-required';
+    var scrollToSimulators = tab === 'simulators';
+    if (scrollToSimulators) target = 'home';
     Object.keys(views).forEach(function (key) {
       var el = views[key];
       if (!el) return;
@@ -118,6 +120,20 @@
     if (footer) footer.hidden = target !== 'home' && window.matchMedia('(max-width: 768px)').matches;
     if (target === 'profile') fillProfile();
     if (target === 'my-courses') fillMyCourses();
+    if (scrollToSimulators) {
+      var simulators = document.getElementById('simulators');
+      if (simulators) {
+        window.requestAnimationFrame(function () {
+          var header = document.getElementById('header');
+          var offset = header ? header.offsetHeight : 72;
+          window.scrollTo({
+            top: simulators.getBoundingClientRect().top + window.scrollY - offset,
+            behavior: 'smooth',
+          });
+        });
+      }
+      return;
+    }
     window.scrollTo(0, 0);
   }
 

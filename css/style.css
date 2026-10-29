@@ -597,15 +597,17 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .category-chips-container,
 .mobile-chips {
   display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 10px;
-  overflow-x: auto;
   padding: 10px 0;
-  -webkit-overflow-scrolling: touch;
   margin-bottom: 8px;
 }
 .mobile-chip {
   border-radius: 20px;
-  padding: 8px 16px;
+  padding: 8px 18px;
+  font-size: 16px;
+  font-weight: 700;
   white-space: nowrap;
   border: 1px solid #2d3748;
   background: #121824;
@@ -1245,13 +1247,14 @@ body.article-reader-open {
 .ifa-toast--error { background: #3a1717; border-color: rgba(255, 120, 120, 0.45); }
 .ifa-toast.is-leaving { opacity: 0; transform: translateY(-6px); transition: opacity 0.25s, transform 0.25s; }
 
-/* Public instructors */
+/* Public instructors — same grid as .pricing__grid */
 .instructors-container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-  max-width: 900px;
-  margin: 0 auto;
+  align-items: stretch;
+  max-width: none;
+  margin: 0;
 }
 
 .instructor-horizontal-card {
@@ -1313,6 +1316,14 @@ body.article-reader-open {
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .instructors-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+    gap: 12px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1727,6 +1738,12 @@ body.article-reader-open {
   min-height: calc(100vh - 140px);
   padding: 1.25rem 1rem 6.5rem;
 }
+.simulator-demo-gap {
+  margin-top: 5rem;
+  margin-bottom: 5rem;
+}
+#view-courses,
+#view-simulators,
 #view-my-courses,
 #view-profile,
 #view-auth-required { display: none; }
@@ -1742,7 +1759,8 @@ body.article-reader-open {
   #view-simulators.active,
   #view-courses.active,
   #view-home.active { display: block; }
-  #view-simulators .features__grid {
+  #view-simulators .features__grid,
+  #simulators .features__grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
@@ -1905,9 +1923,7 @@ body.article-reader-open {
   .courses-carousel,
   .courses-grid-container,
   #publicCoursesGrid,
-  #homeCoursesGrid,
-  #publicInstructorsGrid,
-  .instructors-container {
+  #homeCoursesGrid {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -1916,8 +1932,7 @@ body.article-reader-open {
     -webkit-overflow-scrolling: touch;
     padding: 4px 0 10px;
   }
-  .custom-course-card,
-  .instructor-horizontal-card {
+  .custom-course-card {
     flex: 0 0 75%;
     max-width: 260px;
     scroll-snap-align: center;
@@ -1948,15 +1963,25 @@ body.article-reader-open {
     font-size: 0.72rem;
   }
 
-  .instructors-container {
+  .instructors-container,
+  #publicInstructorsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    overflow: visible;
     max-width: none;
+    padding: 4px 0 10px;
   }
   .instructor-horizontal-card {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    flex: none;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 12px;
-    gap: 8px;
+    padding: 10px 8px;
+    gap: 6px;
   }
   .instructor-image-wrapper img,
   .instructor-image-wrapper__empty {
@@ -1964,9 +1989,17 @@ body.article-reader-open {
     height: 64px;
   }
   .instructor-info { text-align: center; min-width: 0; }
-  .instructor-info h3 { font-size: 0.78rem; margin-bottom: 4px; }
+  .instructor-info h3 { font-size: 0.72rem; margin-bottom: 2px; }
   .instructor-title,
-  .instructor-info p { font-size: 0.68rem; line-height: 1.35; }
+  .instructor-info p { font-size: 0.62rem; line-height: 1.3; margin-bottom: 4px; }
+  .instructor-bio {
+    font-size: 0.6rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 
   .article-card { padding: 10px; min-width: 0; }
   .article-card__title { font-size: 0.78rem; line-height: 1.35; }
@@ -2008,14 +2041,17 @@ body.article-reader-open {
     background: #121824;
     border: 1px solid #2d3748;
     border-radius: 16px;
-    padding: 16px;
+    padding: 20px 15px;
     margin-bottom: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    text-align: center;
   }
-  .mobile-welcome__kicker { margin: 0; color: #94a3b8; font-size: 0.8rem; }
-  .mobile-welcome__title { margin: 0; color: #fff; font-size: 1.15rem; }
+  .mobile-welcome__copy { text-align: center; }
+  .mobile-welcome__kicker { margin: 0; color: #94a3b8; font-size: 0.8rem; text-align: center; }
+  .mobile-welcome__title { margin: 0 0 8px; color: #fff; font-size: 1.15rem; text-align: center; }
+  .mobile-welcome__text { margin: 0; color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; text-align: center; }
   .mobile-welcome__actions { display: flex; gap: 8px; }
   .mobile-welcome__btn {
     flex: 1;
@@ -2034,15 +2070,17 @@ body.article-reader-open {
 
   .mobile-chips {
     display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 10px;
-    overflow-x: auto;
     padding: 10px 0;
-    -webkit-overflow-scrolling: touch;
     margin-bottom: 8px;
   }
   .mobile-chip {
     border-radius: 20px;
-    padding: 8px 16px;
+    padding: 8px 18px;
+    font-size: 16px;
+    font-weight: 700;
     white-space: nowrap;
     border: 1px solid #2d3748;
     background: #121824;

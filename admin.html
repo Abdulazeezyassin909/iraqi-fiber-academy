@@ -23,7 +23,7 @@
     }
   </script>
   <link rel="stylesheet" href="css/style.css?v=20260921">
-  <link rel="stylesheet" href="css/admin.css?v=20260921">
+  <link rel="stylesheet" href="css/admin.css?v=20261029f">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alexandria&family=Almarai&family=Cairo&family=Inter&family=Montserrat&family=Noto+Kufi+Arabic&family=Poppins&family=Roboto&family=Tajawal&display=swap" rel="stylesheet">
@@ -597,24 +597,18 @@
                 <span class="admin-field__label">الوصف</span>
                 <textarea class="admin-field__input admin-field__textarea" id="courseEditorDescription" rows="3"></textarea>
               </label>
-              <div class="admin-field admin-field--full" style="display: flex; gap: 15px; align-items: flex-start;">
-                <div class="form-group" style="flex: 1;">
-                  <span class="admin-field__label">صورة الكورس</span>
-                  <input type="file" id="course-image-input" accept="image/*" />
-                  <input type="hidden" id="courseEditorImageUrl" value="" />
-                  <img id="course-image-preview" class="course-image-preview" alt="" hidden />
-                </div>
-                <div class="form-group" style="flex: 1;">
-                  <label>تصنيف الكورس</label>
-                  <select id="courseCategorySelect" class="form-control admin-field__input">
-                    <option value="اتصالات">اتصالات</option>
-                    <option value="شبكات">شبكات</option>
-                    <option value="مدني">مدني</option>
-                    <option value="كهرباء">كهرباء</option>
-                    <option value="FTTH">FTTH</option>
-                    <option value="فايبر">فايبر</option>
-                    <option value="عام">عام</option>
-                  </select>
+              <div class="admin-field admin-field--full">
+                <span class="admin-field__label">صورة الكورس</span>
+                <input type="file" id="course-image-input" accept="image/*" />
+                <input type="hidden" id="courseEditorImageUrl" value="" />
+                <img id="course-image-preview" class="course-image-preview" alt="" hidden />
+              </div>
+              <div class="admin-field admin-field--full form-group">
+                <label class="admin-field__label" for="courseCategoryToggle">تصنيف الكورس</label>
+                <div class="category-dropdown" id="courseCategoryDropdown">
+                  <button type="button" class="category-dropdown__toggle admin-field__input" id="courseCategoryToggle">اختر تصنيفاً</button>
+                  <div class="category-dropdown__menu" id="courseCategoryMenu" hidden></div>
+                  <input type="hidden" id="courseCategorySelect" value="" />
                 </div>
               </div>
               <label class="admin-field">
@@ -1159,14 +1153,14 @@
         <h3 class="admin-panel__title" style="margin-top:1.5rem;">المدربون الحاليون</h3>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>الصورة</th><th>الاسم</th><th>الاختصاص</th><th>النبذة</th><th></th></tr></thead>
+            <thead><tr><th>الترتيب</th><th>الصورة</th><th>الاسم</th><th>الاختصاص</th><th>النبذة</th><th></th></tr></thead>
             <tbody id="publicInstructorsBody"></tbody>
           </table>
         </div>
         <h3 class="admin-panel__title" style="margin-top:1.5rem;">طلبات بانتظار الموافقة</h3>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>الصورة</th><th>الاسم</th><th>الاختصاص</th><th>النبذة</th><th></th></tr></thead>
+            <thead><tr><th></th><th>الصورة</th><th>الاسم</th><th>الاختصاص</th><th>النبذة</th><th></th></tr></thead>
             <tbody id="pendingInstructorsBody"></tbody>
           </table>
         </div>
@@ -1600,14 +1594,14 @@
   <script src="js/platform-plans.js?v=20260921"></script>
   <script type="module" src="js/platform-plans-firestore-sync.js?v=20260921"></script>
   <script src="js/course-plan-sync.js?v=20260921"></script>
-  <script src="js/admin-courses-ui.js?v=20260921"></script>
+  <script src="js/admin-courses-ui.js?v=20261029j"></script>
   <script src="js/admin-plans-ui.js?v=20260921"></script>
   <script src="js/settings/FtthLabSettings.js?v=20260921"></script>
   <script src="js/ftth-lab-settings-cms.js?v=20260921"></script>
   <script src="js/admin-core.js?v=20260925"></script>
   <script src="js/admin-users-ui.js?v=20260921"></script>
   <script src="js/admin-instructors-ui.js?v=20261014g"></script>
-  <script type="module" src="js/admin-public-instructors.js?v=20261014h"></script>
+  <script type="module" src="js/admin-public-instructors.js?v=20261029m"></script>
   <script type="module" src="js/platform-simulators-firestore-sync.js?v=20260921"></script>
   <script src="js/admin-site-cms.js?v=20260921"></script>
   <script type="module" src="js/admin-orders-ui.js?v=20260921"></script>

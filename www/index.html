@@ -22,7 +22,7 @@
       });
     }
   </script>
-  <link rel="stylesheet" href="css/style.css?v=20260925">
+  <link rel="stylesheet" href="css/style.css?v=20261029p">
   <link rel="stylesheet" href="css/header.css?v=20260921">
   <link rel="stylesheet" href="css/hero.css?v=20260921">
   <link rel="stylesheet" href="css/features.css?v=20260921">
@@ -277,7 +277,44 @@
       </div>
     </section>
 
-    <section class="section demo" id="demo">
+    <section class="section" id="courses">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge">الكورسات</span>
+          <h2 class="section__title">المسار من الصفر للاحتراف</h2>
+          <p class="section__subtitle">كورسات متكاملة تأخذك من المفاهيم الأساسية إلى إدارة مشاريع كاملة</p>
+        </div>
+        <div class="mobile-chips category-chips-container" id="categoryChipsHome" role="tablist" aria-label="تصنيفات الكورسات"></div>
+        <div id="homeCoursesGrid" class="courses-carousel public-courses-grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section" id="simulators">
+      <div class="container">
+        <div class="section__header">
+          <span class="section__badge">بيئة التدريب العملي</span>
+          <h2 class="section__title">المحاكيات</h2>
+          <p class="section__subtitle">أدوات محاكاة متقدمة مصممة خصيصاً لفنيي ومهندسي الألياف الضوئية</p>
+        </div>
+        <div class="features__grid" id="publicSimulatorsGrid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <div id="plans"></div>
+    <section class="section" id="pricing">
+      <div class="container">
+        <div class="section__header fade-in">
+          <span class="section__badge" data-i18n="section.pricing.badge">خطط الاشتراك</span>
+          <h2 class="section__title" data-i18n="section.pricing.title">اختر الباقة المناسبة لك</h2>
+          <p class="section__subtitle" data-i18n="section.pricing.subtitle">ابدأ مجاناً وطوّر مهاراتك مع باقات تناسب كل المستويات</p>
+        </div>
+        <div class="pricing__grid" id="publicPricingGrid" aria-live="polite">
+          <!-- تُملأ ديناميكياً من platform_plans -->
+        </div>
+      </div>
+    </section>
+
+    <section class="section demo simulator-demo-gap" id="demo">
       <div class="container">
         <div class="demo__wrapper" id="simulatorShowcase" data-sim-showcase>
           <div class="demo__content sim-showcase__content">
@@ -321,28 +358,14 @@
       </div>
     </section>
 
-    <div id="plans"></div>
-    <section class="section" id="pricing">
+    <section class="section" id="faq">
       <div class="container">
         <div class="section__header fade-in">
-          <span class="section__badge" data-i18n="section.pricing.badge">خطط الاشتراك</span>
-          <h2 class="section__title" data-i18n="section.pricing.title">اختر الباقة المناسبة لك</h2>
-          <p class="section__subtitle" data-i18n="section.pricing.subtitle">ابدأ مجاناً وطوّر مهاراتك مع باقات تناسب كل المستويات</p>
+          <span class="section__badge" data-i18n="section.faq.badge">أسئلة شائعة</span>
+          <h2 class="section__title" data-i18n="section.faq.title">كل ما تحتاج معرفته</h2>
+          <p class="section__subtitle" data-i18n="section.faq.subtitle">إجابات على أكثر الأسئلة تكراراً حول المنصة والمحاكي والاشتراكات</p>
         </div>
-        <div class="pricing__grid" id="publicPricingGrid" aria-live="polite">
-          <!-- تُملأ ديناميكياً من platform_plans -->
-        </div>
-      </div>
-    </section>
-
-    <section class="section section--alt testimonials-section" id="testimonials">
-      <div class="container">
-        <div class="section__header fade-in">
-          <span class="section__badge" data-i18n="section.testimonials.badge">آراء المستخدمين</span>
-          <h2 class="section__title" data-i18n="section.testimonials.title">ماذا يقول طلابنا؟</h2>
-          <p class="section__subtitle" data-i18n="section.testimonials.subtitle">تجارب حقيقية من فنيين ومهندسين استفادوا من منصتنا</p>
-        </div>
-        <div class="testimonials__grid" id="testimonials-grid"></div>
+        <div class="faq__list" id="faq-accordion"></div>
       </div>
     </section>
 
@@ -357,41 +380,27 @@
       </div>
     </section>
 
-    <section class="section" id="home-courses">
+    <section class="section section--alt testimonials-section" id="testimonials">
       <div class="container">
         <div class="section__header fade-in">
-          <span class="section__badge">الكورسات</span>
-          <h2 class="section__title">كورسات المنصة</h2>
+          <span class="section__badge" data-i18n="section.testimonials.badge">آراء المستخدمين</span>
+          <h2 class="section__title" data-i18n="section.testimonials.title">ماذا يقول طلابنا؟</h2>
+          <p class="section__subtitle" data-i18n="section.testimonials.subtitle">تجارب حقيقية من فنيين ومهندسين استفادوا من منصتنا</p>
         </div>
-        <div id="homeCoursesGrid" class="courses-carousel public-courses-grid" aria-live="polite"></div>
-      </div>
-    </section>
-
-    <section class="section" id="faq">
-      <div class="container">
-        <div class="section__header fade-in">
-          <span class="section__badge" data-i18n="section.faq.badge">أسئلة شائعة</span>
-          <h2 class="section__title" data-i18n="section.faq.title">كل ما تحتاج معرفته</h2>
-          <p class="section__subtitle" data-i18n="section.faq.subtitle">إجابات على أكثر الأسئلة تكراراً حول المنصة والمحاكي والاشتراكات</p>
-        </div>
-        <div class="faq__list" id="faq-accordion"></div>
+        <div class="testimonials__grid" id="testimonials-grid"></div>
       </div>
     </section>
   </main>
 
-  <section id="view-courses" class="app-view section section--alt">
+  <section id="view-courses" class="app-view section section--alt mobile-app-view">
     <div class="container">
       <div class="section__header">
         <h2 class="section__title">الدورات</h2>
       </div>
       <div class="mobile-only mobile-welcome">
         <div class="mobile-welcome__copy">
-          <p class="mobile-welcome__kicker">مرحباً بك</p>
-          <h3 class="mobile-welcome__title">ابدأ مسارك الهندسي</h3>
-        </div>
-        <div class="mobile-welcome__actions">
-          <button type="button" class="mobile-welcome__btn mobile-welcome__btn--ghost" data-auth-login>تسجيل الدخول</button>
-          <button type="button" class="mobile-welcome__btn" data-auth-login>تسجيل</button>
+          <h3 class="mobile-welcome__title">مسارك المهني يبدأ من هنا</h3>
+          <p class="mobile-welcome__text">كورسات منظمة تأخذك من المفاهيم الأساسية إلى إدارة مشاريع كاملة</p>
         </div>
       </div>
       <div class="mobile-chips category-chips-container" id="categoryChips" role="tablist" aria-label="تصنيفات الكورسات"></div>
@@ -399,16 +408,7 @@
     </div>
   </section>
 
-  <section id="view-simulators" class="app-view section">
-    <div class="container">
-      <div class="section__header">
-        <span class="section__badge">بيئة التدريب العملي</span>
-        <h2 class="section__title">المحاكيات</h2>
-        <p class="section__subtitle">أدوات محاكاة متقدمة مصممة خصيصاً لفنيي ومهندسي الألياف الضوئية</p>
-      </div>
-      <div class="features__grid" id="publicSimulatorsGrid" aria-live="polite"></div>
-    </div>
-  </section>
+  <section id="view-simulators" class="app-view section mobile-app-view"></section>
 
   <section id="view-my-courses" class="app-view mobile-screen">
     <h2 class="mobile-screen__title">دوراتي</h2>
@@ -569,7 +569,7 @@
   <script src="js/articles.js?v=20260921"></script>
   <script type="module" src="js/platform-articles-firestore-sync.js?v=20260921"></script>
   <script src="js/faq.js?v=20260921"></script>
-  <script type="module" src="js/public-instructors.js?v=20261014h"></script>
+  <script type="module" src="js/public-instructors.js?v=20261029q"></script>
   <script type="module" src="js/platform-faqs-firestore-sync.js?v=20260921"></script>
   <script src="js/testimonials.js?v=20260921"></script>
   <script type="module" src="js/platform-testimonials-firestore-sync.js?v=20260921"></script>
@@ -638,8 +638,8 @@
   </script>
   <script src="js/instructor-applications.js?v=20261014d"></script>
   <script src="js/platform-courses.js?v=20260921"></script>
-  <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
-  <script src="js/platform-courses-public.js?v=20261029"></script>
+  <script type="module" src="js/platform-courses-firestore-sync.js?v=20261029q"></script>
+  <script src="js/platform-courses-public.js?v=20261029j"></script>
   <script src="js/platform-plans.js?v=20260921"></script>
   <script type="module" src="js/platform-plans-firestore-sync.js?v=20260921"></script>
   <script src="js/platform-plans-public.js?v=20260921"></script>
@@ -942,7 +942,7 @@
   <script src="js/platform-notifications.js?v=20260921"></script>
   <script type="module" src="js/platform-notifications-firestore-sync.js?v=20260921"></script>
   <script src="js/auth-manager.js?v=20261014b" type="module"></script>
-  <script src="js/capacitor-back.js?v=20261029"></script>
+  <script src="js/capacitor-back.js?v=20261029q"></script>
   <nav class="mobile-only mobile-bottom-nav" aria-label="التنقل السفلي">
     <a class="nav-item mobile-bottom-nav__item is-active" href="#view-home" data-view="home">
       <span class="mobile-bottom-nav__icon" aria-hidden="true">⌂</span>

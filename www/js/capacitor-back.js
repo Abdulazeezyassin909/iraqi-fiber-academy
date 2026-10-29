@@ -22,6 +22,11 @@
     }, 1800);
   }
 
+  App.addListener('appStateChange', function (state) {
+    if (!state || !state.isActive) return;
+    document.dispatchEvent(new CustomEvent('ifa:app-resumed'));
+  });
+
   App.addListener('backButton', function (event) {
     var home = document.getElementById('view-home');
     if (home && !home.classList.contains('active') && typeof window.switchTab === 'function') {

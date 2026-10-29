@@ -648,6 +648,17 @@ export async function reorderCourses(orderedIds) {
   }
 }
 
+export function refreshCoursesFromServer() {
+  if (writesInFlight) return Promise.resolve(cachedCourses.slice());
+  return getDocs(collection(db, COLLECTION)).then(function (snap) {
+    handleSnapshot(snap);
+    return cachedCourses.slice();
+  }).catch(function (err) {
+    console.warn('[PlatformCoursesFirestore] resume refresh failed', err);
+    return cachedCourses.slice();
+  });
+}
+
 export function startCoursesFirestoreSync() {
   if (unsubscribeSnapshot) return unsubscribeSnapshot;
   unsubscribeSnapshot = onSnapshot(
@@ -693,7 +704,12 @@ var api = {
   deleteCourse: softDeleteCourse,
   reorderCourses: reorderCourses,
   start: startCoursesFirestoreSync,
+  refresh: refreshCoursesFromServer,
 };
+
+document.addEventListener('ifa:app-resumed', function () {
+  refreshCoursesFromServer();
+});
 
 window.PlatformCoursesFirestore = api;
 if (hydrateCoursesFromLocalStorage() && cachedCourses.length) {

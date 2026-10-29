@@ -85,19 +85,19 @@
     'كهرباء': true,
     'FTTH': true,
     'فايبر': true,
-    'عام': true,
   };
 
   function normalizeCategory(category) {
     var raw = String(category || '').trim();
+    if (!raw) return '';
     if (PUBLIC_CATEGORY[raw]) return raw;
     var c = raw.toLowerCase();
     if (c === 'ftth') return 'FTTH';
     if (c === 'master') return 'اتصالات';
     if (c === 'program') return 'شبكات';
-    if (c === 'individual' || c === 'general' || raw === '') return 'عام';
+    if (c === 'individual' || c === 'general') return '';
     if (VALID_CATEGORY[c]) return c;
-    return raw || 'عام';
+    return raw;
   }
 
   function normalizeCurrency(value) {

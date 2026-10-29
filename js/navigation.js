@@ -45,10 +45,15 @@
       const href = this.getAttribute('href');
       if (href && href.startsWith('#')) {
         e.preventDefault();
+        if (href === '#courses' || href === '#simulators') {
+          if (typeof window.switchView === 'function') window.switchView('view-home');
+        }
         const target = document.querySelector(href);
         if (target) {
           const offset = header ? header.offsetHeight : 72;
-          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+          window.requestAnimationFrame(function () {
+            window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+          });
         }
         closeMenu();
       }

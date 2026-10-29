@@ -658,6 +658,147 @@
       .join('');
   }
 
+  function categoryChoices() {
+    var seen = {};
+    var values = [];
+    var courses =
+      window.PlatformCourses && typeof window.PlatformCourses.getCourses === 'function'
+        ? window.PlatformCourses.getCourses()
+        : [];
+    (courses || []).forEach(function (course) {
+      var label = String((course && course.category) || '').trim();
+      if (!label || label === 'الكل' || seen[label]) return;
+      seen[label] = true;
+      values.push(label);
+    });
+    return values;
+  }
+
+  function setCategoryValue(value) {
+    var hidden = document.getElementById('courseCategorySelect');
+    var toggle = document.getElementById('courseCategoryToggle');
+    var next = String(value || '').trim();
+    if (hidden) hidden.value = next;
+    if (toggle) toggle.textContent = next || 'اختر تصنيفاً';
+  }
+
+  function renderCategoryMenu(selected) {
+    var menu = document.getElementById('courseCategoryMenu');
+    if (!menu) return;
+    var values = categoryChoices();
+    if (selected && selected !== 'الكل' && values.indexOf(selected) === -1) values.unshift(selected);
+    menu.innerHTML =
+      values
+        .map(function (label) {
+          return (
+            '<div class="category-dropdown__item" data-category-value="' +
+            escapeHtml(label) +
+            '"><span class="category-dropdown__label">' +
+            escapeHtml(label) +
+            '</span><button type="button" class="category-dropdown__delete" data-category-delete="' +
+            escapeHtml(label) +
+            '" aria-label="حذف التصنيف">🗑</button></div>'
+          );
+        })
+        .join('') +
+      '<div class="category-dropdown__add" data-category-add="1"><span aria-hidden="true">+</span> إضافة تصنيف جديد</div>';
+    setCategoryValue(selected || '');
+  }
+
+  function commitNewCategory(raw) {
+    var name = String(raw || '').trim();
+    if (!name || name === 'الكل') return;
+    var root = document.getElementById('courseCategoryDropdown');
+    if (root) root.setAttribute('data-pending-category', name);
+    setCategoryValue(name);
+    renderCategoryMenu(name);
+    var menu = document.getElementById('courseCategoryMenu');
+    if (menu) menu.hidden = true;
+  }
+
+  async function removeCategory(label) {
+    var name = String(label || '').trim();
+    if (!name || !window.PlatformCourses || typeof window.PlatformCourses.getCourses !== 'function') return;
+    var matches = window.PlatformCourses.getCourses().filter(function (course) {
+      return String((course && course.category) || '').trim() === name;
+    });
+    for (var i = 0; i < matches.length; i++) {
+      await saveCourseRecord(matches[i].id, { category: '' });
+    }
+    var current = (document.getElementById('courseCategorySelect') || {}).value;
+    renderCategoryMenu(current === name ? '' : current);
+    if (typeof renderCoursesTable === 'function') renderCoursesTable();
+  }
+
+  function bindCategoryDropdown() {
+    var root = document.getElementById('courseCategoryDropdown');
+    var toggle = document.getElementById('courseCategoryToggle');
+    var menu = document.getElementById('courseCategoryMenu');
+    if (!root || !toggle || !menu || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+    toggle.addEventListener('click', function () {
+      menu.hidden = !menu.hidden;
+    });
+    document.addEventListener('click', function (event) {
+      if (!root.contains(event.target)) menu.hidden = true;
+    });
+    menu.addEventListener('click', function (event) {
+      var del = event.target.closest('[data-category-delete]');
+      if (del) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!window.confirm('هل أنت متأكد من حذف هذا التصنيف؟')) return;
+        removeCategory(del.getAttribute('data-category-delete'));
+        return;
+      }
+      var saveBtn = event.target.closest('[data-category-save]');
+      if (saveBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        var saveInput = saveBtn.parentElement && saveBtn.parentElement.querySelector('input');
+        commitNewCategory(saveInput ? saveInput.value : '');
+        return;
+      }
+      var add = event.target.closest('[data-category-add]');
+      if (add) {
+        if (add.querySelector('input')) return;
+        add.innerHTML =
+          '<input class="category-dropdown__input" type="text" placeholder="اسم التصنيف" />' +
+          '<button type="button" class="category-dropdown__save" data-category-save="1">حفظ</button>';
+        var input = add.querySelector('input');
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commitNewCategory(input.value);
+          }
+        });
+        input.focus();
+        return;
+      }
+      var item = event.target.closest('[data-category-value]');
+      if (!item) return;
+      setCategoryValue(item.getAttribute('data-category-value'));
+      menu.hidden = true;
+    });
+  }
+
+  function readCourseCategory() {
+    var root = document.getElementById('courseCategoryDropdown');
+    var pending = root ? String(root.getAttribute('data-pending-category') || '').trim() : '';
+    if (pending && pending !== 'الكل') return pending;
+    var typing = document.querySelector('#courseCategoryMenu .category-dropdown__input');
+    if (typing && String(typing.value || '').trim() && String(typing.value).trim() !== 'الكل') {
+      return String(typing.value).trim();
+    }
+    var hidden = document.getElementById('courseCategorySelect');
+    var stored = hidden ? String(hidden.value || '').trim() : '';
+    if (stored) return stored;
+    var toggle = document.getElementById('courseCategoryToggle');
+    var label = toggle ? String(toggle.textContent || '').trim() : '';
+    if (!label || label === 'اختر تصنيفاً') return '';
+    return label;
+  }
+
   function openCourseModal(course) {
     var modal = document.getElementById('courseEditorModal');
     var titleEl = document.getElementById('courseEditorTitle');
@@ -690,26 +831,15 @@
     if (notifyEl) {
       notifyEl.checked = !course || course.status !== 'published';
     }
-    var courseCategorySelect = document.getElementById('courseCategorySelect');
-    if (courseCategorySelect) {
-      var savedCategory = course ? String(course.category || '').trim() : '';
-      if (savedCategory === 'individual' || savedCategory === 'general') savedCategory = 'عام';
-      if (savedCategory === 'program') savedCategory = 'شبكات';
-      if (savedCategory === 'master') savedCategory = 'اتصالات';
-      if (savedCategory.toLowerCase() === 'ftth') savedCategory = 'FTTH';
-      if (!savedCategory) savedCategory = 'عام';
-      var known = false;
-      Array.prototype.forEach.call(courseCategorySelect.options, function (opt) {
-        if (opt.value === savedCategory) known = true;
-      });
-      if (!known) {
-        var extra = document.createElement('option');
-        extra.value = savedCategory;
-        extra.textContent = savedCategory;
-        courseCategorySelect.appendChild(extra);
-      }
-      courseCategorySelect.value = savedCategory;
-    }
+    var savedCategory = course ? String(course.category || '').trim() : '';
+    if (savedCategory === 'individual' || savedCategory === 'general') savedCategory = '';
+    if (savedCategory === 'program') savedCategory = 'شبكات';
+    if (savedCategory === 'master') savedCategory = 'اتصالات';
+    if (savedCategory.toLowerCase() === 'ftth') savedCategory = 'FTTH';
+    bindCategoryDropdown();
+    var categoryRoot = document.getElementById('courseCategoryDropdown');
+    if (categoryRoot) categoryRoot.removeAttribute('data-pending-category');
+    renderCategoryMenu(savedCategory);
     writeSimulatorChecks(course ? course.allowedSimulators : []);
     writeGeneratePlanCheck(course);
 
@@ -1319,7 +1449,8 @@
           return;
         }
 
-        var payload = {
+          var categoryName = readCourseCategory();
+          var payload = {
           title: (document.getElementById('courseEditorName') || {}).value,
           description: (document.getElementById('courseEditorDescription') || {}).value,
           durationHours: (document.getElementById('courseEditorHours') || {}).value,
@@ -1330,7 +1461,7 @@
           requiredPlanId: '',
           weeklySchedule: (document.getElementById('courseEditorSchedule') || {}).value,
           status: (document.getElementById('courseEditorStatus') || {}).value,
-          category: document.getElementById('courseCategorySelect').value || 'عام',
+          category: categoryName,
           allowedSimulators: readSimulatorChecks(),
           autoPricingPlan: autoPricingPlan,
           suppressPricingPlan: autoPricingPlan ? false : undefined,
@@ -1355,6 +1486,12 @@
           var publishResult = await runWithPublishProgress(progressLabel, async function (setPct) {
             setPct(15);
             var saved = await saveCourseRecord(id, payload);
+            if (
+              categoryName &&
+              (!saved || String(saved.category || '').trim() !== categoryName)
+            ) {
+              saved = await saveCourseRecord((saved && saved.id) || id, { category: categoryName });
+            }
             setPct(65);
             saved = (await syncCoursePricingPlan(saved)) || saved;
             setPct(95);

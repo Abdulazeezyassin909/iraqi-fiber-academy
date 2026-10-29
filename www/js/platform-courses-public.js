@@ -176,65 +176,52 @@
   }
 
   function publicCategory(course) {
-    var raw = String((course && course.category) || '').trim();
-    var lower = raw.toLowerCase();
-    if (raw === 'individual' || lower === 'individual' || raw === 'general' || raw === '') return 'عام';
-    if (raw === 'program' || lower === 'program') return 'شبكات';
-    if (raw === 'master' || lower === 'master') return 'اتصالات';
-    if (lower === 'ftth') return 'FTTH';
-    return raw;
+    return String((course && course.category) || '').trim();
   }
 
-  var STANDARD_CATEGORIES = ['الكل', 'اتصالات', 'شبكات', 'مدني', 'كهرباء', 'FTTH', 'فايبر'];
+  function chipBoxes() {
+    return Array.prototype.slice.call(document.querySelectorAll('.category-chips-container'));
+  }
 
   function renderCategoryChips(courses) {
-    var box = document.getElementById('categoryChips');
-    if (!box) return;
-    var labels = STANDARD_CATEGORIES.slice();
+    var boxes = chipBoxes();
+    if (!boxes.length) return;
+    var labels = ['الكل'];
     (courses || []).forEach(function (course) {
       var label = publicCategory(course);
-      if (!label || labels.indexOf(label) !== -1) return;
+      if (!label || label === 'الكل' || labels.indexOf(label) !== -1) return;
       labels.push(label);
     });
-    var selected = box.getAttribute('data-selected') || 'الكل';
+    var selected = boxes[0].getAttribute('data-selected') || 'الكل';
     if (labels.indexOf(selected) === -1) selected = 'الكل';
-    box.setAttribute('data-selected', selected);
-    box.innerHTML = labels
-      .map(function (label) {
-        var active = label === selected ? ' is-active active' : '';
-        return (
-          '<button type="button" class="mobile-chip' +
-          active +
-          '" data-category="' +
-          escapeHtml(label) +
-          '">' +
-          escapeHtml(label) +
-          '</button>'
-        );
-      })
-      .join('');
-    if (box.dataset.filterBound !== '1') {
-      box.dataset.filterBound = '1';
-      box.addEventListener('click', function (event) {
-        var chip = event.target.closest('.mobile-chip');
-        if (!chip || !box.contains(chip)) return;
-        applyCategoryFilter((chip.getAttribute('data-category') || chip.textContent || '').trim());
-      });
-    }
+    boxes.forEach(function (box) {
+      box.setAttribute('data-selected', selected);
+      box.innerHTML = labels
+        .map(function (label) {
+          var active = label === selected ? ' is-active active' : '';
+          return (
+            '<button type="button" class="mobile-chip' +
+            active +
+            '" data-category="' +
+            escapeHtml(label) +
+            '">' +
+            escapeHtml(label) +
+            '</button>'
+          );
+        })
+        .join('');
+      if (box.dataset.filterBound !== '1') {
+        box.dataset.filterBound = '1';
+        box.addEventListener('click', function (event) {
+          var chip = event.target.closest('.mobile-chip');
+          if (!chip || !box.contains(chip)) return;
+          applyCategoryFilter((chip.getAttribute('data-category') || chip.textContent || '').trim());
+        });
+      }
+    });
   }
 
-  function applyCategoryFilter(label) {
-    var box = document.getElementById('categoryChips');
-    var grid = document.getElementById(GRID_ID);
-    var key = label || 'الكل';
-    if (box) {
-      box.setAttribute('data-selected', key);
-      box.querySelectorAll('.mobile-chip').forEach(function (chip) {
-        var on = (chip.getAttribute('data-category') || '').trim() === key;
-        chip.classList.toggle('is-active', on);
-        chip.classList.toggle('active', on);
-      });
-    }
+  function filterOneGrid(grid, key) {
     if (!grid) return;
     var placeholder = grid.querySelector('[data-category-placeholder]');
     if (placeholder) placeholder.remove();
@@ -255,6 +242,20 @@
         '<div class="custom-course-card__content"><h3 class="custom-course-card__title">سوف تتوفر قريباً</h3></div>';
       grid.appendChild(empty);
     }
+  }
+
+  function applyCategoryFilter(label) {
+    var key = label || 'الكل';
+    chipBoxes().forEach(function (box) {
+      box.setAttribute('data-selected', key);
+      box.querySelectorAll('.mobile-chip').forEach(function (chip) {
+        var on = (chip.getAttribute('data-category') || '').trim() === key;
+        chip.classList.toggle('is-active', on);
+        chip.classList.toggle('active', on);
+      });
+    });
+    filterOneGrid(document.getElementById(GRID_ID), key);
+    filterOneGrid(document.getElementById('homeCoursesGrid'), key);
   }
 
   function renderCourseCard(course, index) {
@@ -370,9 +371,7 @@
     });
     renderCategoryChips(courses);
     applyCategoryFilter(
-      (document.getElementById('categoryChips') || {}).getAttribute
-        ? document.getElementById('categoryChips').getAttribute('data-selected') || 'الكل'
-        : 'الكل'
+      (chipBoxes()[0] && chipBoxes()[0].getAttribute('data-selected')) || 'الكل'
     );
   }
 

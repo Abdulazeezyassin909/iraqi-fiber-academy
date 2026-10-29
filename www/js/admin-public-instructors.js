@@ -63,27 +63,56 @@ function showPreview(src) {
     : '';
 }
 
-function instructorRow(row, actions) {
+function sortInstructors(list) {
+  return list.slice().sort(function (a, b) {
+    var ao = Number(a.displayOrder);
+    var bo = Number(b.displayOrder);
+    var aOk = isFinite(ao);
+    var bOk = isFinite(bo);
+    if (aOk && bOk && ao !== bo) return ao - bo;
+    if (aOk && !bOk) return -1;
+    if (!aOk && bOk) return 1;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
+  });
+}
+
+function instructorRow(row, actions, orderCell) {
   var photo = row.photoUrl
     ? '<img src="' + esc(row.photoUrl) + '" alt="" width="40" height="40" style="width:40px;height:40px;object-fit:cover;border-radius:50%">'
     : '—';
-  return '<tr><td>' + photo + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.title) + '</td><td>' + esc(row.bio) + '</td><td>' + actions + '</td></tr>';
+  return '<tr><td>' + (orderCell || '') + '</td><td>' + photo + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.title) + '</td><td>' + esc(row.bio) + '</td><td>' + actions + '</td></tr>';
+}
+
+function orderCell(row, index, total) {
+  return (
+    '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-move-instructor="' +
+    esc(row.id) +
+    '" data-move-dir="-1"' +
+    (index === 0 ? ' disabled' : '') +
+    ' aria-label="أعلى">↑</button> ' +
+    '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-move-instructor="' +
+    esc(row.id) +
+    '" data-move-dir="1"' +
+    (index === total - 1 ? ' disabled' : '') +
+    ' aria-label="أسفل">↓</button>'
+  );
 }
 
 function render() {
   var el = formEls();
-  var active = rows.filter(function (row) { return !row.status || row.status === 'approved'; });
+  var active = sortInstructors(rows.filter(function (row) { return !row.status || row.status === 'approved'; }));
   var pending = rows.filter(function (row) { return row.status === 'pending'; });
   if (el.body) {
     el.body.innerHTML = active.length
-      ? active.map(function (row) {
+      ? active.map(function (row, index) {
           return instructorRow(
             row,
             '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-edit-public-instructor="' + esc(row.id) + '">تعديل</button> ' +
-            '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">حذف</button>'
+            '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">حذف</button>',
+            orderCell(row, index, active.length)
           );
         }).join('')
-      : '<tr><td colspan="5">لا يوجد مدربون حاليون</td></tr>';
+      : '<tr><td colspan="6">لا يوجد مدربون حاليون</td></tr>';
   }
   if (el.pending) {
     el.pending.innerHTML = pending.length
@@ -91,11 +120,18 @@ function render() {
           return instructorRow(
             row,
             '<button type="button" class="admin-btn admin-btn--primary admin-btn--sm" data-approve-public-instructor="' + esc(row.id) + '">موافقة</button> ' +
-            '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">رفض</button>'
+            '<button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-delete-public-instructor="' + esc(row.id) + '">رفض</button>',
+            ''
           );
         }).join('')
-      : '<tr><td colspan="5">لا توجد طلبات بانتظار الموافقة</td></tr>';
+      : '<tr><td colspan="6">لا توجد طلبات بانتظار الموافقة</td></tr>';
   }
+}
+
+function persistInstructorOrder(orderedIds) {
+  return Promise.all(orderedIds.map(function (id, index) {
+    return updateDoc(doc(db, 'instructors', id), { displayOrder: index });
+  }));
 }
 
 function bind() {
@@ -108,13 +144,11 @@ function bind() {
     snap.forEach(function (docSnap) {
       rows.push(Object.assign({ id: docSnap.id }, docSnap.data() || {}));
     });
-    rows.sort(function (a, b) {
-      return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
-    });
+    rows = sortInstructors(rows);
     render();
   }, function (err) {
     console.error('[PublicInstructorsAdmin]', err);
-    if (el.body) el.body.innerHTML = '<tr><td colspan="5">تعذر تحميل المدربين</td></tr>';
+    if (el.body) el.body.innerHTML = '<tr><td colspan="6">تعذر تحميل المدربين</td></tr>';
   });
 
   if (el.photo) {
@@ -153,7 +187,13 @@ function bind() {
         };
         var id = el.id.value;
         if (id) await updateDoc(doc(db, 'instructors', id), payload);
-        else await addDoc(collection(db, 'instructors'), Object.assign({ createdAt: serverTimestamp() }, payload));
+        else {
+          var nextOrder = rows.reduce(function (max, row) {
+            var n = Number(row.displayOrder);
+            return isFinite(n) ? Math.max(max, n + 1) : max;
+          }, 0);
+          await addDoc(collection(db, 'instructors'), Object.assign({ createdAt: serverTimestamp(), displayOrder: nextOrder, status: 'approved' }, payload));
+        }
 
         submitBtn.textContent = 'تم النشر بنجاح!';
         alert('تم النشر بنجاح');
@@ -176,6 +216,24 @@ function bind() {
     var editBtn = event.target.closest('[data-edit-public-instructor]');
     var deleteBtn = event.target.closest('[data-delete-public-instructor]');
     var approveBtn = event.target.closest('[data-approve-public-instructor]');
+    var moveBtn = event.target.closest('[data-move-instructor]');
+    if (moveBtn) {
+      var moveId = moveBtn.getAttribute('data-move-instructor');
+      var dir = Number(moveBtn.getAttribute('data-move-dir')) || 0;
+      var active = sortInstructors(rows.filter(function (row) { return !row.status || row.status === 'approved'; }));
+      var index = active.findIndex(function (row) { return row.id === moveId; });
+      var next = index + dir;
+      if (index < 0 || next < 0 || next >= active.length) return;
+      var swapped = active.slice();
+      var hold = swapped[index];
+      swapped[index] = swapped[next];
+      swapped[next] = hold;
+      persistInstructorOrder(swapped.map(function (row) { return row.id; })).catch(function (err) {
+        console.error(err);
+        alert('تعذر حفظ ترتيب المدربين.');
+      });
+      return;
+    }
     if (approveBtn) {
       var approveId = approveBtn.getAttribute('data-approve-public-instructor');
       updateDoc(doc(db, 'instructors', approveId), { status: 'approved' }).catch(function (err) {

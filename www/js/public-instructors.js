@@ -1,5 +1,5 @@
 import { db } from './firebase-config.js';
-import { collection, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { collection, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 function esc(value) {
   return String(value == null ? '' : value)
@@ -10,6 +10,8 @@ function esc(value) {
 }
 
 var instructorRows = {};
+var CACHE_KEY = 'ifa_public_instructors_v1';
+var lastSignature = '';
 
 function ensureInstructorModal() {
   var overlay = document.getElementById('instructorProfileModal');
@@ -92,21 +94,84 @@ function render(rows) {
   });
 }
 
+function instructorSignature(rows) {
+  return JSON.stringify((rows || []).map(function (row) {
+    return [
+      row.id,
+      row.name,
+      row.title,
+      row.bio,
+      row.photoUrl,
+      row.displayOrder,
+      row.status,
+    ];
+  }));
+}
+
+function sortInstructors(rows) {
+  return rows.filter(function (row) {
+    return !row.status || row.status === 'approved';
+  }).sort(function (a, b) {
+    var ao = Number(a.displayOrder);
+    var bo = Number(b.displayOrder);
+    var aOk = isFinite(ao);
+    var bOk = isFinite(bo);
+    if (aOk && bOk && ao !== bo) return ao - bo;
+    if (aOk && !bOk) return -1;
+    if (!aOk && bOk) return 1;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
+  });
+}
+
+function rowsFromSnapshot(snap) {
+  var rows = [];
+  snap.forEach(function (docSnap) {
+    rows.push(Object.assign({ id: docSnap.id }, docSnap.data() || {}));
+  });
+  return sortInstructors(rows);
+}
+
+function readInstructorCache() {
+  try {
+    var raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function applyInstructorRows(rows) {
+  var next = rows || [];
+  var signature = instructorSignature(next);
+  if (signature === lastSignature) return;
+  lastSignature = signature;
+  render(next);
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+  } catch (err) {}
+}
+
+function refreshInstructors() {
+  return getDocs(collection(db, 'instructors')).then(function (snap) {
+    applyInstructorRows(rowsFromSnapshot(snap));
+  }).catch(function (err) {
+    console.warn('[public-instructors] refresh failed', err);
+  });
+}
+
 var grid = document.getElementById('publicInstructorsGrid');
 if (grid) {
+  var cached = readInstructorCache();
+  if (cached && cached.length) {
+    lastSignature = instructorSignature(cached);
+    render(cached);
+  }
   onSnapshot(collection(db, 'instructors'), function (snap) {
-    var rows = [];
-    snap.forEach(function (docSnap) {
-      rows.push(Object.assign({ id: docSnap.id }, docSnap.data() || {}));
-    });
-    rows = rows.filter(function (row) {
-      return !row.status || row.status === 'approved';
-    });
-    rows.sort(function (a, b) {
-      return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
-    });
-    render(rows);
+    applyInstructorRows(rowsFromSnapshot(snap));
   }, function () {
-    render([]);
+    if (!lastSignature) render([]);
   });
+  document.addEventListener('ifa:app-resumed', refreshInstructors);
 }
