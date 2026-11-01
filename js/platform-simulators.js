@@ -502,16 +502,11 @@
   }
 
   function isPrivilegedRole(authUser, directoryUser) {
-    var role = String(
-      (directoryUser && directoryUser.role) || (authUser && authUser.role) || ''
-    ).toLowerCase();
+    var authRole = String((authUser && authUser.role) || '').toLowerCase();
+    if (authRole === 'admin' || authRole === 'instructor') return true;
+    if (authUser && (authUser.isAdmin === true || authUser.isInstructor === true)) return true;
+    var role = String((directoryUser && directoryUser.role) || '').toLowerCase();
     if (role === 'admin' || role === 'instructor') return true;
-    if (authUser && (authUser.isAdmin || authUser.isInstructor)) {
-      if (directoryUser && String(directoryUser.role || '').toLowerCase() === 'student') {
-        return false;
-      }
-      return true;
-    }
     var email = normalizeEmail((directoryUser && directoryUser.email) || (authUser && authUser.email));
     return ADMIN_EMAILS.indexOf(email) !== -1;
   }
@@ -1197,7 +1192,7 @@
       var btnHref = openHref || '#simulators';
 
       if (trialTier) {
-        var privileged = authUser && isPrivilegedRole(authUser, directoryUser);
+        var privileged = isPrivileged;
         var globalSub = authUser && isGlobalPlatformSubscriber(authUser);
         var entitled = authUser ? getUserAllowedSimulatorIds(authUser, directoryUser) : [];
         var courseGrantsThisSim = entitled.indexOf(id) !== -1;

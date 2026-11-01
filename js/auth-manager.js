@@ -1263,7 +1263,9 @@ function canShowSimulatorAdminSettingsUI() {
 }
 
 function isInstructorUser(profile, _email) {
-  return !!(profile && String(profile.role || '').toLowerCase() === 'instructor');
+  if (!profile) return false;
+  if (String(profile.role || '').toLowerCase() === 'instructor') return true;
+  return profile.isInstructor === true;
 }
 
 function resolveMenuEmail(user, profile) {
@@ -1337,8 +1339,9 @@ function guestMenuHtml() {
 
 function dashboardRole(profile) {
   var role = profile && profile.role ? String(profile.role).toLowerCase() : 'student';
-  if (role !== 'admin' && role !== 'instructor') return 'student';
-  return role;
+  if (role === 'admin' || role === 'instructor') return role;
+  if (profile && profile.isInstructor === true) return 'instructor';
+  return 'student';
 }
 
 function userMenuHtml(options) {
@@ -1982,7 +1985,7 @@ function applySessionFromProfileAndEntitlements(user, profile, orderEntitlements
       photoURL: user.photoURL || (profile && profile.photo) || '',
       isSubscriber: !!orderEntitlements.isSubscriber,
       isAdmin: role === 'admin',
-      isInstructor: !!(profile && profile.isInstructor),
+      isInstructor: role === 'instructor' || !!(profile && profile.isInstructor),
       role: role,
       planId: orderEntitlements.planId != null ? String(orderEntitlements.planId) : '',
       enrolledCourseIds: Array.isArray(orderEntitlements.enrolledCourseIds)
@@ -2132,12 +2135,6 @@ function initAuthUI() {
   bindAuthClicks();
   slots = Array.prototype.slice.call(document.querySelectorAll('[data-auth-slot]'));
 
-  /* Public/native builds must not paint a seeded admin from localStorage.
-     Firebase onAuthStateChanged restores a real session after this. */
-  if (!shouldBypassAccessControl()) {
-    clearLocalAuthUser();
-  }
-
   if (isNativeAppShell()) {
     initializeNativeGoogleAuth();
   }
@@ -2247,18 +2244,25 @@ function initAuthUI() {
     profileSynced = hasCachedEntitlements;
 
     if (!hasCachedEntitlements) {
-      var bootstrapRole = applyOwnerAdminSessionRole(email, 'user');
+      var previousStaff = getLocalAuthUser();
+      var sameStaff =
+        previousStaff && normalizeEmail(previousStaff.email) === email;
+      var keptRole = sameStaff ? String(previousStaff.role || '').toLowerCase() : '';
+      if (keptRole !== 'admin' && keptRole !== 'instructor') {
+        keptRole = applyOwnerAdminSessionRole(email, 'user');
+      }
       setLocalAuthUser({
-        name: user.displayName || '',
+        name: (sameStaff && previousStaff.name) || user.displayName || '',
         email: email,
-        photoURL: user.photoURL || '',
-        isSubscriber: false,
-        isAdmin: bootstrapRole === 'admin',
-        isInstructor: false,
-        role: bootstrapRole,
+        photoURL: user.photoURL || (sameStaff && previousStaff.photoURL) || '',
+        isSubscriber: !!(sameStaff && previousStaff.isSubscriber),
+        isAdmin: keptRole === 'admin',
+        isInstructor: keptRole === 'instructor' || !!(sameStaff && previousStaff.isInstructor),
+        role: keptRole,
       });
     }
 
+    startUserDocListener(user.uid);
     refreshSlots();
     notifyLocalAuthChanged({ type: 'login', email: email });
     notifyAuthChange(user, { profileSynced: hasCachedEntitlements });
