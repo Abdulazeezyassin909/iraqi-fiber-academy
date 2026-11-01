@@ -220,7 +220,10 @@ function applyProfileToLocalSession(user, profile) {
           : [],
     role: profile.role || (previous && previous.role) || 'user',
     isAdmin: profile.role === 'admin' || !!(previous && previous.isAdmin),
-    isInstructor: profile.isInstructor === true || !!(previous && previous.isInstructor),
+    isInstructor:
+      profile.isInstructor === true ||
+      String(profile.role || '').toLowerCase() === 'instructor' ||
+      !!(previous && previous.isInstructor),
     trialExpiresAt:
       profile.trialExpiresAt != null && profile.trialExpiresAt !== ''
         ? profile.trialExpiresAt
@@ -228,6 +231,11 @@ function applyProfileToLocalSession(user, profile) {
           ? previous.trialExpiresAt
           : 0,
   };
+  window.currentUserProfile = Object.assign({}, profile, {
+    role: payload.role,
+    isInstructor: payload.isInstructor,
+    isAdmin: payload.isAdmin,
+  });
   if (typeof window.IFAAuth.setLocalAuthUser === 'function') {
     window.IFAAuth.setLocalAuthUser(payload, profile);
   } else if (typeof window.IFAAuth.applyEntitlements === 'function') {
@@ -327,7 +335,35 @@ function tryKickOutExpiredTrial(simulatorId, localUser) {
   return false;
 }
 
+function readStaffRole(profile, localUser) {
+  var fromProfile = window.currentUserProfile || null;
+  var userRole = String(
+    (profile && profile.role) ||
+      (fromProfile && fromProfile.role) ||
+      (localUser && localUser.role) ||
+      ''
+  ).toLowerCase();
+  if (userRole === 'admin' || userRole === 'instructor') return userRole;
+  if (profileIsPrivilegedStaff(profile) || profileIsPrivilegedStaff(fromProfile)) {
+    return String((profile && profile.role) || (fromProfile && fromProfile.role) || '').toLowerCase();
+  }
+  if (localUser && localUser.isAdmin === true) return 'admin';
+  if (localUser && localUser.isInstructor === true) return 'instructor';
+  if (fromProfile && fromProfile.isInstructor === true) return 'instructor';
+  return '';
+}
+
 async function evaluateAccess(user) {
+  var localUser = getLocalAuthSnapshot();
+  var profile = window.currentUserProfile || null;
+  var userRole = readStaffRole(profile, localUser);
+  if (userRole === 'admin' || userRole === 'instructor') {
+    var simulatorId = currentSimulatorIdFromPage();
+    if (profile) applyProfileToLocalSession(user, profile);
+    grantSimulatorAccess(simulatorId);
+    return;
+  }
+
   if (shouldBypassAccessControl()) {
     setGateVisible(false);
     return;
@@ -490,6 +526,19 @@ function tryBruteForceGateBypassFromLocalAuth() {
   if (!localAuth) return false;
 
   var simulatorId = currentSimulatorIdFromPage();
+
+  var localRole = String(localAuth.role || '').toLowerCase();
+  if (
+    localRole === 'admin' ||
+    localRole === 'instructor' ||
+    localAuth.isAdmin === true ||
+    localAuth.isInstructor === true
+  ) {
+    forceRemoveSubscriberGate();
+    grantSimulatorAccess(simulatorId);
+    document.documentElement.setAttribute('data-ifa-access', 'brute-force-staff-grant');
+    return true;
+  }
 
   if (normalizeEmail(localAuth.email) === normalizeEmail(OWNER_ACCOUNT_EMAIL)) {
     forceRemoveSubscriberGate();

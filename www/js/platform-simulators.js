@@ -491,6 +491,16 @@
     return null;
   }
 
+  function isGlobalPrivilegedProfile() {
+    var profile = global.currentUserProfile || null;
+    var authUser = getLocalAuthUser();
+    var role = String((profile && profile.role) || (authUser && authUser.role) || '').toLowerCase();
+    if (role === 'admin' || role === 'instructor') return true;
+    if (authUser && (authUser.isAdmin === true || authUser.isInstructor === true)) return true;
+    if (profile && (profile.isAdmin === true || profile.isInstructor === true)) return true;
+    return false;
+  }
+
   function isPrivilegedRole(authUser, directoryUser) {
     var role = String(
       (directoryUser && directoryUser.role) || (authUser && authUser.role) || ''
@@ -880,7 +890,7 @@
       return;
     }
     if (isAdminPreviewContext()) return;
-    if (viewerCanAccess(id)) return;
+    if (isGlobalPrivilegedProfile() || viewerCanAccess(id)) return;
     showPaywallNotice(PAYWALL_TOAST_MSG);
     global.location.replace(paywallRedirectUrl(id));
   }
@@ -892,7 +902,7 @@
       return false;
     }
     var openHref = withPreviewQuery(href || (findSimulator(id) && findSimulator(id).href) || '');
-    if (viewerCanAccess(id)) {
+    if (isGlobalPrivilegedProfile() || viewerCanAccess(id)) {
       if (!openHref) {
         showPaywallNotice('هذا المحاكي قيد الإعداد — سيكون متاحاً قريباً');
         return false;
@@ -1099,6 +1109,7 @@
   function viewerCanAccess(simulatorId) {
     var id = String(simulatorId || '');
     if (isAdminPreviewContext()) return true;
+    if (isGlobalPrivilegedProfile()) return true;
 
     var authUser = getLocalAuthUser();
     var directoryUser = authUser ? findDirectoryUser(authUser.email) : null;
@@ -1174,11 +1185,13 @@
         return;
       }
 
-      var allowed = viewerCanAccess(id);
-      var openHref = withPreviewQuery(href);
-      var trialTier = isTrialTierSimulator(id);
       var authUser = getLocalAuthUser();
       var directoryUser = authUser ? findDirectoryUser(authUser.email) : null;
+      var isPrivileged =
+        isGlobalPrivilegedProfile() || isPrivilegedRole(authUser, directoryUser);
+      var allowed = isPrivileged || viewerCanAccess(id);
+      var openHref = withPreviewQuery(href);
+      var trialTier = isTrialTierSimulator(id);
       var badgeHtml = '';
       var btnText = allowed ? 'افتح المحاكي' : 'يتطلب الاشتراك بالباقة';
       var btnHref = openHref || '#simulators';

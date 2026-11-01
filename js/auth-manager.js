@@ -1832,8 +1832,13 @@ function startUserDocListener(uid) {
     if (nextRole !== 'admin' && nextRole !== 'instructor') return;
     var local = getLocalAuthUser() || {};
     if (!lastProfile || typeof lastProfile !== 'object') lastProfile = {};
-    lastProfile.isInstructor = true;
+    lastProfile.isInstructor = nextRole === 'instructor' || nextRole === 'admin';
     lastProfile.role = nextRole;
+    window.currentUserProfile = Object.assign({}, lastProfile, data, {
+      role: nextRole,
+      isInstructor: nextRole === 'instructor' || data.isInstructor === true,
+      isAdmin: nextRole === 'admin',
+    });
     setLocalAuthUser(
       Object.assign({}, local, {
         isInstructor: true,
