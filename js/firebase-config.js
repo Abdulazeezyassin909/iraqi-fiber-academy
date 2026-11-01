@@ -4,7 +4,12 @@
  * Enable Email/Password in Firebase Console → Authentication → Sign-in method.
  */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  setPersistence,
+  indexedDBLocalPersistence,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -24,6 +29,9 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+setPersistence(auth, indexedDBLocalPersistence).catch(function (err) {
+  console.warn('[Auth] indexedDB persistence failed', err);
+});
 export const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 export const db = initializeFirestore(app, {

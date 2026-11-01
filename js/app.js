@@ -89,7 +89,7 @@
         var image = course.imageUrl || course.thumbnailUrl || '';
         var thumb = image ? '<img class="my-course-card__thumb" src="' + esc(image) + '" alt="" />' : '';
         return (
-          '<article class="my-course-card">' +
+          '<article class="my-course-card" data-course-id="' + esc(course.id) + '" role="link" tabindex="0">' +
           thumb +
           '<h3>' + esc(course.title || 'كورس') + '</h3>' +
           '<div class="progress-row">' +
@@ -99,6 +99,16 @@
         );
       })
       .join('');
+    if (!list.dataset.courseNavBound) {
+      list.dataset.courseNavBound = '1';
+      list.addEventListener('click', function (event) {
+        var card = event.target && event.target.closest ? event.target.closest('[data-course-id]') : null;
+        if (!card || !list.contains(card)) return;
+        var courseId = card.getAttribute('data-course-id');
+        if (!courseId) return;
+        window.location.assign('course-details.html?id=' + encodeURIComponent(courseId));
+      });
+    }
   }
 
   function switchView(viewId) {

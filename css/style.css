@@ -1833,9 +1833,13 @@ body.article-reader-open {
 .profile-list__logout {
   color: #fecaca;
   background: #3a1717;
+  text-align: center;
+  justify-content: center;
+  width: 100%;
   border-color: rgba(248, 113, 113, 0.45);
 }
 .my-course-card {
+  cursor: pointer;
   background: #121824;
   border: 1px solid #2d3748;
   border-radius: 16px;

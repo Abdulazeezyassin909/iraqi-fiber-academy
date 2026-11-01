@@ -292,8 +292,9 @@ function profileHasActiveTrial(profile) {
   return expMs > Date.now();
 }
 
-function profileIsFirestoreAdmin(profile) {
-  return !!(profile && String(profile.role || '').toLowerCase() === 'admin');
+function profileIsPrivilegedStaff(profile) {
+  var role = String((profile && profile.role) || '').toLowerCase();
+  return role === 'admin' || role === 'instructor';
 }
 
 function resolveGateAfterAccessError(user, simulatorId) {
@@ -382,7 +383,16 @@ async function evaluateAccess(user) {
       runBackgroundProfileSync(user);
     }
 
-    if (profile && (profileIsFirestoreAdmin(profile) || profileHasActiveTrial(profile))) {
+    var localUser = getLocalAuthSnapshot();
+    var userRole = String((profile && profile.role) || (localUser && localUser.role) || '').toLowerCase();
+    if (userRole === 'admin' || userRole === 'instructor' || profileIsPrivilegedStaff(profile)) {
+      if (profile) applyProfileToLocalSession(user, profile);
+      grantSimulatorAccess(simulatorId);
+      accessSettled = true;
+      return;
+    }
+
+    if (profile && profileHasActiveTrial(profile)) {
       applyProfileToLocalSession(user, profile);
       grantSimulatorAccess(simulatorId);
       accessSettled = true;
@@ -393,7 +403,6 @@ async function evaluateAccess(user) {
       applyProfileToLocalSession(user, profile);
     }
 
-    var localUser = getLocalAuthSnapshot();
     try {
       if (
         window.PlatformSimulators &&

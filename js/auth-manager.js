@@ -9,11 +9,15 @@
 import { auth, db, provider } from './firebase-config.js';
 import {
   signInWithPopup,
-  getRedirectResult,
+  signInWithCredential,
+  GoogleAuthProvider,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  setPersistence,
+  indexedDBLocalPersistence,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import {
@@ -29,6 +33,7 @@ import {
   writeCachedEntitlements,
 } from './entitlements-sync.js';
 import { startFcmOnAuth, setupNotificationToggle } from './fcm-push.js';
+import { initializeNativeGoogleAuth, signInWithNativeGoogle } from './native-google-auth.js?v=20261030a';
 
 /**
  * RBAC: admin access is granted only when Firestore users/{uid}.role === 'admin'.
@@ -282,7 +287,28 @@ function readDocumentCookie(name) {
   }
 }
 
+function isNativeAppShell() {
+  if (typeof window !== 'undefined' && window.IFA_ENV && typeof window.IFA_ENV.isNativeAppShell === 'function') {
+    if (window.IFA_ENV.isNativeAppShell()) return true;
+  }
+  try {
+    if (window.androidBridge) return true;
+    var cap = window.Capacitor;
+    if (cap && typeof cap.isNativePlatform === 'function' && cap.isNativePlatform()) return true;
+    if (cap && typeof cap.getPlatform === 'function') {
+      var platform = String(cap.getPlatform() || '');
+      if (platform === 'android' || platform === 'ios') return true;
+    }
+    var ua = String((window.navigator && window.navigator.userAgent) || '');
+    if (/Capacitor/i.test(ua) || /; wv\)/i.test(ua)) return true;
+  } catch (err) {
+    return false;
+  }
+  return false;
+}
+
 function isLocalDevEnvironment() {
+  if (isNativeAppShell()) return false;
   if (typeof window !== 'undefined' && window.IFA_ENV && typeof window.IFA_ENV.isLocalDevEnvironment === 'function') {
     return window.IFA_ENV.isLocalDevEnvironment();
   }
@@ -297,6 +323,7 @@ function isLocalDevEnvironment() {
 }
 
 function shouldBypassAccessControl() {
+  if (isNativeAppShell()) return false;
   if (typeof window !== 'undefined' && window.IFA_ENV && typeof window.IFA_ENV.shouldBypassAccessControl === 'function') {
     return window.IFA_ENV.shouldBypassAccessControl();
   }
@@ -940,7 +967,7 @@ function formatAuthError(err) {
   var code = err && err.code ? String(err.code) : '';
   if (code === 'auth/invalid-email') return 'البريد الإلكتروني غير صالح.';
   if (code === 'auth/user-disabled') return 'تم تعطيل هذا الحساب.';
-  if (code === 'auth/user-not-found') return 'لا يوجد حساب بهذا البريد.';
+  if (code === 'auth/user-not-found') return 'البريد الإلكتروني غير مسجل';
   if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
     return 'البريد أو كلمة المرور غير صحيحة.';
   }
@@ -948,11 +975,12 @@ function formatAuthError(err) {
   if (code === 'auth/weak-password') return 'كلمة المرور ضعيفة (6 أحرف على الأقل).';
   if (code === 'auth/too-many-requests') return 'محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.';
   if (code === 'auth/network-request-failed') return 'تعذّر الاتصال. تحقق من الشبكة.';
-  if (code === 'auth/popup-blocked') {
-    return 'تم حظر النافذة المنبثقة. اسمح بالنوافذ المنبثقة لهذا الموقع ثم أعد المحاولة.';
+  if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+    return 'تعذر فتح نافذة Google داخل التطبيق. أعد المحاولة، أو سجّل الدخول بالبريد وكلمة المرور.';
   }
-  if (code === 'auth/missing-initial-state') {
-    return 'تعذّر إكمال تسجيل الدخول. أعد المحاولة من نفس المتصفح (بدون وضع التصفح الخاص إن أمكن).';
+  var message = err && err.message ? String(err.message) : '';
+  if (code === 'auth/missing-initial-state' || message.indexOf('missing initial state') !== -1) {
+    return 'تعذر إكمال تسجيل Google داخل التطبيق. أعد المحاولة، أو سجّل الدخول بالبريد وكلمة المرور.';
   }
   if (code === 'auth/operation-not-allowed') return 'طريقة تسجيل الدخول غير مفعلة';
   if (code === 'auth/unauthorized-domain') return 'النطاق غير مصرح به في إعدادات فايبربيس';
@@ -998,6 +1026,8 @@ function setAuthModalMode(mode) {
     switchSignup.hidden = authModalMode === 'signup';
     switchSignup.textContent = authText('auth.switchSignup', 'ليس لديك حساب؟ إنشاء حساب');
   }
+  var forgotBtn = modal.querySelector('[data-auth-forgot]');
+  if (forgotBtn) forgotBtn.hidden = authModalMode === 'signup';
   var nameContainer = document.getElementById('authNameContainer');
   var nameInput = document.getElementById('authNameInput');
   if (nameContainer && nameInput) {
@@ -1043,6 +1073,7 @@ function ensureAuthModal() {
           '<span>كلمة المرور</span>' +
           '<input type="password" name="password" data-auth-password autocomplete="current-password" minlength="6" required />' +
         '</label>' +
+        '<button type="button" data-auth-forgot style="background:none;border:none;color:#00a8ff;cursor:pointer;margin-top:10px;">نسيت كلمة المرور؟</button>' +
         '<button type="submit" class="auth-modal__submit" data-auth-submit>تسجيل الدخول</button>' +
       '</form>' +
       '<div class="auth-modal__switch">' +
@@ -1073,6 +1104,23 @@ function ensureAuthModal() {
     });
     wrap.querySelector('[data-auth-google]').addEventListener('click', function () {
       loginWithGoogle();
+    });
+    wrap.querySelector('[data-auth-forgot]').addEventListener('click', function () {
+      var emailInput = wrap.querySelector('[data-auth-email]');
+      var email = emailInput ? String(emailInput.value || '').trim() : '';
+      if (!email) {
+        email = window.prompt('أدخل بريدك الإلكتروني:');
+        email = email ? String(email).trim() : '';
+      }
+      if (!email) return;
+      setAuthModalError('');
+      sendPasswordResetEmail(auth, email)
+        .then(function () {
+          setAuthModalError('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.');
+        })
+        .catch(function (err) {
+          setAuthModalError(formatAuthError(err));
+        });
     });
     wrap.querySelector('#authModalForm').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -1168,10 +1216,9 @@ function isProductionEnvironment() {
   }
 }
 
-/** Local → always show Admin + Instructor; production → admin email allow-list only */
+/** Admin dashboard link only when Firestore role is exactly admin. */
 function shouldShowDashboardLinks(_email, profile) {
-  if (shouldBypassAccessControl()) return true;
-  return isAdminUser(profile);
+  return !!(profile && String(profile.role || '').toLowerCase() === 'admin');
 }
 
 /** Seed / upgrade a full-privilege local session for free local development. */
@@ -1215,37 +1262,8 @@ function canShowSimulatorAdminSettingsUI() {
   return false;
 }
 
-function isInstructorUser(profile, email) {
-  if (shouldBypassAccessControl()) return true;
-  var Apps = typeof window !== 'undefined' ? window.InstructorApps : null;
-  var checkEmail = normalizeEmail(
-    email ||
-      (profile && profile.email) ||
-      (Apps && Apps.getSessionEmail ? Apps.getSessionEmail() : '') ||
-      readLocalSessionEmail()
-  );
-
-  if (isAdminUser(profile)) return true;
-
-  if (profile && (profile.isInstructor === true || String(profile.role || '').toLowerCase() === 'instructor')) {
-    return true;
-  }
-
-  if (!Apps || !checkEmail) return false;
-
-  if (typeof Apps.isApprovedInstructor === 'function' && Apps.isApprovedInstructor(checkEmail)) {
-    return true;
-  }
-
-  if (
-    typeof Apps.getInstructorApprovedFlag === 'function' &&
-    Apps.getInstructorApprovedFlag() &&
-    typeof Apps.getApprovedInstructorEmail === 'function'
-  ) {
-    return normalizeEmail(Apps.getApprovedInstructorEmail()) === checkEmail;
-  }
-
-  return false;
+function isInstructorUser(profile, _email) {
+  return !!(profile && String(profile.role || '').toLowerCase() === 'instructor');
 }
 
 function resolveMenuEmail(user, profile) {
@@ -1317,38 +1335,39 @@ function guestMenuHtml() {
   );
 }
 
+function dashboardRole(profile) {
+  var role = profile && profile.role ? String(profile.role).toLowerCase() : 'student';
+  if (role !== 'admin' && role !== 'instructor') return 'student';
+  return role;
+}
+
 function userMenuHtml(options) {
   var fullName = escapeHtml(options.fullName || 'مستخدم');
   var email = escapeHtml(options.email || '');
-  var showDashboards = options.showDashboards === true;
+  var userRole = dashboardRole(options.profile);
+  var adminBtnHtml = userRole === 'admin'
+    ? '<a href="admin.html" id="admin-dashboard" class="user-menu__item user-menu__item--admin" role="menuitem" data-admin-only>لوحة الإدارة</a>'
+    : '';
+  var instructorBtnHtml = userRole === 'instructor'
+    ? '<a href="instructor.html" id="instructor-dashboard" class="user-menu__item user-menu__item--instructor" role="menuitem">لوحة المدرب</a>'
+    : '';
   var avatar =
     options.avatarHtml ||
     '<span class="user-menu__avatar" aria-hidden="true">' +
       escapeHtml((options.fullName || 'م').charAt(0)) +
       '</span>';
 
-  var instructor = isInstructorUser(options.profile, options.email);
-
   var menuClasses = 'user-menu';
-  if (instructor) menuClasses += ' is-instructor';
-  if (showDashboards) menuClasses += ' is-admin';
-  if (shouldBypassAccessControl()) menuClasses += ' is-file-local is-local-dev';
+  if (userRole === 'instructor') menuClasses += ' is-instructor';
+  if (userRole === 'admin') menuClasses += ' is-admin';
 
-  var instructorItem = instructor
-    ? '<a href="instructor.html" id="instructor-dashboard" class="user-menu__item" role="menuitem" style="display: flex !important;">لوحة المدرب</a>'
-    : '';
-
-  var adminItem = showDashboards
-    ? '<a href="admin.html" id="admin-dashboard" class="user-menu__item user-menu__item--admin" role="menuitem" data-admin-only>لوحة الإدارة</a>'
-    : '';
-
-  var joinItem = instructor
+  var joinItem = userRole === 'instructor'
     ? ''
     : '<a href="#" class="user-menu__item user-menu__item--join" role="menuitem" data-join-instructor>' +
       'انضم إلينا كمدرب' +
       '</a>';
 
-  var midItems = instructorItem + adminItem + joinItem;
+  var midItems = instructorBtnHtml + adminBtnHtml + joinItem;
 
   return (
     '<div class="' +
@@ -1440,8 +1459,28 @@ function resolveActiveIdentity() {
   return { user: null, profile: null, source: 'none' };
 }
 
+function authLoadingHtml() {
+  return (
+    '<span class="auth-slot__loading" role="status" aria-live="polite" aria-busy="true" aria-label="جار التحقق من الجلسة" ' +
+    'style="display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.35);border-top-color:#00a8ff;border-radius:50%;animation:ifa-auth-spin .7s linear infinite"></span>'
+  );
+}
+
+function ensureAuthSpinStyle() {
+  if (document.getElementById('ifa-auth-spin-style')) return;
+  var style = document.createElement('style');
+  style.id = 'ifa-auth-spin-style';
+  style.textContent = '@keyframes ifa-auth-spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+}
+
 function renderAuthSlot(slot) {
   if (!slot) return;
+  if (!authInitialized) {
+    ensureAuthSpinStyle();
+    slot.innerHTML = authLoadingHtml();
+    return;
+  }
   var variant = slotVariant(slot);
   var identity = resolveActiveIdentity();
   slot.innerHTML = identity.user
@@ -1540,6 +1579,60 @@ function simulateLocalLogin() {
   loginLocalSession({ email: email });
 }
 
+var POST_LOGIN_ROUTE_KEY = 'ifa_pending_role_route';
+
+function markPendingRoleRoute() {
+  try {
+    sessionStorage.setItem(POST_LOGIN_ROUTE_KEY, '1');
+  } catch (err) {
+    /* ignore */
+  }
+}
+
+function consumePendingRoleRoute() {
+  try {
+    var pending = sessionStorage.getItem(POST_LOGIN_ROUTE_KEY) === '1';
+    if (pending) sessionStorage.removeItem(POST_LOGIN_ROUTE_KEY);
+    return pending;
+  } catch (err) {
+    return false;
+  }
+}
+
+function dashboardPathForRole(role, profile) {
+  var resolved = String(role || (profile && profile.role) || '').toLowerCase();
+  if (resolved === 'admin' || (profile && profile.isAdmin === true)) return 'admin.html';
+  if (
+    resolved === 'instructor' ||
+    (profile && (profile.isInstructor === true || String(profile.role || '').toLowerCase() === 'instructor'))
+  ) {
+    return 'instructor.html';
+  }
+  return 'index.html';
+}
+
+function currentPageName() {
+  try {
+    var path = String(window.location.pathname || '');
+    var name = path.split('/').pop() || 'index.html';
+    return name || 'index.html';
+  } catch (err) {
+    return 'index.html';
+  }
+}
+
+/** After a fresh login, leave the current page only once the Firestore role is known. */
+function routeToRoleDashboard(role, profile) {
+  if (!consumePendingRoleRoute()) return false;
+  var target = dashboardPathForRole(role, profile);
+  var page = currentPageName();
+  var alreadyThere =
+    page === target || (target === 'index.html' && (page === '' || page === 'index.html'));
+  if (alreadyThere) return false;
+  window.location.replace(target);
+  return true;
+}
+
 export async function loginWithEmailPassword(email, password) {
   var key = normalizeEmail(email);
   if (!key || key.indexOf('@') === -1) {
@@ -1549,7 +1642,8 @@ export async function loginWithEmailPassword(email, password) {
     throw new Error('كلمة المرور يجب أن تكون 6 أحرف على الأقل.');
   }
   var result = await signInWithEmailAndPassword(auth, key, String(password));
-  closeAuthModal();
+  markPendingRoleRoute();
+  finishSuccessfulLogin(result.user);
   return result.user;
 }
 
@@ -1575,6 +1669,7 @@ export async function signUpWithEmailPassword(email, password, fullName) {
   var profileOptions = await buildTrialProfileOptionsForSignUp();
   profileOptions.displayName = name;
   await createUserProfileOnSignUp(result.user, profileOptions);
+  markPendingRoleRoute();
   closeAuthModal();
   return result.user;
 }
@@ -1605,6 +1700,66 @@ async function handleAuthModalSubmit() {
   }
 }
 
+function renderProfileActionList(profile) {
+  var list = document.getElementById('profileActionList');
+  if (!list) return;
+  var userRole = profile ? dashboardRole(profile) : 'student';
+  var adminBtnHtml = userRole === 'admin'
+    ? '<a class="profile-list__item" href="admin.html">لوحة الإدارة</a>'
+    : '';
+  var instructorBtnHtml = userRole === 'instructor'
+    ? '<a class="profile-list__item" href="instructor.html">لوحة المدرب</a>'
+    : '';
+  list.innerHTML =
+    instructorBtnHtml +
+    adminBtnHtml +
+    '<button type="button" class="profile-list__logout" data-auth-logout style="text-align: center; justify-content: center; display: flex; width: 100%;">تسجيل خروج</button>';
+}
+
+function renderLoggedOutShell() {
+  authInitialized = true;
+  lastUser = null;
+  lastProfile = null;
+  clearLocalAuthUser();
+  closeUserMenuDropdown();
+  closeAuthModal();
+  setAuthModalMode('login');
+  renderProfileActionList(null);
+  slots.forEach(function (slot) {
+    slot.innerHTML = loggedOutHtml(slotVariant(slot));
+  });
+  if (typeof window.switchView === 'function') {
+    window.switchView('view-auth-required');
+  }
+}
+
+function finishSuccessfulLogin(user) {
+  authInitialized = true;
+  if (user) {
+    lastUser = user;
+    var existing = getLocalAuthUser();
+    var sameUser = existing && normalizeEmail(existing.email) === normalizeEmail(user.email || '');
+    if (!sameUser) {
+      setLocalAuthUser({
+        name: user.displayName || '',
+        email: user.email || '',
+        photoURL: user.photoURL || '',
+        role: 'user',
+        isAdmin: false,
+        isInstructor: false,
+      });
+    }
+  }
+  closeAuthModal();
+  alert('تم تسجيل الدخول بنجاح');
+  refreshSlots();
+  openUserMenuDropdown();
+  var authView = document.getElementById('view-auth-required');
+  if (authView && authView.classList.contains('active') && typeof window.switchView === 'function') {
+    window.switchView('view-profile');
+  }
+}
+
 function isPopupCancellationError(err) {
   var code = err && err.code ? String(err.code) : '';
   return (
@@ -1614,13 +1769,43 @@ function isPopupCancellationError(err) {
   );
 }
 
+function isMissingInitialStateError(err) {
+  var code = err && err.code ? String(err.code) : '';
+  var message = err && err.message ? String(err.message) : '';
+  return code === 'auth/missing-initial-state' || message.indexOf('missing initial state') !== -1;
+}
+
+async function loginWithGoogleNative() {
+  var googleUser = await signInWithNativeGoogle();
+  var authentication = (googleUser && googleUser.authentication) || {};
+  var idToken = authentication.idToken || (googleUser && googleUser.idToken) || '';
+  if (!idToken) {
+    var missing = new Error('Google sign-in did not return an id token');
+    missing.code = 'auth/missing-initial-state';
+    throw missing;
+  }
+  var credential = GoogleAuthProvider.credential(idToken);
+  await signInWithCredential(auth, credential);
+}
+
 export async function loginWithGoogle() {
   setAuthModalError('');
   try {
-    await signInWithPopup(auth, provider);
-    closeAuthModal();
+    markPendingRoleRoute();
+    if (isNativeAppShell()) {
+      await loginWithGoogleNative();
+    } else {
+      await signInWithPopup(auth, provider);
+    }
+    finishSuccessfulLogin(auth.currentUser);
   } catch (err) {
     if (isPopupCancellationError(err)) {
+      consumePendingRoleRoute();
+      return;
+    }
+    var message = err && err.message ? String(err.message) : '';
+    if (message.indexOf('canceled') !== -1 || message.indexOf('cancelled') !== -1) {
+      consumePendingRoleRoute();
       return;
     }
     console.error('[Auth] Google login error:', err);
@@ -1643,9 +1828,9 @@ function startUserDocListener(uid) {
   userDocUnsub = onSnapshot(doc(db, 'users', uid), function (snap) {
     if (!snap.exists()) return;
     var data = snap.data() || {};
-    if (data.isInstructor !== true) return;
+    var nextRole = String(data.role || '').toLowerCase();
+    if (nextRole !== 'admin' && nextRole !== 'instructor') return;
     var local = getLocalAuthUser() || {};
-    var nextRole = data.role === 'admin' ? 'admin' : 'instructor';
     if (!lastProfile || typeof lastProfile !== 'object') lastProfile = {};
     lastProfile.isInstructor = true;
     lastProfile.role = nextRole;
@@ -1668,19 +1853,19 @@ export async function logoutUser() {
   closeAuthModal();
   stopUserDocListener();
   stopPlatformNotifications();
+  var signedOut = false;
   try {
     if (auth.currentUser) {
       await signOut(auth);
+      signedOut = true;
     }
   } catch (err) {
     console.error('[Auth] Sign-out failed:', err);
   }
-  clearLocalAuthUser();
-  lastUser = null;
-  lastProfile = null;
-  refreshSlots();
   notifyLocalAuthChanged({ type: 'logout' });
   notifyAuthChange(null, { profileSynced: true });
+  if (signedOut) alert('تم تسجيل الخروج بنجاح');
+  renderLoggedOutShell();
 }
 
 function bindAuthClicks() {
@@ -1769,34 +1954,21 @@ function dispatchSubscriptionChanged(user, orderEntitlements, email) {
   }
 }
 
-function resolveSessionRoleFromProfileAndLocal(profile, user, email) {
-  var firestoreRole = String((profile && profile.role) || 'user');
-  var sessionEmail = normalizeEmail(email || (user && user.email) || '');
-  var local = getLocalAuthUser();
-  if (
-    local &&
-    sessionEmail &&
-    normalizeEmail(local.email) === sessionEmail &&
-    (isAdminUser({ role: local.role }) || local.isAdmin === true) &&
-    !isAdminUser(profile)
-  ) {
-    return applyOwnerAdminSessionRole(sessionEmail, 'admin');
-  }
-  return applyOwnerAdminSessionRole(sessionEmail, firestoreRole);
+function resolveSessionRoleFromProfileAndLocal(profile, _user, _email) {
+  return String((profile && profile.role) || 'user').toLowerCase();
 }
 
 function applySessionFromProfileAndEntitlements(user, profile, orderEntitlements, email, isNewProfile) {
   var sessionEmail = normalizeEmail(email || (user && user.email) || '');
-  var role = applyOwnerAdminSessionRole(
-    sessionEmail,
-    resolveSessionRoleFromProfileAndLocal(profile, user, email)
-  );
+  var role = resolveSessionRoleFromProfileAndLocal(profile, user, email);
   var profileForSession =
     profile && typeof profile === 'object'
       ? Object.assign({}, profile, { role: role, email: sessionEmail || profile.email })
       : { role: role, email: sessionEmail };
 
   lastProfile = profileForSession;
+
+  if (routeToRoleDashboard(role, profileForSession)) return;
 
   setLocalAuthUser(
     {
@@ -1925,6 +2097,14 @@ function runBackgroundProfileAndEntitlementsSync(user) {
         }
       }
       fallbackRole = applyOwnerAdminSessionRole(user.email || email, fallbackRole);
+      if (
+        routeToRoleDashboard(fallbackRole, {
+          role: fallbackRole,
+          isInstructor: !!(localMatchesSession && local && local.isInstructor),
+        })
+      ) {
+        return;
+      }
       lastProfile = {
         uid: user.uid,
         email: user.email || email,
@@ -1941,38 +2121,37 @@ function runBackgroundProfileAndEntitlementsSync(user) {
     });
 }
 
-function completeGoogleRedirectSignIn() {
-  getRedirectResult(auth)
-    .then(function (result) {
-      if (result && result.user) {
-        closeAuthModal();
-      }
-    })
-    .catch(function (err) {
-      if (!err || !err.code) return;
-      if (isPopupCancellationError(err)) return;
-      setAuthModalError(formatAuthError(err));
-      console.warn('[Auth] Google redirect result failed', err);
-    });
-}
-
 function initAuthUI() {
   getOrCreateDeviceUuid();
   ensureAuthModal();
-  completeGoogleRedirectSignIn();
   bindAuthClicks();
   slots = Array.prototype.slice.call(document.querySelectorAll('[data-auth-slot]'));
 
+  /* Public/native builds must not paint a seeded admin from localStorage.
+     Firebase onAuthStateChanged restores a real session after this. */
+  if (!shouldBypassAccessControl()) {
+    clearLocalAuthUser();
+  }
+
+  if (isNativeAppShell()) {
+    initializeNativeGoogleAuth();
+  }
+
   refreshSlots = function () {
+    if (!authInitialized) {
+      ensureAuthSpinStyle();
+      slots.forEach(function (slot) {
+        slot.innerHTML = authLoadingHtml();
+      });
+      return;
+    }
     if (window.InstructorApps && window.InstructorApps.absorbApprovalFromUrl) {
       window.InstructorApps.absorbApprovalFromUrl();
-    }
-    if (shouldBypassAccessControl()) {
-      ensureLocalDevSession();
     }
     slots.forEach(function (slot) {
       renderAuthSlot(slot);
     });
+    renderProfileActionList(lastProfile || getLocalAuthUser());
 
     var footerLink = document.getElementById('footerInstructorLink');
     if (footerLink) {
@@ -1990,10 +2169,6 @@ function initAuthUI() {
       }
     }
   };
-
-  if (shouldBypassAccessControl()) {
-    ensureLocalDevSession();
-  }
 
   refreshSlots();
 
@@ -2042,6 +2217,11 @@ function initAuthUI() {
   });
   window.addEventListener('ifa:settings-menu-mounted', wireStudentPushToggle);
 
+  setPersistence(auth, indexedDBLocalPersistence)
+    .catch(function (err) {
+      console.warn('[Auth] indexedDB persistence failed', err);
+    })
+    .then(function () {
   onAuthStateChanged(auth, function (user) {
     authInitialized = true;
     lastUser = user || null;
@@ -2049,11 +2229,7 @@ function initAuthUI() {
       lastProfile = null;
       profileSynced = true;
       stopPlatformNotifications();
-      if (shouldBypassAccessControl()) {
-        ensureLocalDevSession();
-      } else {
-        clearLocalAuthUser();
-      }
+      clearLocalAuthUser();
       refreshSlots();
       notifyLocalAuthChanged({ type: getLocalAuthUser() ? 'local-session' : 'logout' });
       notifyAuthChange(null, { profileSynced: true });
@@ -2084,6 +2260,7 @@ function initAuthUI() {
 
     runBackgroundProfileAndEntitlementsSync(user);
   });
+    });
 
   document.addEventListener('ifa:instructor-application-submitted', refreshSlots);
   document.addEventListener('ifa:instructor-status-changed', refreshSlots);

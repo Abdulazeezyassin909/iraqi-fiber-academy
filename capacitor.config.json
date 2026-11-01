@@ -1,5 +1,12 @@
 {
   "appId": "com.masar.almuhandis",
   "appName": "مسار المهندس 360",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "ضع_الـ_ID_الحقيقي_هنا",
+      "forceCodeForRefreshToken": true
+    }
+  }
 }

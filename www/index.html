@@ -11,6 +11,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="مسار المهندس">
+  <script type="importmap">
+  {
+    "imports": {
+      "@capacitor/core": "./js/vendor/capacitor-core.js",
+      "@codetrix-studio/capacitor-google-auth": "./js/vendor/capacitor-google-auth/index.js"
+    }
+  }
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -424,9 +432,7 @@
         <p class="profile-hero__email" id="profileEmail">abdulazizyassin909@gmail.com</p>
       </div>
     </div>
-    <div class="profile-list">
-      <a class="profile-list__item" href="instructor.html">لوحة المدرب</a>
-      <a class="profile-list__item" href="admin.html">لوحة الإدارة</a>
+    <div class="profile-list" id="profileActionList">
       <button type="button" class="profile-list__logout" data-auth-logout>تسجيل خروج</button>
     </div>
   </section>
@@ -560,7 +566,7 @@
   </div>
 
   <script src="js/ifa-toast.js?v=20261015a"></script>
-  <script src="js/env-access.js?v=20260921"></script>
+  <script src="js/env-access.js?v=20261030a"></script>
   <script src="js/platform-simulators.js?v=20260921"></script>
   <script src="js/platform-simulator-showcase.js?v=20260921"></script>
   <script src="js/platform-simulators-public.js?v=20260921"></script>
@@ -738,8 +744,8 @@
         var localDev = isLocalDev();
         var liveDomain = isLiveDomain();
 
-        /* Guests: hide privileged dashboards — except local-dev bypass */
-        if (guest && !localDev) {
+        /* Guests never see dashboard links, including on a local-dev bypass. */
+        if (guest) {
           menu.classList.remove('is-admin', 'is-instructor', 'is-file-local', 'is-local-dev');
           menu.querySelectorAll(
             '.user-menu__item--admin, [data-admin-only], .user-menu__item--instructor'
@@ -749,9 +755,10 @@
           return;
         }
 
-        /* local dev bypass, or Firestore RBAC role === admin */
-        var admin = localDev || isAdminSession();
-        var instructor = localDev || isAdminSession() || isAuthorizedInstructor(email);
+        /* Dashboards follow Firestore role only. Students and unknown roles see neither link. */
+        var sessionRole = String(readSessionRole() || '').toLowerCase();
+        var admin = sessionRole === 'admin';
+        var instructor = sessionRole === 'instructor';
 
         menu.classList.toggle('is-file-local', localDev);
         menu.classList.toggle('is-local-dev', localDev);
@@ -761,65 +768,11 @@
         menu.classList.toggle('is-instructor', instructor);
 
         menu.querySelectorAll('.user-menu__item--admin, [data-admin-only]').forEach(function (el) {
-          if (!admin) {
-            el.remove();
-          } else {
-            el.style.setProperty('display', 'flex', 'important');
-            el.setAttribute('aria-hidden', 'false');
-          }
+          if (!admin) el.remove();
         });
         menu.querySelectorAll('.user-menu__item--instructor').forEach(function (el) {
-          if (!instructor) {
-            el.remove();
-          } else {
-            el.style.setProperty('display', 'flex', 'important');
-            el.setAttribute('aria-hidden', 'false');
-          }
+          if (!instructor) el.remove();
         });
-
-        function insertMenuItem(el, beforeSelector) {
-          var drop = menu.querySelector('#userMenuDropdown, .user-menu__dropdown');
-          var before = beforeSelector ? menu.querySelector(beforeSelector) : null;
-          if (before && before.parentNode) {
-            before.parentNode.insertBefore(el, before);
-            return;
-          }
-          if (drop) drop.appendChild(el);
-        }
-
-        if (instructor && !menu.querySelector('.user-menu__item--instructor')) {
-          var item = document.createElement('a');
-          item.href = 'instructor.html';
-          item.id = 'instructor-dashboard';
-          item.className = 'user-menu__item user-menu__item--instructor';
-          item.setAttribute('role', 'menuitem');
-          item.textContent = 'لوحة المدرب';
-          item.style.setProperty('display', 'flex', 'important');
-          insertMenuItem(
-            item,
-            '[data-join-instructor], .user-menu__item--join, [data-auth-logout], .user-menu__item--logout'
-          );
-        }
-
-        if (admin && !menu.querySelector('.user-menu__item--admin, [data-admin-only]')) {
-          var adminItem = document.createElement('a');
-          adminItem.href = 'admin.html';
-          adminItem.id = 'admin-dashboard';
-          adminItem.className = 'user-menu__item user-menu__item--admin';
-          adminItem.setAttribute('role', 'menuitem');
-          adminItem.setAttribute('data-admin-only', '');
-          adminItem.textContent = 'لوحة الإدارة';
-          adminItem.style.setProperty('display', 'flex', 'important');
-          var afterInst = menu.querySelector('.user-menu__item--instructor');
-          if (afterInst && afterInst.parentNode) {
-            afterInst.parentNode.insertBefore(adminItem, afterInst.nextSibling);
-          } else {
-            insertMenuItem(
-              adminItem,
-              '[data-join-instructor], .user-menu__item--join, [data-auth-logout], .user-menu__item--logout'
-            );
-          }
-        }
       }
 
       window.applyRoleMenuVisibility = applyRoleMenuVisibility;
@@ -941,7 +894,7 @@
   <script src="js/main.js?v=20261014d"></script>
   <script src="js/platform-notifications.js?v=20260921"></script>
   <script type="module" src="js/platform-notifications-firestore-sync.js?v=20260921"></script>
-  <script src="js/auth-manager.js?v=20261014b" type="module"></script>
+  <script src="js/auth-manager.js?v=20261030a" type="module"></script>
   <script src="js/capacitor-back.js?v=20261029q"></script>
   <nav class="mobile-only mobile-bottom-nav" aria-label="التنقل السفلي">
     <a class="nav-item mobile-bottom-nav__item is-active" href="#view-home" data-view="home">
@@ -962,6 +915,6 @@
       <span>الملف الشخصي</span>
     </a>
   </nav>
-  <script src="js/app.js?v=20261029b"></script>
+  <script src="js/app.js?v=20261030b"></script>
 </body>
 </html>
