@@ -906,6 +906,7 @@ function clearTrialGrantAttemptedFlags() {
 function clearLocalAuthUser() {
   try {
     localStorage.removeItem(LOCAL_AUTH_KEY);
+    localStorage.removeItem('cachedUserProfile');
   } catch (err) {
     /* ignore */
   }
@@ -1263,9 +1264,14 @@ function canShowSimulatorAdminSettingsUI() {
 }
 
 function isInstructorUser(profile, _email) {
-  if (!profile) return false;
-  if (String(profile.role || '').toLowerCase() === 'instructor') return true;
-  return profile.isInstructor === true;
+  if (profile) {
+    if (String(profile.role || '').toLowerCase() === 'instructor') return true;
+    if (profile.isInstructor === true) return true;
+  }
+  if (typeof window.getSynchronousUserRole === 'function' && getLocalAuthUser()) {
+    return String(window.getSynchronousUserRole() || '').toLowerCase() === 'instructor';
+  }
+  return false;
 }
 
 function resolveMenuEmail(user, profile) {
@@ -1337,8 +1343,22 @@ function guestMenuHtml() {
   );
 }
 
+window.getSynchronousUserRole = function () {
+  if (window.currentUserProfile && window.currentUserProfile.role) return window.currentUserProfile.role;
+  try {
+    var cached = JSON.parse(localStorage.getItem('cachedUserProfile') || '{}');
+    return cached.role || 'student';
+  } catch (e) {
+    return 'student';
+  }
+};
+
 function dashboardRole(profile) {
-  var role = profile && profile.role ? String(profile.role).toLowerCase() : 'student';
+  var role = profile && profile.role ? String(profile.role).toLowerCase() : '';
+  var signedIn = !!(profile && (profile.email || profile.uid || profile.role)) || !!getLocalAuthUser();
+  if (signedIn && role !== 'admin' && role !== 'instructor' && typeof window.getSynchronousUserRole === 'function') {
+    role = String(window.getSynchronousUserRole() || '').toLowerCase();
+  }
   if (role === 'admin' || role === 'instructor') return role;
   if (profile && profile.isInstructor === true) return 'instructor';
   return 'student';
@@ -1842,6 +1862,11 @@ function startUserDocListener(uid) {
       isInstructor: nextRole === 'instructor' || data.isInstructor === true,
       isAdmin: nextRole === 'admin',
     });
+    try {
+      localStorage.setItem('cachedUserProfile', JSON.stringify(window.currentUserProfile));
+    } catch (cacheErr) {
+      /* ignore */
+    }
     setLocalAuthUser(
       Object.assign({}, local, {
         isInstructor: true,
@@ -1975,6 +2000,12 @@ function applySessionFromProfileAndEntitlements(user, profile, orderEntitlements
       : { role: role, email: sessionEmail };
 
   lastProfile = profileForSession;
+  window.currentUserProfile = profileForSession;
+  try {
+    localStorage.setItem('cachedUserProfile', JSON.stringify(profileForSession));
+  } catch (cacheErr) {
+    /* ignore quota or non-serializable fields */
+  }
 
   if (routeToRoleDashboard(role, profileForSession)) return;
 

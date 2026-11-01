@@ -354,6 +354,14 @@ function readStaffRole(profile, localUser) {
 }
 
 async function evaluateAccess(user) {
+  var syncRole = (typeof window.getSynchronousUserRole === 'function')
+    ? String(window.getSynchronousUserRole() || '').toLowerCase()
+    : '';
+  if (syncRole === 'admin' || syncRole === 'instructor') {
+    grantSimulatorAccess(currentSimulatorIdFromPage());
+    return;
+  }
+
   var localUser = getLocalAuthSnapshot();
   var profile = window.currentUserProfile || null;
   var userRole = readStaffRole(profile, localUser);
