@@ -11,6 +11,7 @@
   var articlesLiveBound = false;
   var faqBinView = false;
   var tstBinView = false;
+  var tstReviewFilter = 'published';
   var editingFaqId = null;
   var faqToggleInFlight = false;
   var editingTestimonialId = null;
@@ -113,6 +114,9 @@
   function statusBadge(status) {
     if (status === 'trash') {
       return '<span class="cms-status cms-status--trash">مهمل</span>';
+    }
+    if (status === 'pending') {
+      return '<span class="cms-status cms-status--draft">قيد المراجعة</span>';
     }
     return status === 'draft'
       ? '<span class="cms-status cms-status--draft">مسودة</span>'
@@ -944,6 +948,84 @@
     whatsapp: 'WhatsApp',
   };
 
+  var footerQuills = {};
+  var footerPagesState = { contact: '', privacy: '', terms: '' };
+  var footerEditorDirty = false;
+
+  var FOOTER_EDITOR_KEYS = {
+    cmsFooterContactEditor: 'contact',
+    cmsFooterPrivacyEditor: 'privacy',
+    cmsFooterTermsEditor: 'terms',
+  };
+
+  var DEFAULT_FOOTER_PAGE_HTML = {
+    contact:
+      '<p>نحن هنا لمساعدتك! لا تتردد في التواصل معنا عبر القنوات التالية للإجابة على أي استفسار:</p><p>البريد الإلكتروني الأول: <a href="mailto:your-email@gmail.com">your-email@gmail.com</a></p><p>البريد الإلكتروني الثاني: <a href="mailto:friend-email@gmail.com">friend-email@gmail.com</a></p><p>واتساب: <a href="https://wa.me/964XXXXXXXX" target="_blank">+964XXXXXXXX</a></p>',
+    privacy:
+      '<h2>مقدمة</h2><p>أهلاً بك في منصتنا. نحن نأخذ خصوصيتك بجدية تامة، ونهدف من خلال هذه السياسة إلى توضيح كيفية تعاملنا مع بياناتك الشخصية بشفافية.</p><h2>جمع البيانات واستخدامها</h2><p>نقوم بجمع معلوماتك الأساسية فقط (مثل الاسم والبريد الإلكتروني) عند التسجيل. الغرض من ذلك هو إنشاء حسابك الشخصي، توثيق عمليات الشراء، وحفظ تقدمك في الكورسات التي تشترك بها.</p><h2>حماية البيانات</h2><p>جميع بياناتك الشخصية ومعلومات المرور الخاصة بك مشفرة ومحفوظة في خوادم آمنة. نحن نلتزم التزاماً كاملاً بعدم بيع، تأجير، أو مشاركة معلوماتك مع أي جهات خارجية أو أطراف ثالثة.</p><h2>التواصل والإشعارات</h2><p>قد نستخدم بريدك الإلكتروني لإرسال تحديثات هامة تخص الكورسات أو تغييرات في سياسات المنصة.</p>',
+    terms:
+      '<h2>المقدمة</h2><p>باستخدامك لهذه المنصة كطالب أو مدرب، فإنك توافق على الالتزام بالشروط والأحكام التالية.</p><h2>حقوق الملكية الفكرية (يُمنع التسريب)</h2><p>جميع الكورسات والمواد التعليمية المتوفرة في المنصة محمية بحقوق الطبع والنشر. يُمنع منعاً باتاً تسجيل الفيديوهات بالشاشة، أو تحميلها بطرق غير مشروعة، أو تسريبها ونشرها في أي مكان آخر. أي مخالفة لهذا البند تؤدي إلى الحظر النهائي للحساب والملاحقة القانونية.</p><h2>حساب المستخدم</h2><p>أنت مسؤول مسؤولية كاملة عن الحفاظ على سرية بيانات تسجيل الدخول الخاصة بك. يُمنع مشاركة الحساب الواحد مع أكثر من شخص؛ الحساب مخصص لاستخدام فردي فقط.</p><h2>التزامات المدربين</h2><p>يلتزم المدرب بتقديم محتوى تعليمي أصلي واحترافي من إعداده الخاص. يُمنع رفع أي محتوى مسروق من مدربين آخرين أو منصات أخرى، ويتحمل المدرب المسؤولية القانونية الكاملة عن أي انتهاك لحقوق الملكية.</p><h2>سياسة الدفع والاسترجاع</h2><p>بمجرد إتمام عملية شراء الكورس وفتحه للمشاهدة، لا يمكن المطالبة باسترجاع المبلغ المالي، إلا في حال وجود خلل فني من طرف المنصة يمنعك تماماً من الوصول للمحتوى.</p>',
+  };
+
+  var PREVIOUS_FOOTER_PAGE_HTML = {
+    privacy:
+      '<p>أهلاً بك في منصتنا. نحن نأخذ خصوصيتك بجدية تامة، ونهدف من خلال هذه السياسة إلى توضيح كيفية تعاملنا مع بياناتك الشخصية بشفافية.</p><h4>جمع البيانات واستخدامها:</h4><p>نقوم بجمع معلوماتك الأساسية فقط (مثل الاسم والبريد الإلكتروني) عند التسجيل. الغرض من ذلك هو إنشاء حسابك الشخصي، توثيق عمليات الشراء، وحفظ تقدمك في الكورسات التي تشترك بها.</p><h4>حماية البيانات:</h4><p>جميع بياناتك الشخصية ومعلومات المرور الخاصة بك مشفرة ومحفوظة في خوادم آمنة. نحن نلتزم التزاماً كاملاً بعدم بيع، تأجير، أو مشاركة معلوماتك مع أي جهات خارجية أو أطراف ثالثة.</p>',
+    terms:
+      '<p>باستخدامك لهذه المنصة كطالب أو مدرب، فإنك توافق على الالتزام بالشروط والأحكام التالية:</p><h4>حقوق الملكية الفكرية (يُمنع التسريب):</h4><p>جميع الكورسات والمواد التعليمية المتوفرة في المنصة محمية بحقوق الطبع والنشر. يُمنع منعاً باتاً تسجيل الفيديوهات بالشاشة، أو تحميلها بطرق غير مشروعة، أو تسريبها ونشرها في أي مكان آخر.</p><h4>حساب المستخدم:</h4><p>أنت مسؤول مسؤولية كاملة عن الحفاظ على سرية بيانات تسجيل الدخول الخاصة بك. يُمنع مشاركة الحساب الواحد مع أكثر من شخص.</p><h4>التزامات المدربين:</h4><p>يلتزم المدرب بتقديم محتوى تعليمي أصلي واحترافي من إعداده الخاص.</p>',
+  };
+
+  function footerPageInitialHtml(value, fallback, previous) {
+    var html = String(value == null ? '' : value)
+      .replace(/<p><br><\/p>/gi, '')
+      .replace(/<p>\s*<\/p>/gi, '')
+      .trim();
+    if (!html || (previous && String(value).trim() === previous)) return fallback;
+    return String(value);
+  }
+
+  function footerQuillHtml(id) {
+    var editor = footerQuills[id];
+    if (!editor) return '';
+    var html = editor.root.innerHTML || '';
+    return html === '<p><br></p>' ? '' : html;
+  }
+
+  function rememberFooterPage(id) {
+    var key = FOOTER_EDITOR_KEYS[id];
+    if (!key) return;
+    footerPagesState[key] = footerQuillHtml(id);
+  }
+
+  function ensureFooterQuill(id, html) {
+    var host = $(id);
+    if (!host || !window.Quill) return;
+    if (!footerQuills[id]) {
+      footerQuills[id] = new window.Quill(host, {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ header: [2, 3, 4, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['link'],
+            ['clean'],
+          ],
+        },
+      });
+      footerQuills[id].on('text-change', function (_delta, _old, source) {
+        if (source !== 'user') return;
+        footerEditorDirty = true;
+        rememberFooterPage(id);
+      });
+    }
+    if (footerEditorDirty) return;
+    var current = footerQuills[id].root.innerHTML;
+    var next = html || '';
+    if (current !== next && !(current === '<p><br></p>' && !next)) {
+      footerQuills[id].clipboard.dangerouslyPasteHTML(next || '<p><br></p>');
+    }
+    rememberFooterPage(id);
+  }
   function collectFooterDraftFromForm() {
     var social = {};
     if (window.PlatformFooter && window.PlatformFooter.SOCIAL_ORDER) {
@@ -963,6 +1045,17 @@
         color: $('cmsFooterDescColor') ? $('cmsFooterDescColor').value : '#94a3b8',
       },
       social: social,
+      links: {
+        helpCenter: $('cmsFooterHelpLink') ? $('cmsFooterHelpLink').value : '',
+        contact: 'contact.html',
+        privacy: 'privacy-policy.html',
+        terms: 'terms.html',
+      },
+      pages: {
+        contact: footerPagesState.contact || footerQuillHtml('cmsFooterContactEditor'),
+        privacy: footerPagesState.privacy || footerQuillHtml('cmsFooterPrivacyEditor'),
+        terms: footerPagesState.terms || footerQuillHtml('cmsFooterTermsEditor'),
+      },
     };
   }
 
@@ -1043,6 +1136,21 @@
     if ($('cmsFooterDescText')) $('cmsFooterDescText').value = settings.description.text;
     if ($('cmsFooterDescSize')) $('cmsFooterDescSize').value = String(settings.description.fontSize);
     if ($('cmsFooterDescColor')) $('cmsFooterDescColor').value = settings.description.color;
+    var links = settings.links || {};
+    if ($('cmsFooterHelpLink')) $('cmsFooterHelpLink').value = links.helpCenter || '';
+    var pages = settings.pages || {};
+    ensureFooterQuill(
+      'cmsFooterContactEditor',
+      footerPageInitialHtml(pages.contact, DEFAULT_FOOTER_PAGE_HTML.contact)
+    );
+    ensureFooterQuill(
+      'cmsFooterPrivacyEditor',
+      footerPageInitialHtml(pages.privacy, DEFAULT_FOOTER_PAGE_HTML.privacy, PREVIOUS_FOOTER_PAGE_HTML.privacy)
+    );
+    ensureFooterQuill(
+      'cmsFooterTermsEditor',
+      footerPageInitialHtml(pages.terms, DEFAULT_FOOTER_PAGE_HTML.terms, PREVIOUS_FOOTER_PAGE_HTML.terms)
+    );
     renderFooterSocialFields(settings);
     syncFooterLivePreview();
   }
@@ -1057,6 +1165,7 @@
       } else {
         await window.PlatformFooter.saveFooterSettings(draft);
       }
+      footerEditorDirty = false;
       loadFooterEditorForm();
       if (status) status.textContent = 'تم حفظ إعدادات التذييل في Firestore';
       toast('تم حفظ إعدادات التذييل');
@@ -2792,17 +2901,39 @@
     return avatar;
   }
 
+  function updatePendingTestimonialsBadge() {
+    var badge = document.getElementById('adminTestimonialsPendingBadge');
+    if (!badge || !window.PlatformTestimonials || typeof window.PlatformTestimonials.getTestimonials !== 'function') return;
+    var pending = window.PlatformTestimonials.getTestimonials().filter(function (item) {
+      return item.status === 'pending';
+    }).length;
+    if (!pending) {
+      badge.hidden = true;
+      badge.textContent = '';
+      return;
+    }
+    badge.hidden = false;
+    badge.textContent = pending > 99 ? '99+' : String(pending);
+  }
+
   function renderTestimonialsTable() {
+    updatePendingTestimonialsBadge();
     var body = $('cmsTestimonialsBody');
     if (!body || !window.PlatformTestimonials) return;
     updateTestimonialsBinToolbar();
     var list = tstBinView
       ? window.PlatformTestimonials.getTrashedTestimonials()
-      : window.PlatformTestimonials.getTestimonials();
+      : window.PlatformTestimonials.getTestimonials().filter(function (t) {
+          return tstReviewFilter === 'pending' ? t.status === 'pending' : t.status !== 'pending';
+        });
     if (!list.length) {
       body.innerHTML =
         '<tr><td colspan="5" class="admin-empty-cell">' +
-        (tstBinView ? 'سلة المهملات فارغة.' : 'لا توجد آراء.') +
+        (tstBinView
+          ? 'سلة المهملات فارغة.'
+          : tstReviewFilter === 'pending'
+            ? 'لا توجد آراء قيد المراجعة.'
+            : 'لا توجد آراء منشورة.') +
         '</td></tr>';
       return;
     }
@@ -2843,11 +2974,15 @@
           '</td><td>' +
           statusBadge(t.status) +
           '</td><td class="admin-table__actions">' +
-          '<button class="admin-btn admin-btn--ghost" type="button" data-tst-toggle="' +
-          escapeHtml(t.id) +
-          '">' +
-          (t.status === 'published' ? 'مسودة' : 'نشر') +
-          '</button>' +
+          (t.status === 'pending'
+            ? '<button class="admin-btn admin-btn--primary" type="button" data-tst-approve="' +
+              escapeHtml(t.id) +
+              '">موافقة / نشر</button>'
+            : '<button class="admin-btn admin-btn--ghost" type="button" data-tst-toggle="' +
+              escapeHtml(t.id) +
+              '">' +
+              (t.status === 'published' ? 'مسودة' : 'نشر') +
+              '</button>') +
           '<button class="admin-btn admin-btn--ghost" type="button" data-tst-edit="' +
           escapeHtml(t.id) +
           '">تعديل</button>' +
@@ -2941,6 +3076,20 @@
       else toast('تم حفظ الرأي');
     } catch (err) {
       toast((err && err.message) || 'تعذّر حفظ الرأي', true);
+    }
+  }
+
+  async function approveTestimonial(id) {
+    var key = String(id || '').trim();
+    var Firestore = window.PlatformTestimonialsFirestore;
+    if (!key || !Firestore || typeof Firestore.setTestimonialStatus !== 'function') return;
+    try {
+      await Firestore.setTestimonialStatus(key, 'published');
+      renderTestimonialsTable();
+      reloadSitePreview();
+      toast('تم نشر التقييم');
+    } catch (err) {
+      toast((err && err.message) || 'تعذّر نشر التقييم', true);
     }
   }
 
@@ -3264,6 +3413,18 @@
         renderTestimonialsTable();
         return;
       }
+      var tstFilter = e.target.closest ? e.target.closest('[data-tst-filter]') : null;
+      if (tstFilter) {
+        tstBinView = false;
+        tstReviewFilter = tstFilter.getAttribute('data-tst-filter') || 'published';
+        document.querySelectorAll('[data-tst-filter]').forEach(function (btn) {
+          btn.setAttribute('aria-pressed', btn === tstFilter ? 'true' : 'false');
+        });
+        var binBtn = document.querySelector('[data-tst-bin-toggle]');
+        if (binBtn) binBtn.setAttribute('aria-pressed', 'false');
+        renderTestimonialsTable();
+        return;
+      }
       if (e.target.closest && e.target.closest('[data-tst-restore-defaults]')) {
         restoreDefaultTestimonials();
         return;
@@ -3285,6 +3446,11 @@
       var tstToggle = e.target.closest ? e.target.closest('[data-tst-toggle]') : null;
       if (tstToggle) {
         toggleTestimonialStatus(tstToggle.getAttribute('data-tst-toggle'));
+        return;
+      }
+      var tstApprove = e.target.closest ? e.target.closest('[data-tst-approve]') : null;
+      if (tstApprove) {
+        approveTestimonial(tstApprove.getAttribute('data-tst-approve'));
         return;
       }
       var tstEdit = e.target.closest ? e.target.closest('[data-tst-edit]') : null;

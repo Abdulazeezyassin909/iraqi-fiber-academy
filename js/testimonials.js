@@ -32,10 +32,11 @@
   }
 
   function normalizeStatus(value) {
+    var s = String(value == null ? '' : value).trim().toLowerCase();
+    if (s === 'pending') return 'pending';
     if (global.CmsStatus && typeof global.CmsStatus.normalize === 'function') {
       return global.CmsStatus.normalize(value);
     }
-    var s = String(value == null ? '' : value).trim().toLowerCase();
     if (s === 'trash' || s === 'deleted') return 'trash';
     if (s === 'draft' || s === 'hidden') return 'draft';
     return 'published';
@@ -119,7 +120,8 @@
       text: String(t.text || '').trim(),
       rating: clampRating(t.rating),
       avatar: String(t.avatar || ''),
-      status: normalizeStatus(t.status),
+      uid: String(t.uid || '').trim(),
+    status: normalizeStatus(t.status),
       sortOrder: isFinite(Number(t.sortOrder)) ? Number(t.sortOrder) : 0,
     };
   }
@@ -154,6 +156,7 @@
   }
 
   function isPublishedStatus(status) {
+    if (normalizeStatus(status) === 'pending') return false;
     if (global.CmsStatus && typeof global.CmsStatus.isPublished === 'function') {
       return global.CmsStatus.isPublished(status);
     }
@@ -289,6 +292,136 @@
       global.reobserveAnimations(grid);
     }
     bindTestimonialModal(grid);
+    bindReviewComposer();
+  }
+
+  function loggedInUser() {
+    var Auth = global.IFAAuth;
+    if (!Auth || typeof Auth.isLoggedIn !== 'function' || !Auth.isLoggedIn()) return null;
+    var firebaseUser = Auth.auth && Auth.auth.currentUser;
+    if (firebaseUser && firebaseUser.uid) return firebaseUser;
+    return null;
+  }
+
+  function bindReviewComposer() {
+    var section = document.querySelector('.testimonials-section');
+    if (!section || section.dataset.reviewBound === '1') return;
+    section.dataset.reviewBound = '1';
+    var header = section.querySelector('.section__header');
+    if (!header) return;
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'testimonials__write';
+    button.textContent = 'اكتب رأيك';
+    button.hidden = !loggedInUser();
+    header.appendChild(button);
+    button.addEventListener('click', openReviewForm);
+    function syncButton() {
+      button.hidden = !loggedInUser();
+    }
+    global.addEventListener('ifa:auth-changed', syncButton);
+    global.setTimeout(syncButton, 600);
+  }
+
+  function openReviewForm() {
+    if (!loggedInUser()) return;
+    var modal = document.getElementById('reviewSubmitModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'reviewSubmitModal';
+      modal.className = 'testimonial-modal';
+      modal.innerHTML =
+        '<div class="testimonial-modal__backdrop" data-close-review></div>' +
+        '<form class="testimonial-modal__panel" role="dialog" aria-modal="true" aria-labelledby="reviewSubmitTitle">' +
+        '<button type="button" class="testimonial-modal__close" data-close-review aria-label="إغلاق">×</button>' +
+        '<h3 id="reviewSubmitTitle">اكتب رأيك</h3>' +
+        '<div class="review-stars" role="radiogroup" aria-label="التقييم">' +
+        [1, 2, 3, 4, 5]
+          .map(function (n) {
+            return (
+              '<button type="button" class="review-stars__btn" data-star="' +
+              n +
+              '" aria-label="' +
+              n +
+              ' من 5">☆</button>'
+            );
+          })
+          .join('') +
+        '</div>' +
+        '<label class="review-form__label" for="reviewRoleInput">الصفة / المسمى الوظيفي</label>' +
+        '<div class="review-role-chips">' +
+        ['طالب', 'مهندس ألياف ضوئية', 'فني FTTH', 'مستقل']
+          .map(function (label) {
+            return '<button type="button" class="review-role-chip" data-role-chip="' + label + '">' + label + '</button>';
+          })
+          .join('') +
+        '</div>' +
+        '<input id="reviewRoleInput" class="review-form__role" type="text" maxlength="80" placeholder="أدخل المسمى الوظيفي أو التخصص مثل: مهندس اتصالات، فني شبكات، طالب" />' +
+        '<textarea class="review-form__text" rows="5" maxlength="1000" required placeholder="اكتب تجربتك مع المنصة"></textarea>' +
+        '<p class="review-form__status" role="status"></p>' +
+        '<button class="review-form__submit" type="submit">إرسال التقييم</button>' +
+        '</form>';
+      document.body.appendChild(modal);
+      var rating = 0;
+      modal.addEventListener('click', function (event) {
+        if (event.target.closest('[data-close-review]')) modal.hidden = true;
+        var star = event.target.closest('[data-star]');
+        var chip = event.target.closest('[data-role-chip]');
+        if (chip) {
+          var roleInput = document.getElementById('reviewRoleInput');
+          if (roleInput) roleInput.value = chip.getAttribute('data-role-chip') || '';
+          modal.querySelectorAll('[data-role-chip]').forEach(function (btn) {
+            btn.classList.toggle('is-on', btn === chip);
+          });
+        }
+        if (star) {
+          rating = Number(star.getAttribute('data-star'));
+          modal.querySelectorAll('[data-star]').forEach(function (btn) {
+            var value = Number(btn.getAttribute('data-star'));
+            btn.textContent = value <= rating ? '★' : '☆';
+            btn.classList.toggle('is-on', value <= rating);
+          });
+        }
+      });
+      modal.querySelector('form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        var status = modal.querySelector('.review-form__status');
+        var text = modal.querySelector('textarea').value;
+        var api = global.PlatformTestimonialsFirestore;
+        if (!rating) {
+          status.textContent = 'اختر تقييماً من 1 إلى 5';
+          return;
+        }
+        if (!api || typeof api.submitStudentReview !== 'function') {
+          status.textContent = 'تعذّر الاتصال بقاعدة البيانات';
+          return;
+        }
+        try {
+          var roleInput = document.getElementById('reviewRoleInput');
+          await api.submitStudentReview({
+            text: text,
+            rating: rating,
+            role: roleInput ? roleInput.value : '',
+          });
+          status.textContent = 'تم إرسال التقييم للمراجعة وسيظهر بعد الموافقة عليه';
+          modal.querySelector('textarea').value = '';
+          if (roleInput) roleInput.value = '';
+          modal.querySelectorAll('[data-role-chip]').forEach(function (btn) {
+            btn.classList.remove('is-on');
+          });
+          rating = 0;
+          modal.querySelectorAll('[data-star]').forEach(function (btn) {
+            btn.textContent = '☆';
+            btn.classList.remove('is-on');
+          });
+        } catch (err) {
+          status.textContent = (err && err.message) || 'تعذّر إرسال التقييم';
+        }
+      });
+    }
+    var statusNode = modal.querySelector('.review-form__status');
+    if (statusNode) statusNode.textContent = '';
+    modal.hidden = false;
   }
 
   function bindTestimonialModal(grid) {

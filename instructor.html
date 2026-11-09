@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script src="js/shell-layout.js?v=20261106m"></script>
   <meta name="description" content="لوحة المدرب — Engineer Path °360 | منصة المسار المهني الهندسي">
   <title>لوحة المدرب | Engineer Path °360</title>
   <link rel="icon" type="image/png" href="images/logo.png" />
@@ -14,7 +15,8 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
+        navigator.serviceWorker.register('/sw.js?v=20261108push6').then(registration => {
+          registration.update();
           console.log('PWA ServiceWorker registered successfully');
         }).catch(err => {
           console.log('PWA ServiceWorker registration failed: ', err);
@@ -24,7 +26,7 @@
   </script>
   <link rel="stylesheet" href="css/style.css?v=20260921">
   <link rel="stylesheet" href="css/admin.css?v=20260921">
-  <link rel="stylesheet" href="css/instructor.css?v=20260921">
+  <link rel="stylesheet" href="css/instructor.css?v=20261109students">
 </head>
 <body class="inst-body">
 
@@ -45,7 +47,7 @@
         <a href="#overview" class="admin-nav__link active" data-inst-section="overview">نظرة عامة</a>
         <a href="#courses" class="admin-nav__link" data-inst-section="courses">كورساتي</a>
         <a href="#orders" class="admin-nav__link" data-inst-section="orders">طلبات الشراء</a>
-        <a href="#qa" class="admin-nav__link" data-inst-section="qa">أسئلة وتعليقات الطلاب</a>
+        <a href="#comments" class="admin-nav__link" data-inst-section="qa">أسئلة وتعليقات الطلاب</a>
         <a href="#analytics" class="admin-nav__link" data-inst-section="analytics">التقدم والإحصائيات</a>
         <a href="#profile" class="admin-nav__link" data-inst-section="profile">بياناتي الشخصية</a>
       </nav>
@@ -371,11 +373,12 @@
   <link rel="stylesheet" href="css/instructor-apply.css?v=20260921">
   <script src="js/ifa-toast.js?v=20261015a"></script>
   <script src="js/env-access.js?v=20260921"></script>
-  <script src="js/instructor-applications.js?v=20261014b"></script>
+  <script src="js/instructor-applications.js?v=20261108flt"></script>
   <script src="js/platform-courses.js?v=20260921"></script>
   <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
-  <script type="module" src="js/auth-manager.js?v=20261101b"></script>
+  <script type="module" src="js/auth-manager.js?v=20261109courses"></script>
   <script src="js/instructor-dashboard-data.js?v=20261014b"></script>
-  <script src="js/instructor-dashboard-ui.js?v=20261014b"></script>
+  <script type="module" src="js/lesson-comments.js?v=20261109comments"></script>
+  <script src="js/instructor-dashboard-ui.js?v=20261109students"></script>
 </body>
 </html>

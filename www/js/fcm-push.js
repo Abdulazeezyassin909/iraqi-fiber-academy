@@ -9,9 +9,10 @@ import { doc, setDoc, getDoc, serverTimestamp } from
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { onAuthStateChanged } from
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { subscribeSitePush } from './web-push-client.js?v=20261108push6';
 
 const VAPID_KEY =
-  'BPOrMOrbrd1Nf0DygkNi6jpyIrsvIgKKS-TL0K8rBRjCMbEf9n5vdXCrO_X2Nt8z8IvYz5DQDwvo4-WTtnwgdlw';
+  'BHdeQdsCa1fox1V3qtBCHWmeYVZDlwvxS6n5-qmc9bTWSns0r_ffytTVKLtJLE_hS6YwN0kywrATcmFRZ0hs0qU';
 
 let messagingInstance = null;
 let foregroundHandlerBound = false;
@@ -20,7 +21,8 @@ let profileResolver = function () {
 };
 
 function resolveRole(profile) {
-  if (profile && String(profile.role || '') === 'admin') return 'admin';
+  var role = profile && String(profile.role || '').toLowerCase();
+  if (role === 'admin' || role === 'instructor') return role;
   return 'user';
 }
 
@@ -52,7 +54,7 @@ async function ensureMessaging() {
 async function registerMessagingServiceWorker() {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    return await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    return await navigator.serviceWorker.register('/sw.js?v=20261108push6');
   } catch (err) {
     console.warn('[FCM] Service worker registration failed', err);
     return null;
@@ -152,13 +154,24 @@ export async function refreshFcmToken(profile) {
     return { ok: false, reason: 'permission_not_granted' };
   }
 
-  var messaging = await ensureMessaging();
-  if (!messaging) {
-    return { ok: false, reason: 'messaging_unsupported' };
+  var role = resolveRole(profile);
+  var registration = null;
+  try {
+    registration = await registerMessagingServiceWorker();
+  } catch (err) {
+    console.warn('[WebPush] service worker registration failed', err);
   }
 
-  await registerMessagingServiceWorker();
-  var registration = await navigator.serviceWorker.ready;
+  try {
+    await subscribeSitePush(user, role);
+  } catch (pushErr) {
+    console.warn('[WebPush] subscribe failed', pushErr);
+  }
+
+  var messaging = await ensureMessaging();
+  if (!messaging || !registration) {
+    return { ok: true, reason: 'site_push_only' };
+  }
 
   var token;
   try {
@@ -168,14 +181,12 @@ export async function refreshFcmToken(profile) {
     });
   } catch (err) {
     console.error('[FCM] getToken failed', err);
-    return { ok: false, reason: 'get_token_failed', error: err };
+    return { ok: true, reason: 'site_push_only' };
   }
 
   if (!token) {
-    return { ok: false, reason: 'empty_token' };
+    return { ok: true, reason: 'site_push_only' };
   }
-
-  var role = resolveRole(profile);
   await saveFcmToken(user.uid, token, role);
   bindForegroundHandler(messaging);
 
@@ -211,6 +222,7 @@ export function startFcmOnAuth(getProfile) {
   onAuthStateChanged(auth, function (user) {
     if (!user) return;
     maybeRefreshTokenSilently();
+    maybeOfferPushPermission();
   });
 
   window.addEventListener('ifa:local-auth-changed', function (e) {
@@ -219,6 +231,75 @@ export function startFcmOnAuth(getProfile) {
       maybeRefreshTokenSilently();
     }
   });
+}
+
+async function maybeOfferPushPermission() {
+  var user = auth.currentUser;
+  if (!user || typeof Notification === 'undefined') return;
+  if (Notification.permission !== 'default') return;
+  if (document.getElementById('ifaPushPrompt')) return;
+  try {
+    if (sessionStorage.getItem('ifa_push_prompt_dismissed') === '1') return;
+  } catch (err) {
+    /* ignore */
+  }
+
+  var overlay = document.createElement('div');
+  overlay.id = 'ifaPushPrompt';
+  overlay.className = 'ifa-push-prompt';
+  overlay.innerHTML =
+    '<div class="ifa-push-prompt__card" role="dialog" aria-modal="true">' +
+    '<h3 class="ifa-push-prompt__title">تفعيل إشعارات المتصفح</h3>' +
+    '<p class="ifa-push-prompt__body">اسمح بالإشعارات حتى تصلك التنبيهات خارج الموقع عند نشر كورس جديد.</p>' +
+    '<div class="ifa-push-prompt__actions">' +
+    '<button type="button" class="ifa-push-prompt__later" data-push-later>لاحقاً</button>' +
+    '<button type="button" class="ifa-push-prompt__allow" data-push-allow>السماح</button>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+
+  function dismiss() {
+    try {
+      sessionStorage.setItem('ifa_push_prompt_dismissed', '1');
+    } catch (err) {
+      /* ignore */
+    }
+    overlay.remove();
+  }
+
+  overlay.querySelector('[data-push-later]').addEventListener('click', dismiss);
+  overlay.querySelector('[data-push-allow]').addEventListener('click', async function () {
+    var result = await requestPushPermission();
+    if (!result.ok) {
+      dismiss();
+      return;
+    }
+    await setNotificationsEnabledPreference(user.uid, true);
+    await refreshFcmToken(profileResolver());
+    document.querySelectorAll('[data-settings-push-toggle]').forEach(function (el) {
+      el.checked = true;
+    });
+    dismiss();
+  });
+}
+
+function bindPushToggles() {
+  setupNotificationToggle('settingsPushNotificationsToggle');
+  setupNotificationToggle('settingsPushNotificationsToggleDrawer');
+}
+
+function isIosDevice() {
+  var ua = navigator.userAgent || '';
+  var iPadDesktop = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iPad|iPhone|iPod/.test(ua) || iPadDesktop;
+}
+
+function isStandalonePwa() {
+  return window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+}
+
+function needsIosHomeScreen() {
+  return isIosDevice() && !isStandalonePwa();
 }
 
 function ensureHintElement(toggleEl, elementId) {
@@ -247,13 +328,13 @@ function deniedHintText() {
   );
 }
 
-function showDeniedHint(hintEl) {
+function showIosHint(hintEl) {
   if (!hintEl) return;
-  hintEl.textContent = deniedHintText();
+  hintEl.textContent = 'لتفعيل الإشعارات على الآيفون، يرجى إضافة الموقع إلى الشاشة الرئيسية (Add to Home Screen) أولاً.';
   hintEl.hidden = false;
 }
 
-function hideDeniedHint(hintEl) {
+function hideIosHint(hintEl) {
   if (!hintEl) return;
   hintEl.hidden = true;
   hintEl.textContent = '';
@@ -272,7 +353,6 @@ export function setupNotificationToggle(elementId) {
     return;
   }
   toggleEl.dataset.fcmToggleBound = '1';
-
   var hintEl = ensureHintElement(toggleEl, elementId);
 
   async function syncUi() {
@@ -280,22 +360,28 @@ export function setupNotificationToggle(elementId) {
     if (!user) {
       toggleEl.checked = false;
       toggleEl.disabled = true;
-      hideDeniedHint(hintEl);
+      hideIosHint(hintEl);
       return;
     }
 
+    if (needsIosHomeScreen()) {
+      toggleEl.checked = false;
+      toggleEl.disabled = true;
+      showIosHint(hintEl);
+      return;
+    }
+
+    hideIosHint(hintEl);
     toggleEl.disabled = false;
     var pref = await getNotificationsEnabledPreference(user.uid);
     var perm = typeof Notification !== 'undefined' ? Notification.permission : 'denied';
 
     if (perm === 'denied') {
       toggleEl.checked = false;
-      showDeniedHint(hintEl);
       return;
     }
 
-    hideDeniedHint(hintEl);
-    toggleEl.checked = !!pref;
+    toggleEl.checked = perm === 'granted' && !!pref;
 
     if (perm === 'granted' && pref) {
       await maybeRefreshTokenSilently();
@@ -310,27 +396,23 @@ export function setupNotificationToggle(elementId) {
     }
 
     if (toggleEl.checked) {
-      var perm = typeof Notification !== 'undefined' ? Notification.permission : 'denied';
-
-      if (perm === 'denied') {
+      if (needsIosHomeScreen()) {
         toggleEl.checked = false;
-        showDeniedHint(hintEl);
+        toggleEl.disabled = true;
+        showIosHint(hintEl);
         return;
       }
-
-      if (perm === 'default') {
+      var perm = typeof Notification !== 'undefined' ? Notification.permission : 'denied';
+      if (perm !== 'granted') {
         var permResult = await requestPushPermission();
-        if (!permResult.ok) {
+        perm = typeof Notification !== 'undefined' ? Notification.permission : 'denied';
+        if (!permResult.ok || perm !== 'granted') {
           toggleEl.checked = false;
           await setNotificationsEnabledPreference(user.uid, false);
-          if (permResult.reason === 'denied') {
-            showDeniedHint(hintEl);
-          }
           return;
         }
       }
 
-      hideDeniedHint(hintEl);
       await setNotificationsEnabledPreference(user.uid, true);
       var profile = profileResolver();
       var result = await refreshFcmToken(profile);
@@ -342,7 +424,6 @@ export function setupNotificationToggle(elementId) {
       return;
     }
 
-    hideDeniedHint(hintEl);
     await setNotificationsEnabledPreference(user.uid, false);
   });
 
@@ -353,9 +434,12 @@ export function setupNotificationToggle(elementId) {
     if (!user) {
       toggleEl.checked = false;
       toggleEl.disabled = true;
-      hideDeniedHint(hintEl);
       return;
     }
     syncUi();
   });
 }
+
+window.IFAFcm = {
+  bindToggles: bindPushToggles,
+};

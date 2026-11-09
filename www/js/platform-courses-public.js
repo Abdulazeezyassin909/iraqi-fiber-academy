@@ -397,6 +397,12 @@
     document.addEventListener('ifa:pricing-firestore-changed', renderPublicCourses);
     window.addEventListener('ifa:pricing-firestore-changed', renderPublicCourses);
 
+    document.addEventListener('ifa:subscription-changed', refreshCourseAfterAccessSync);
+    window.addEventListener('ifa:subscription-changed', refreshCourseAfterAccessSync);
+    document.addEventListener('ifa:local-auth-changed', refreshCourseAfterAccessSync);
+    window.addEventListener('ifa:local-auth-changed', refreshCourseAfterAccessSync);
+    document.addEventListener('ifa:lesson-progress-changed', refreshCourseAfterAccessSync);
+    window.addEventListener('ifa:lesson-progress-changed', refreshCourseAfterAccessSync);
     document.addEventListener('ifa:platform-courses-changed', renderCourseDetailsPage);
     window.addEventListener('ifa:platform-courses-changed', renderCourseDetailsPage);
     document.addEventListener('ifa:courses-firestore-changed', renderCourseDetailsPage);
@@ -570,8 +576,20 @@
     return 'passed_' + courseId + '_' + lessonId;
   }
 
+  function readPassedTokens() {
+    try {
+      var raw = localStorage.getItem('ifa_passed_lessons');
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
   function isLessonPassed(course, lesson) {
     if (!course || !lesson) return false;
+    var token = String(course.id) + '::' + String(lesson.id);
+    if (readPassedTokens().indexOf(token) !== -1) return true;
     try {
       return localStorage.getItem(lessonPassedKey(course.id, lesson.id)) === 'true';
     } catch (err) {
@@ -581,11 +599,45 @@
 
   function markLessonPassed(course, lesson) {
     if (!course || !lesson) return;
+    var token = String(course.id) + '::' + String(lesson.id);
     try {
       localStorage.setItem(lessonPassedKey(course.id, lesson.id), 'true');
+      var list = readPassedTokens();
+      if (list.indexOf(token) === -1) {
+        list.push(token);
+        localStorage.setItem('ifa_passed_lessons', JSON.stringify(list));
+      }
     } catch (err) {
       /* ignore */
     }
+    if (window.IFALessonProgress && typeof window.IFALessonProgress.save === 'function') {
+      window.IFALessonProgress.save(course.id, lesson.id);
+    }
+  }
+
+  var lastCourseAccessSig = '';
+
+  function courseAccessSignature() {
+    var user = readAuthUser();
+    return [
+      user ? user.email : '',
+      user ? String(user.planId || '') : '',
+      user && Array.isArray(user.enrolledCourseIds) ? user.enrolledCourseIds.join(',') : '',
+      readPassedTokens().join(','),
+    ].join('|');
+  }
+
+  function refreshCourseAfterAccessSync() {
+    var root = document.getElementById('courseDetailsRoot');
+    if (!root) return;
+    var next = courseAccessSignature();
+    if (next === lastCourseAccessSig) return;
+    if (root.querySelector('.course-details__player') && !root.querySelector('.course-details__locked-panel')) {
+      lastCourseAccessSig = next;
+      return;
+    }
+    lastCourseAccessSig = next;
+    renderCourseDetailsPage();
   }
 
   function orderedCourseLessons(course) {
@@ -937,11 +989,14 @@
               encodeURIComponent(course.id) +
               '&lesson=' +
               encodeURIComponent(lesson.id);
-            var badge = free
+            var examLocked = subscribed && !canPlay;
+            var badge = free && canPlay
               ? '<span class="course-lesson__badge course-lesson__badge--free">معاينة مجانية</span>'
               : canPlay
                 ? ''
-                : '<span class="course-lesson__badge course-lesson__badge--lock">🔒 يتطلب الاشتراك بالباقة</span>';
+                : examLocked
+                  ? '<span class="course-lesson__badge course-lesson__badge--lock">🔒 تُفتح بعد اجتياز امتحان المحاضرة السابقة</span>'
+                  : '<span class="course-lesson__badge course-lesson__badge--lock">🔒 يتطلب الاشتراك بالباقة</span>';
             if (canPlay) {
               return (
                 '<a class="course-lesson' +
@@ -964,7 +1019,7 @@
               escapeHtml(lesson.title || 'حلقة') +
               '</span>' +
               badge +
-              '<a class="course-lesson__plans" href="index.html#plans">عرض الباقات</a>' +
+              (examLocked ? '' : '<a class="course-lesson__plans" href="index.html#plans">عرض الباقات</a>') +
               '</div>'
             );
           })
@@ -990,6 +1045,50 @@
           formattedDuration && formattedDuration !== 'كورس تدريبي' ? formattedDuration : 'TBA';
       }
       var priceLabel = formatCoursePrice(course);
+      function courseEnrollButtonHtml(course, fallbackHref) {
+        var api = window.PlatformPlansPublic;
+        var plan = null;
+        if (api && typeof api.findPlanById === 'function') {
+          var requiredId = String(course.requiredPlanId || '').trim();
+          if (requiredId) plan = api.findPlanById(requiredId);
+          if (!plan) plan = api.findPlanById('plan_course_' + course.id);
+        }
+        if (plan && api && typeof api.resolvePlanCta === 'function') {
+          var cta = api.resolvePlanCta(plan);
+          var label = escapeHtml(cta.label || 'اشترك الآن');
+          if (cta.disabled) {
+            return '<button type="button" class="course-enroll-btn" disabled>' + label + '</button>';
+          }
+          return '<a class="course-enroll-btn" href="' + escapeHtml(cta.href || fallbackHref) + '">' + label + '</a>';
+        }
+        return '<a class="course-enroll-btn" href="' + fallbackHref + '">اشترك الآن</a>';
+      }
+      var progressLessons = orderedCourseLessons(course);
+      var progressDone = 0;
+      progressLessons.forEach(function (lesson) {
+        if (isLessonPassed(course, lesson)) progressDone += 1;
+      });
+      var progressTotal = progressLessons.length;
+      var progressPct = progressTotal ? Math.round((progressDone / progressTotal) * 100) : 0;
+      var progressLeft = Math.max(0, progressTotal - progressDone);
+      var progressMessage = !progressTotal
+        ? 'الدروس ستظهر هنا قريباً'
+        : progressLeft === 0
+          ? 'أنهيت كل الدروس. ممتاز!'
+          : progressDone === 0
+            ? 'ابدأ الآن، باقي ' + progressLeft + ' دروس'
+            : 'باقي ' + progressLeft + (progressLeft === 1 ? ' درس' : ' دروس') + ' وتخلّص الكورس';
+      var progressHtml =
+        '<div class="course-progress" aria-label="تقدم الكورس">' +
+        '<div class="course-progress__head"><span>إنجازك</span><strong>' +
+        progressPct +
+        '%</strong></div>' +
+        '<div class="course-progress__track"><div class="course-progress__fill" style="width:' +
+        progressPct +
+        '%"></div></div>' +
+        '<p class="course-progress__msg">' +
+        escapeHtml(progressMessage) +
+        '</p></div>';
       var enrollHref = 'index.html#plans';
       if (targetLesson && (subscribed || lessonCanPlay(targetLesson, course))) {
         enrollHref = overviewUrl + '&lesson=' + encodeURIComponent(targetLesson.id);
@@ -1001,6 +1100,7 @@
         '<h1 class="course-floating-title" id="courseTitle">' +
         escapeHtml(course.title || '') +
         '</h1>' +
+        progressHtml +
         '<div class="course-floating-meta">' +
         '<div class="meta-item">' +
         '<span class="meta-label">السعر</span>' +
@@ -1015,9 +1115,7 @@
         '</span>' +
         '</div>' +
         '</div>' +
-        '<a class="course-enroll-btn" href="' +
-        enrollHref +
-        '">اشترك الآن</a>' +
+        courseEnrollButtonHtml(course, enrollHref) +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -1048,11 +1146,14 @@
           renderStudentLessonQuiz(active) +
           '<div id="course-lesson-next"></div>';
       } else {
-        playerHtml =
-          '<div class="course-details__locked-panel">' +
-          '<p>🔒 يتطلب الاشتراك بالباقة</p>' +
-          '<a class="btn btn--primary" href="index.html#plans">عرض الباقات</a>' +
-          '</div>';
+        playerHtml = subscribed
+          ? '<div class="course-details__locked-panel">' +
+            '<p>🔒 تُفتح بعد اجتياز امتحان المحاضرة السابقة</p>' +
+            '</div>'
+          : '<div class="course-details__locked-panel">' +
+            '<p>🔒 يتطلب الاشتراك بالباقة</p>' +
+            '<a class="btn btn--primary" href="index.html#plans">عرض الباقات</a>' +
+            '</div>';
       }
       pageHtml =
         '<div class="container">' +
@@ -1070,6 +1171,7 @@
         '</div>';
     }
 
+    lastCourseAccessSig = courseAccessSignature();
     root.innerHTML = pageHtml;
 
     if (!active) {

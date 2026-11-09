@@ -1,7 +1,30 @@
 {
   "name": "iraqi-fiber-academy",
-  "compatibility_date": "2026-10-29",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-06",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "iraqi-fiber-notifications",
+      "database_id": "8b84ccc4-a43a-44b9-92e8-e740bca4c60d"
+    }
+  ],
+  "migrations": [
+    {
+      "tag": "v1-notification-hub",
+      "new_sqlite_classes": ["NotificationHub"]
+    },
+    {
+      "tag": "v2-delete-notification-hub",
+      "deleted_classes": ["NotificationHub"]
+    }
+  ],
+  "vars": {
+    "VAPID_PUBLIC_KEY": "BHdeQdsCa1fox1V3qtBCHWmeYVZDlwvxS6n5-qmc9bTWSns0r_ffytTVKLtJLE_hS6YwN0kywrATcmFRZ0hs0qU",
+    "VAPID_PRIVATE_JWK": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"d15B2wJrV-jHVXeq0EIdaZ5hVkOXC_FLqfn6qZz1tNY\",\"y\":\"Sns0r_ffytTVKLtJLE_hS6YwN0kywrATcmFRZ0hs0qU\",\"d\":\"NbdWjkse4-X-H3BpX54KWGdXRoo0j3ZnaAxQJ6s6HMA\"}"
   }
 }

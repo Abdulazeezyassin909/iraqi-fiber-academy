@@ -2,6 +2,7 @@
   "appId": "com.masar.almuhandis",
   "appName": "مسار المهندس 360",
   "webDir": "www",
+  "appendUserAgent": "IFAFlutterApp",
   "plugins": {
     "GoogleAuth": {
       "scopes": ["profile", "email"],

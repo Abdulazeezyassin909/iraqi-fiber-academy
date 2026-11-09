@@ -29,8 +29,8 @@
   function looksLikeEmbeddedAppWebView() {
     try {
       var ua = String((global.navigator && global.navigator.userAgent) || '');
+      if (/IFAFlutterApp/i.test(ua)) return true;
       if (/Capacitor/i.test(ua)) return true;
-      if (/; wv\)/i.test(ua)) return true;
     } catch (err) {
       /* ignore */
     }

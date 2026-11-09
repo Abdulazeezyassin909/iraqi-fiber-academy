@@ -10,6 +10,7 @@
   var selectedVideoName = '';
   var selectedTemplates = [];
   var renderInstructorCourses = function () {};
+  var latestAnalytics = { courses: [], byCourse: {} };
 
   function esc(value) {
     return String(value == null ? '' : value)
@@ -107,28 +108,21 @@
     var authUser = (window.IFAAuth && window.IFAAuth.getCurrentUser && window.IFAAuth.getCurrentUser())
       || (window.IFAAuth && window.IFAAuth.auth && window.IFAAuth.auth.currentUser)
       || null;
-    var uid = authUser ? (authUser.uid || authUser.id || '') : '';
-    if (!uid) {
+    if (!authUser || typeof authUser.getIdToken !== 'function') {
       body.innerHTML = '<tr><td colspan="7" class="admin-empty-cell">سجّل الدخول لعرض طلبات الشراء.</td></tr>';
       return;
     }
-    Promise.all([
-      import('./firebase-config.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
-    ]).then(function (mods) {
-      var db = mods[0].db;
-      var fs = mods[1];
-      var q = fs.query(fs.collection(db, 'orders'), fs.where('instructorId', '==', uid));
-      return fs.getDocs(q);
-    }).then(function (snap) {
-      var rows = [];
-      snap.forEach(function (docSnap) {
-        rows.push(Object.assign({ id: docSnap.id }, docSnap.data() || {}));
+    authUser.getIdToken().then(function (token) {
+      return fetch('/api/instructor/orders', {
+        headers: { Authorization: 'Bearer ' + token },
       });
+    }).then(function (response) {
+      if (!response.ok) throw new Error('orders request failed');
+      return response.json();
+    }).then(function (data) {
+      var rows = Array.isArray(data.orders) ? data.orders : [];
       rows.sort(function (a, b) {
-        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : Date.parse(a.createdAt) || 0;
-        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : Date.parse(b.createdAt) || 0;
-        return tb - ta;
+        return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
       });
       instructorOrdersCache = rows;
       var filterEl = document.getElementById('instructorOrderStatusFilter');
@@ -354,20 +348,48 @@
     loadInstructorAnalytics();
   }
 
+  function orderDateMs(value) {
+    if (!value) return 0;
+    if (typeof value.toDate === 'function') return value.toDate().getTime();
+    if (value.seconds) return value.seconds * 1000;
+    var parsed = Date.parse(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  function formatJoinDate(ms) {
+    if (!ms) return '—';
+    try {
+      return new Date(ms).toLocaleDateString('ar-IQ');
+    } catch (err) {
+      return '—';
+    }
+  }
+
   function paintInstructorAnalytics(courses, orders) {
     var byCourse = {};
     courses.forEach(function (c) {
       byCourse[c.id] = { students: {} };
     });
     var allStudents = {};
+
     (orders || []).forEach(function (order) {
       if (String(order.status || '') !== 'approved') return;
       var cid = String(order.courseId || '');
       var sid = String(order.userId || order.userEmail || '');
       if (!sid || !byCourse[cid]) return;
-      byCourse[cid].students[sid] = true;
+      var enrolledAt = orderDateMs(order.createdAt);
+      var prev = byCourse[cid].students[sid];
+      if (!prev || enrolledAt < prev.enrolledAt) {
+        byCourse[cid].students[sid] = {
+          id: String(order.userId || ''),
+          email: String(order.userEmail || ''),
+          name: String(order.userName || order.userEmail || 'طالب'),
+          enrolledAt: enrolledAt,
+        };
+      }
       allStudents[sid] = true;
     });
+    latestAnalytics = { courses: courses, byCourse: byCourse };
 
     var views = 0;
     var completions = 0;
@@ -410,7 +432,7 @@
     }
     table.innerHTML =
       '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>' +
-      '<th>الكورس</th><th>الحلقات</th><th>المسجلون</th><th>المشاهدات</th><th>الإكمالات</th><th>نسبة الإكمال</th>' +
+      '<th>الكورس</th><th>الحلقات</th><th>المسجلون</th><th>المشاهدات</th><th>الإكمالات</th><th>نسبة الإكمال</th><th></th>' +
       '</tr></thead><tbody>' +
       courses.map(function (c) {
         var courseViews = Number(c.views) || 0;
@@ -422,7 +444,7 @@
         var enrolledN = Object.keys((byCourse[c.id] && byCourse[c.id].students) || {}).length;
         var denom = enrolledN * ((c.lessons || []).length || 0);
         var rate = denom ? Math.min(100, Math.round((courseCompletions / denom) * 100)) : 0;
-        return '<tr><td>' + esc(c.title) + '</td><td>' + esc((c.lessons || []).length) + '</td><td>' + esc(enrolledN) + '</td><td>' + esc(courseViews) + '</td><td>' + esc(courseCompletions) + '</td><td>' + rate + '%</td></tr>';
+        return '<tr data-view-students="' + esc(c.id) + '"><td>' + esc(c.title) + '</td><td>' + esc((c.lessons || []).length) + '</td><td>' + esc(enrolledN) + '</td><td>' + esc(courseViews) + '</td><td>' + esc(courseCompletions) + '</td><td>' + rate + '%</td><td><button type="button" class="inst-students-btn" data-view-students="' + esc(c.id) + '">عرض الطلاب</button></td></tr>';
       }).join('') +
       '</tbody></table></div>';
   }
@@ -455,6 +477,110 @@
     }).catch(function (err) {
       console.error('[InstructorAnalytics] orders load failed:', err);
       paintInstructorAnalytics(courses, []);
+    });
+  }
+
+  function studentsModal() {
+    var modal = document.getElementById('instStudentsModal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'instStudentsModal';
+    modal.className = 'inst-students-modal';
+    modal.hidden = true;
+    modal.innerHTML =
+      '<div class="inst-students-modal__backdrop" data-close-students></div>' +
+      '<div class="inst-students-modal__panel" role="dialog" aria-modal="true">' +
+      '<button type="button" class="inst-students-modal__close" data-close-students aria-label="إغلاق">×</button>' +
+      '<h3 class="inst-students-modal__title"></h3>' +
+      '<div class="inst-students-modal__body"></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function (event) {
+      if (event.target.closest('[data-close-students]')) modal.hidden = true;
+    });
+    return modal;
+  }
+
+  function openCourseStudents(courseId) {
+    var course = null;
+    latestAnalytics.courses.forEach(function (item) {
+      if (String(item.id) === String(courseId)) course = item;
+    });
+    if (!course) return;
+    var bucket = latestAnalytics.byCourse[course.id] || { students: {} };
+    var students = Object.keys(bucket.students).map(function (key) {
+      return bucket.students[key];
+    });
+    var modal = studentsModal();
+    modal.querySelector('.inst-students-modal__title').textContent = 'طلاب: ' + (course.title || '');
+    var body = modal.querySelector('.inst-students-modal__body');
+    modal.hidden = false;
+    if (!students.length) {
+      body.innerHTML = '<div class="inst-empty">لا يوجد طلاب مسجّلون في هذا الكورس.</div>';
+      return;
+    }
+    body.innerHTML = '<div class="inst-empty">جاري تحميل تقدم الطلاب...</div>';
+    Promise.all([
+      import('./firebase-config.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
+    ]).then(function (mods) {
+      return Promise.all(students.map(function (student) {
+        if (!student.id) return Promise.resolve(student);
+        return mods[1].getDoc(mods[1].doc(mods[0].db, 'users', student.id)).then(function (snap) {
+          var data = snap.exists() ? snap.data() || {} : {};
+          student.name = data.name || data.displayName || student.name;
+          student.email = data.email || student.email;
+          student.passedLessons = Array.isArray(data.passedLessons) ? data.passedLessons.map(String) : [];
+          return student;
+        }).catch(function () {
+          student.passedLessons = [];
+          return student;
+        });
+      }));
+    }).then(function (rows) {
+      var lessons = course.lessons || [];
+      var total = lessons.length;
+      var lessonIds = {};
+      lessons.forEach(function (lesson) {
+        if (lesson && lesson.id) lessonIds[String(lesson.id)] = true;
+      });
+      rows.forEach(function (student) {
+        var done = 0;
+        (student.passedLessons || []).forEach(function (token) {
+          var cut = token.indexOf('::');
+          if (cut <= 0) return;
+          if (token.slice(0, cut) !== String(course.id)) return;
+          var lessonId = token.slice(cut + 2);
+          if (!total || lessonIds[lessonId]) done += 1;
+        });
+        if (total && done > total) done = total;
+        student.done = done;
+        student.pct = total ? Math.round((done / total) * 100) : 0;
+      });
+      rows.sort(function (a, b) {
+        if (b.pct !== a.pct) return b.pct - a.pct;
+        return (b.enrolledAt || 0) - (a.enrolledAt || 0);
+      });
+      body.innerHTML =
+        '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>' +
+        '<th>#</th><th>الطالب</th><th>تاريخ الانضمام</th><th>الدروس المكتملة</th><th>نسبة الإنجاز</th><th>حالة التعلم</th>' +
+        '</tr></thead><tbody>' +
+        rows.map(function (student, index) {
+          var status = student.pct >= 100 && total ? 'مكتمل' : student.pct > 0 ? 'قيد التعلم' : 'لم يبدأ';
+          var statusClass = student.pct >= 100 && total ? 'is-done' : student.pct > 0 ? 'is-active' : 'is-idle';
+          var initial = esc((student.name || 'ط').charAt(0));
+          return (
+            '<tr><td>' + (index + 1) + '</td><td><div class="inst-student-cell"><span class="inst-student-avatar">' +
+            initial + '</span><span><strong>' + esc(student.name || 'طالب') + '</strong><br><span dir="ltr">' +
+            esc(student.email || '') + '</span></span></div></td><td>' +
+            esc(formatJoinDate(student.enrolledAt)) + '</td><td>' + student.done + ' / ' + total +
+            '</td><td><div class="inst-progress"><span style="width:' + student.pct + '%"></span></div>' +
+            student.pct + '%</td><td><span class="inst-learn-status ' + statusClass + '">' + status + '</span></td></tr>'
+          );
+        }).join('') +
+        '</tbody></table></div>';
+    }).catch(function () {
+      body.innerHTML = '<div class="inst-empty">تعذّر تحميل تقدم الطلاب.</div>';
     });
   }
 
@@ -644,58 +770,21 @@
 
   function renderQA() {
     var box = document.getElementById('qaList');
-    var courses = Dash.getCourses(email);
-    var rows = [];
-    courses.forEach(function (c) {
-      (c.lessons || []).forEach(function (l) {
-        (l.comments || []).forEach(function (cm) {
-          rows.push({ course: c, lesson: l, comment: cm });
-        });
+    if (!box) return;
+    var courses = Dash.getCourses(email) || [];
+    var lessonIds = [];
+    var courseTitles = [];
+    courses.forEach(function (course) {
+      if (course && course.title) courseTitles.push(course.title);
+      (course.lessons || []).forEach(function (lesson) {
+        if (lesson && lesson.id) lessonIds.push(String(lesson.id));
       });
     });
-
-    if (!rows.length) {
-      box.innerHTML = '<div class="inst-empty">لا توجد تعليقات من الطلاب حالياً</div>';
+    if (window.LessonComments && typeof window.LessonComments.mountInstructor === 'function') {
+      window.LessonComments.mountInstructor(box, { lessonIds: lessonIds, courseTitles: courseTitles });
       return;
     }
-
-    box.innerHTML = rows
-      .map(function (r) {
-        var cm = r.comment;
-        var replyHtml = cm.reply
-          ? '<div class="inst-qa__reply"><div class="inst-qa__reply-label">ردك</div>' +
-            esc(cm.reply.text) +
-            '</div>'
-          : '<form class="inst-actions" data-reply-form="' +
-            esc(r.course.id) +
-            ':' +
-            esc(r.lesson.id) +
-            ':' +
-            esc(cm.id) +
-            '">' +
-            '<input class="inst-input" name="reply" placeholder="اكتب ردك هنا..." required style="flex:1;min-width:180px;" />' +
-            '<button type="submit" class="admin-btn admin-btn--primary admin-btn--sm">رد</button>' +
-            '</form>';
-
-        return (
-          '<div class="inst-qa">' +
-          '<div class="inst-qa__student">' +
-          esc(cm.studentName) +
-          '</div>' +
-          '<div class="inst-qa__meta">' +
-          esc(r.course.title) +
-          ' · ' +
-          esc(r.lesson.title) +
-          (cm.reply ? '' : ' · <span class="inst-chip inst-badge-warn">بانتظار الرد</span>') +
-          '</div>' +
-          '<div class="inst-qa__text">' +
-          esc(cm.text) +
-          '</div>' +
-          replyHtml +
-          '</div>'
-        );
-      })
-      .join('');
+    box.innerHTML = '<div class="inst-comment-empty"><h3>جاري تجهيز التعليقات</h3></div>';
   }
 
   function renderAnalytics() {
@@ -754,6 +843,12 @@
         return;
       }
       startDashboard();
+      document.addEventListener('click', function (event) {
+        var trigger = event.target.closest ? event.target.closest('[data-view-students]') : null;
+        if (!trigger) return;
+        event.preventDefault();
+        openCourseStudents(trigger.getAttribute('data-view-students'));
+      });
     });
   }
 
@@ -783,6 +878,14 @@
     renderOverview();
     bindInstructorPublicProfile();
     loadInstructorPublicProfile();
+    var sectionHash = String(window.location.hash || '').replace('#', '');
+    if (sectionHash === 'orders') showSection('orders');
+    if (sectionHash === 'comments' || sectionHash === 'qa') showSection('qa');
+    window.addEventListener('hashchange', function () {
+      var next = String(window.location.hash || '').replace('#', '');
+      if (next === 'orders') showSection('orders');
+      if (next === 'comments' || next === 'qa') showSection('qa');
+    });
 
     /* Sidebar */
     document.querySelectorAll('[data-inst-section]').forEach(function (link) {

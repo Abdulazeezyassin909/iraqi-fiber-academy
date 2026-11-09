@@ -944,6 +944,38 @@
     whatsapp: 'WhatsApp',
   };
 
+  var footerQuills = {};
+
+  function footerQuillHtml(id) {
+    var editor = footerQuills[id];
+    if (!editor) return '';
+    var html = editor.root.innerHTML || '';
+    return html === '<p><br></p>' ? '' : html;
+  }
+
+  function ensureFooterQuill(id, html) {
+    var host = $(id);
+    if (!host || !window.Quill) return;
+    if (!footerQuills[id]) {
+      footerQuills[id] = new window.Quill(host, {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ header: [2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['link'],
+            ['clean'],
+          ],
+        },
+      });
+    }
+    var current = footerQuills[id].root.innerHTML;
+    var next = html || '';
+    if (current !== next && !(current === '<p><br></p>' && !next)) {
+      footerQuills[id].clipboard.dangerouslyPasteHTML(next || '<p><br></p>');
+    }
+  }
   function collectFooterDraftFromForm() {
     var social = {};
     if (window.PlatformFooter && window.PlatformFooter.SOCIAL_ORDER) {
@@ -963,6 +995,17 @@
         color: $('cmsFooterDescColor') ? $('cmsFooterDescColor').value : '#94a3b8',
       },
       social: social,
+      links: {
+        helpCenter: $('cmsFooterHelpLink') ? $('cmsFooterHelpLink').value : '',
+        contact: 'contact.html',
+        privacy: 'privacy-policy.html',
+        terms: 'terms.html',
+      },
+      pages: {
+        contact: footerQuillHtml('cmsFooterContactEditor'),
+        privacy: footerQuillHtml('cmsFooterPrivacyEditor'),
+        terms: footerQuillHtml('cmsFooterTermsEditor'),
+      },
     };
   }
 
@@ -1043,6 +1086,12 @@
     if ($('cmsFooterDescText')) $('cmsFooterDescText').value = settings.description.text;
     if ($('cmsFooterDescSize')) $('cmsFooterDescSize').value = String(settings.description.fontSize);
     if ($('cmsFooterDescColor')) $('cmsFooterDescColor').value = settings.description.color;
+    var links = settings.links || {};
+    if ($('cmsFooterHelpLink')) $('cmsFooterHelpLink').value = links.helpCenter || '';
+    var pages = settings.pages || {};
+    ensureFooterQuill('cmsFooterContactEditor', pages.contact || '');
+    ensureFooterQuill('cmsFooterPrivacyEditor', pages.privacy || '');
+    ensureFooterQuill('cmsFooterTermsEditor', pages.terms || '');
     renderFooterSocialFields(settings);
     syncFooterLivePreview();
   }

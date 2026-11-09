@@ -1,9 +1,113 @@
 .ifa-fcm-hint {
-  margin: 0.35rem 0 0;
-  padding: 0 0.25rem;
+  display: none;
+}
+
+.notif-panel .ifa-fcm-hint:not([hidden]) {
+  display: block;
+  margin: 0;
+  padding: 0 1rem 0.75rem;
+  color: #ffb4a8;
   font-size: 0.78rem;
   line-height: 1.45;
-  color: var(--color-text-muted, #94a3b8);
+  text-align: right;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.ifa-push-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.ifa-push-prompt__card {
+  width: min(420px, 100%);
+  direction: rtl;
+  text-align: right;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.ifa-push-prompt__title {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.ifa-push-prompt__body {
+  margin: 0 0 0.9rem;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.ifa-push-prompt__actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+.ifa-push-prompt__allow,
+.ifa-push-prompt__later {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ifa-push-prompt__allow {
+  background: #22d3ee;
+  color: #082f49;
+}
+
+.ifa-push-prompt__later {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.settings-menu--drawer .settings-dropdown--drawer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: visible;
+}
+
+.settings-menu--drawer .settings-dropdown__row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settings-menu--drawer .settings-dropdown__row-label {
+  white-space: normal;
+}
+
+.settings-dropdown__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e53935;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.settings-dropdown__badge[hidden] {
+  display: none;
 }
 
 /* Notifications panel (inside settings hamburger menu) */
@@ -13,10 +117,12 @@
   top: calc(100% + 8px) !important;
   left: 0 !important;
   right: auto !important;
-  width: min(360px, calc(100vw - 2rem));
-  max-height: min(420px, calc(100vh - 96px));
+  width: min(360px, calc(100vw - 1.5rem));
+  max-height: none;
   display: flex;
   flex-direction: column;
+  direction: rtl;
+  text-align: right;
   border-radius: 14px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
@@ -31,32 +137,124 @@
 
 .notif-panel__head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem 0.55rem;
   border-bottom: 1px solid var(--color-border);
+  direction: rtl;
 }
 
 .notif-panel__title {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
+  text-align: center;
+}
+
+.notif-panel__head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  direction: rtl;
+}
+
+.notif-panel__back {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.72));
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.notif-panel__back::before {
+  content: "›";
+  margin-inline-end: 0.2rem;
+  font-size: 1rem;
 }
 
 .notif-panel__mark-all {
+  display: inline;
+  width: auto;
   border: 0;
   background: transparent;
   color: var(--color-accent-cyan);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0.25rem 0.35rem;
+  padding: 0.25rem 0;
+  text-align: left;
 }
 
 .notif-panel__list {
-  overflow: auto;
-  padding: 0.35rem 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 400px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+}
+
+.notif-panel__list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notif-panel__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notif-panel__list::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+}
+
+.notif-panel__list::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
+.notif-panel__push {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-border);
+  direction: rtl;
+  flex-shrink: 0;
+}
+
+.admin-broadcast-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.admin-broadcast-log__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  direction: rtl;
+  text-align: right;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+}
+
+.admin-broadcast-log__item p {
+  margin: 0.25rem 0 0;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.admin-broadcast-log__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 
 .notif-panel__empty {
@@ -64,15 +262,18 @@
   padding: 1.25rem 1rem;
   color: var(--color-text-secondary);
   font-size: 0.88rem;
-  text-align: center;
+  text-align: right;
 }
 
 .notif-item {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   width: 100%;
   border: 0;
   background: transparent;
-  text-align: start;
+  text-align: right;
+  direction: rtl;
   padding: 0.85rem 1rem;
   color: inherit;
   cursor: pointer;
@@ -93,6 +294,15 @@
   font-size: 0.9rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
+}
+
+.notif-item,
+.notif-item__title,
+.notif-item__body {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .notif-item__body {
@@ -160,6 +370,6 @@
     top: calc(100% + 8px) !important;
     left: 0 !important;
     right: auto !important;
-    width: min(360px, calc(100vw - 2rem));
+    width: min(360px, calc(100vw - 1.5rem));
   }
 }

@@ -2,7 +2,7 @@
  * Firestore real-time sync for testimonials (collection: `testimonials`).
  * Deploy rules: firebase deploy --only firestore:rules
  */
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import { rejectDataUrl } from './cms-storage.js';
 import { normalizeCmsStatus } from './cms-status.js';
 import {
@@ -12,8 +12,10 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  addDoc,
   writeBatch,
   getDocs,
+  serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { scheduleLazyFirestoreSync, hydrateListFromLocalStorage } from './firestore-sync-scheduler.js';
 
@@ -451,6 +453,36 @@ export async function setTestimonialStatus(id, status) {
   }
 }
 
+export async function submitStudentReview(payload) {
+  var user = auth.currentUser;
+  if (!user || !user.uid) throw new Error('يجب تسجيل الدخول لإرسال التقييم');
+  var text = String((payload && payload.text) || '').trim();
+  var rating = Number(payload && payload.rating);
+  if (!text) throw new Error('نص التقييم مطلوب');
+  if (!isFinite(rating) || rating < 1 || rating > 5) throw new Error('اختر تقييماً من 1 إلى 5');
+  var name =
+    String(user.displayName || '').trim() ||
+    String(user.email || '').trim() ||
+    'طالب';
+  beginWrite();
+  try {
+    var ref = await addDoc(collection(db, COLLECTION), {
+      name: name,
+      role: String((payload && payload.role) || '').trim() || 'طالب',
+      text: text,
+      rating: Math.round(rating),
+      avatar: '',
+      status: 'pending',
+      uid: user.uid,
+      sortOrder: Date.now(),
+      createdAt: serverTimestamp(),
+    });
+    return ref.id;
+  } finally {
+    endWrite();
+  }
+}
+
 export async function deleteTestimonial(id) {
   return setTestimonialStatus(id, 'trash');
 }
@@ -501,6 +533,7 @@ var api = {
   isReady: isTestimonialsSnapshotReady,
   findTestimonial: findCachedTestimonial,
   addTestimonial: addTestimonial,
+  submitStudentReview: submitStudentReview,
   updateTestimonial: updateTestimonial,
   setTestimonialStatus: setTestimonialStatus,
   deleteTestimonial: deleteTestimonial,

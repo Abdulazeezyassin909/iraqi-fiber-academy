@@ -393,22 +393,37 @@
     return !!(el && el.checked);
   }
 
-  async function maybeNotifyCoursePublished(course, wasAlreadyPublished) {
+  async function maybeNotifyCoursePublished(course) {
     if (!course || course.status !== 'published') return;
-    if (wasAlreadyPublished) return;
     if (!shouldNotifySubscribersOnPublish()) return;
+    var courseTitle = String(course.title || course.name || '').trim();
+    var authUser = window.IFAAuth && typeof window.IFAAuth.getCurrentUser === 'function'
+      ? window.IFAAuth.getCurrentUser()
+      : null;
+    var idToken = authUser && typeof authUser.getIdToken === 'function' ? await authUser.getIdToken() : '';
+    if (!idToken) {
+      showToast('تعذّر إرسال الإشعار: جلسة المدير غير جاهزة', 'error');
+      return;
+    }
     try {
-      var mod = await import('./firestore-notifications.js');
-      var uid = '';
-      if (window.IFAAuth && typeof window.IFAAuth.getCurrentUser === 'function') {
-        var user = window.IFAAuth.getCurrentUser();
-        uid = user && user.uid ? user.uid : '';
-      }
-      await mod.createCourseAnnouncement(course, {
-        targetAudience: 'subscribers',
-        createdBy: uid,
+      var apiResponse = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Authorization: 'Bearer ' + idToken,
+        },
+        body: JSON.stringify({
+          send_notification: true,
+          title: 'تم نشر كورس جديد',
+          message: courseTitle,
+          target: 'all',
+          linkUrl: 'course-details.html?id=' + encodeURIComponent(course.id || ''),
+        }),
       });
-      showToast('تم إرسال إشعار المشتركين', 'success');
+      if (!apiResponse.ok) {
+        throw new Error('تعذّر حفظ الإشعار في قاعدة البيانات');
+      }
+      showToast('تم إرسال الإشعار لكل الطلاب', 'success');
     } catch (err) {
       console.error('[AdminCourses] course notification failed', err);
       showToast((err && err.message) || 'تعذّر إرسال إشعار المشتركين', 'error');
@@ -1480,8 +1495,6 @@
         };
         try {
           var wasPublish = payload.status === 'published';
-          var previousCourse = id && window.PlatformCourses.findCourse(id);
-          var wasAlreadyPublished = !!(previousCourse && previousCourse.status === 'published');
           var progressLabel = wasPublish ? 'جاري النشر...' : 'جاري الحفظ...';
           var publishResult = await runWithPublishProgress(progressLabel, async function (setPct) {
             setPct(15);
@@ -1498,7 +1511,7 @@
             return { saved: saved, wasPublish: wasPublish };
           });
           if (wasPublish && publishResult && publishResult.saved) {
-            await maybeNotifyCoursePublished(publishResult.saved, wasAlreadyPublished);
+            await maybeNotifyCoursePublished(publishResult.saved);
           }
           closeCourseModal();
           renderCoursesTable();

@@ -90,7 +90,7 @@
       'checkout.loading': 'جاري تحميل صفحة الدفع…',
       'checkout.successTitle': 'تم استلام طلبك',
       'checkout.successMessage':
-        'تم استلام طلبك بنجاح، وسيتم تفعيل الكورس فور مراجعة الوصل من الإدارة.',
+        "تم استلام طلبك بنجاح، وسيتم تفعيل الكورس فور مراجعة الوصل من الإدارة. <br><br> <span style='color: #ff4d4d; font-weight: bold;'>ملاحظة هامة ❗❗</span> رسالة الموافقة وتفعيل الكورس قد تصلك في مجلد البريد المزعج (Spam / Junk)، يرجى التحقق منه.",
       'checkout.ok': 'حسناً',
       'instructor.modalTitle': 'انضم إلينا كمدرب',
       'instructor.modalSubtitle':
@@ -237,7 +237,8 @@
     scope.querySelectorAll('[data-i18n]').forEach(function (el) {
       var key = el.getAttribute('data-i18n');
       if (!key) return;
-      el.textContent = t(key, code);
+      if (el.getAttribute('data-i18n-html') === '1') el.innerHTML = t(key, code);
+      else el.textContent = t(key, code);
     });
 
     scope.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {

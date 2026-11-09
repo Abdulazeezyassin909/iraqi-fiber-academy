@@ -1,9 +1,11 @@
 node_modules
-android
 .git
-www
-.cursor
+android
+functions
 fiber_academy_platform
-functions/node_modules
-**/*.apk
-**/.gradle
+fcm-push-server
+**/*.exe
+**/*.dll
+*.local
+firebase-debug.log
+firebase-debug.*.log

@@ -372,6 +372,160 @@
 
   function bindPlatformSettingsForm() {
     var form = document.getElementById('platformSettingsForm');
+    var broadcastBtn = document.getElementById('adminBroadcastSend');
+    if (broadcastBtn && broadcastBtn.dataset.bound !== '1') {
+      broadcastBtn.dataset.bound = '1';
+      var titleInput = document.getElementById('adminBroadcastTitle');
+      var messageInput = document.getElementById('adminBroadcastMessage');
+      var status = document.getElementById('adminBroadcastStatus');
+      var log = document.getElementById('adminBroadcastLog');
+      var editingId = '';
+
+      function setStatus(text) {
+        if (status) status.textContent = text || '';
+      }
+
+      function authToken() {
+        var user = window.IFAAuth && typeof window.IFAAuth.getCurrentUser === 'function'
+          ? window.IFAAuth.getCurrentUser()
+          : null;
+        if (!user || typeof user.getIdToken !== 'function') return Promise.resolve('');
+        return user.getIdToken();
+      }
+
+      function resetForm() {
+        editingId = '';
+        if (titleInput) titleInput.value = '';
+        if (messageInput) messageInput.value = '';
+        broadcastBtn.textContent = 'نشر الإشعار';
+      }
+
+      async function loadLog() {
+        if (!log) return;
+        var token = await authToken();
+        if (!token) return;
+        var response = await fetch('/api/notifications', {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        if (!response.ok) return;
+        var data = await response.json();
+        var items = (Array.isArray(data.notifications) ? data.notifications : []).filter(function (item) {
+          var target = String(item.target || 'all').toLowerCase();
+          return target === 'all' || target === 'all_students';
+        });
+        if (!items.length) {
+          log.innerHTML = '<p class="admin-field__hint">لا توجد إشعارات منشورة بعد.</p>';
+          return;
+        }
+        log.innerHTML = items.map(function (item) {
+          return (
+            '<article class="admin-broadcast-log__item" data-id="' + item.id + '">' +
+            '<div><strong>' + escapeHtml(item.title) + '</strong><p>' + escapeHtml(item.message) + '</p></div>' +
+            '<div class="admin-broadcast-log__actions">' +
+            '<button type="button" class="admin-btn" data-edit-notification="' + item.id + '">تعديل</button>' +
+            '<button type="button" class="admin-btn" data-delete-notification="' + item.id + '">حذف</button>' +
+            '</div></article>'
+          );
+        }).join('');
+      }
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      broadcastBtn.addEventListener('click', async function () {
+        var title = titleInput ? titleInput.value.trim() : '';
+        var message = messageInput ? messageInput.value.trim() : '';
+        if (!title || !message) {
+          setStatus('اكتب العنوان والنص قبل النشر');
+          if (window.ifaNotify) window.ifaNotify('اكتب العنوان والنص قبل النشر');
+          return;
+        }
+        var token = await authToken();
+        if (!token) {
+          setStatus('يجب تسجيل الدخول كمدير');
+          return;
+        }
+        broadcastBtn.disabled = true;
+        try {
+          var response = await fetch(
+            editingId ? '/api/notifications/' + encodeURIComponent(editingId) : '/api/notifications',
+            {
+              method: editingId ? 'PUT' : 'POST',
+              headers: {
+                'content-type': 'application/json',
+                Authorization: 'Bearer ' + token,
+              },
+              body: JSON.stringify({
+                send_notification: true,
+                title: title,
+                message: message,
+                target: 'all',
+                type: 'general',
+                linkUrl: 'index.html',
+              }),
+            }
+          );
+          if (!response.ok) {
+            var failed = await response.json().catch(function () { return {}; });
+            console.error('[Admin] broadcast failed', response.status, failed);
+            throw new Error('تعذر نشر الإشعار');
+          }
+          setStatus('تم النشر بنجاح');
+          if (window.ifaNotify) window.ifaNotify('تم النشر بنجاح');
+          resetForm();
+          await loadLog();
+        } catch (err) {
+          setStatus((err && err.message) || 'تعذر نشر الإشعار');
+        } finally {
+          broadcastBtn.disabled = false;
+        }
+      });
+
+      if (log) {
+        log.addEventListener('click', async function (event) {
+          var editBtn = event.target.closest ? event.target.closest('[data-edit-notification]') : null;
+          var deleteBtn = event.target.closest ? event.target.closest('[data-delete-notification]') : null;
+          if (editBtn) {
+            var editId = editBtn.getAttribute('data-edit-notification');
+            var card = editBtn.closest('.admin-broadcast-log__item');
+            editingId = editId;
+            if (titleInput) titleInput.value = card ? card.querySelector('strong').textContent : '';
+            if (messageInput) messageInput.value = card ? card.querySelector('p').textContent : '';
+            broadcastBtn.textContent = 'حفظ التعديل';
+            setStatus('عدّل النص ثم اضغط حفظ التعديل');
+            return;
+          }
+          if (!deleteBtn) return;
+          var deleteId = deleteBtn.getAttribute('data-delete-notification');
+          var ok = window.confirm('هل أنت متأكد من حذف هذا الإشعار؟ لا يمكن التراجع.');
+          if (!ok) return;
+          var token = await authToken();
+          if (!token) return;
+          var response = await fetch('/api/notifications/' + encodeURIComponent(deleteId), {
+            method: 'DELETE',
+            headers: { Authorization: 'Bearer ' + token },
+          });
+          if (!response.ok) {
+            setStatus('تعذر حذف الإشعار');
+            return;
+          }
+          if (editingId === deleteId) resetForm();
+          setStatus('تم حذف الإشعار');
+          if (window.ifaNotify) window.ifaNotify('تم حذف الإشعار');
+          await loadLog();
+        });
+      }
+
+      loadLog();
+      if (window.IFAAuth && typeof window.IFAAuth.onAuthChange === 'function') {
+        window.IFAAuth.onAuthChange(function () { loadLog(); });
+      }
+    }
     var list = document.getElementById('settingsFreeSimulators');
     var comingSoonList = document.getElementById('settingsComingSoonSimulators');
     var trialDaysInput = document.getElementById('settingsTrialDays');

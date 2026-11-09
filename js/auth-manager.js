@@ -9,6 +9,8 @@
 import { auth, db, provider } from './firebase-config.js';
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithCredential,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
@@ -32,7 +34,7 @@ import {
   readCachedEntitlements,
   writeCachedEntitlements,
 } from './entitlements-sync.js';
-import { startFcmOnAuth, setupNotificationToggle } from './fcm-push.js';
+import { startFcmOnAuth, setupNotificationToggle } from './fcm-push.js?v=20261108push6';
 import { initializeNativeGoogleAuth, signInWithNativeGoogle } from './native-google-auth.js?v=20261030a';
 
 /**
@@ -300,7 +302,7 @@ function isNativeAppShell() {
       if (platform === 'android' || platform === 'ios') return true;
     }
     var ua = String((window.navigator && window.navigator.userAgent) || '');
-    if (/Capacitor/i.test(ua) || /; wv\)/i.test(ua)) return true;
+    if (/IFAFlutterApp/i.test(ua) || /Capacitor/i.test(ua)) return true;
   } catch (err) {
     return false;
   }
@@ -1380,38 +1382,81 @@ function userMenuHtml(options) {
       escapeHtml((options.fullName || 'م').charAt(0)) +
       '</span>';
 
+  var cardAvatar = String(avatar).replace('user-menu__avatar', 'user-menu__avatar user-menu__card-avatar');
+  var iconAccount =
+    '<svg class="user-menu__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  var iconBook =
+    '<svg class="user-menu__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var iconDash =
+    '<svg class="user-menu__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  var iconMoon =
+    '<svg class="user-menu__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 6.5 6.5 0 0 0 21 14.5Z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  var iconLang =
+    '<svg class="user-menu__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 2.8 3.8 6 3.8 9s-1.3 6.2-3.8 9c-2.5-2.8-3.8-6-3.8-9S9.5 5.8 12 3Z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  var iconDesktop =
+    '<svg class="user-menu__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 20h8M12 16v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  var iconLogout =
+    '<svg class="user-menu__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3M14 16l4-4-4-4M10 12h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function settingRow(icon, label, control) {
+    return (
+      '<div class="user-menu__setting" role="none">' +
+      '<span class="user-menu__setting-label">' + icon + label + '</span>' +
+      control +
+      '</div>'
+    );
+  }
+
+  var themeControl =
+    '<label class="toggle-switch toggle-switch--theme" title="المظهر">' +
+    '<input type="checkbox" data-settings-theme-toggle />' +
+    '<span class="toggle-switch__track" aria-hidden="true"><span class="toggle-switch__thumb"></span></span>' +
+    '</label>';
+  var langControl =
+    '<label class="toggle-switch toggle-switch--lang" title="اللغة">' +
+    '<input type="checkbox" data-settings-lang-toggle />' +
+    '<span class="toggle-switch__track toggle-switch__track--lang" aria-hidden="true">' +
+    '<span class="toggle-switch__lang toggle-switch__lang--ar">AR</span>' +
+    '<span class="toggle-switch__lang toggle-switch__lang--en">EN</span>' +
+    '<span class="toggle-switch__thumb"></span></span></label>';
+  var desktopControl =
+    '<label class="toggle-switch" title="وضع سطح المكتب">' +
+    '<input type="checkbox" data-settings-desktop-toggle />' +
+    '<span class="toggle-switch__track" aria-hidden="true"><span class="toggle-switch__thumb"></span></span>' +
+    '</label>';
+
   var menuClasses = 'user-menu';
   if (userRole === 'instructor') menuClasses += ' is-instructor';
   if (userRole === 'admin') menuClasses += ' is-admin';
-
   var joinItem = userRole === 'instructor'
     ? ''
-    : '<a href="#" class="user-menu__item user-menu__item--join" role="menuitem" data-join-instructor>' +
-      'انضم إلينا كمدرب' +
-      '</a>';
-
-  var midItems = instructorBtnHtml + adminBtnHtml + joinItem;
+    : '<a href="#" class="user-menu__item user-menu__item--join" role="menuitem" data-join-instructor>انضم إلينا كمدرب</a>';
 
   return (
-    '<div class="' +
-    menuClasses +
-    '" id="userMenu">' +
+    '<div class="' + menuClasses + '" id="userMenu">' +
     accountToggleHtml(avatar) +
     '<div class="user-menu__dropdown" id="userMenuDropdown" role="menu" hidden>' +
-    '<div class="user-menu__info" role="none">' +
-    '<span class="user-menu__info-name">' +
-    fullName +
-    '</span>' +
+    '<div class="user-menu__card" role="none">' +
+    cardAvatar +
+    '<span class="user-menu__info-name">' + fullName + '</span>' +
     (email ? '<span class="user-menu__info-email" dir="ltr">' + email + '</span>' : '') +
     '</div>' +
     '<div class="user-menu__divider" role="separator"></div>' +
-    midItems +
+    '<button type="button" class="user-menu__item" role="menuitem" data-my-courses aria-expanded="false" aria-controls="userMenuCourses">' +
+    iconBook + '<span>دوراتي</span></button>' +
+    '<div class="user-menu__courses" id="userMenuCourses" hidden></div>' +
+    instructorBtnHtml.replace('>', '>' + iconDash).replace('لوحة المدرب', '<span>لوحة المدرب</span>') +
+    adminBtnHtml.replace('>', '>' + iconDash).replace('لوحة الإدارة', '<span>لوحة الإدارة</span>') +
+    joinItem +
+    '<div class="user-menu__divider" role="separator"></div>' +
+    '<div class="user-menu__section-label" role="presentation">الإعدادات</div>' +
+    settingRow(iconMoon, '<span data-i18n="settings.theme">المظهر</span>', themeControl) +
+    settingRow(iconLang, '<span data-i18n="settings.language">اللغة</span>', langControl) +
+    settingRow(iconDesktop, '<span>وضع سطح المكتب</span>', desktopControl) +
     '<div class="user-menu__divider" role="separator"></div>' +
     '<a href="#" class="user-menu__item user-menu__item--logout" role="menuitem" data-auth-logout data-i18n="auth.logout">' +
-    authText('auth.logout', 'تسجيل خروج') +
-    '</a>' +
-    '</div>' +
-    '</div>'
+    iconLogout + '<span>' + authText('auth.logout', 'تسجيل خروج') + '</span></a>' +
+    '</div></div>'
   );
 }
 
@@ -1515,6 +1560,9 @@ function renderAuthSlot(slot) {
     } catch (err) {
       /* ignore */
     }
+  }
+  if (window.PlatformSettings && typeof window.PlatformSettings.syncPanelControls === 'function') {
+    window.PlatformSettings.syncPanelControls();
   }
 }
 
@@ -1811,14 +1859,39 @@ async function loginWithGoogleNative() {
   await signInWithCredential(auth, credential);
 }
 
+function browserBlocksGooglePopup() {
+  var ua = '';
+  try { ua = String(navigator.userAgent || ''); } catch (err) { ua = ''; }
+  var ios = /iPhone|iPad|iPod/i.test(ua);
+  var safari = /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|Firefox|Android/i.test(ua);
+  var webView = /; wv\)/i.test(ua);
+  return ios || safari || webView;
+}
+
+function shouldUseGoogleRedirect(err) {
+  var code = err && err.code ? String(err.code) : '';
+  return code === 'auth/popup-blocked' ||
+    code === 'auth/operation-not-supported-in-this-environment' ||
+    code === 'auth/web-storage-unsupported';
+}
+
 export async function loginWithGoogle() {
   setAuthModalError('');
   try {
     markPendingRoleRoute();
     if (isNativeAppShell()) {
       await loginWithGoogleNative();
+    } else if (browserBlocksGooglePopup()) {
+      await signInWithRedirect(auth, provider);
+      return;
     } else {
-      await signInWithPopup(auth, provider);
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (popupErr) {
+        if (!shouldUseGoogleRedirect(popupErr)) throw popupErr;
+        await signInWithRedirect(auth, provider);
+        return;
+      }
     }
     finishSuccessfulLogin(auth.currentUser);
   } catch (err) {
@@ -1901,6 +1974,76 @@ export async function logoutUser() {
   renderLoggedOutShell();
 }
 
+function myCoursesList() {
+  var user = getLocalAuthUser() || {};
+  var ids = Array.isArray(user.enrolledCourseIds) ? user.enrolledCourseIds : [];
+  var catalog =
+    window.PlatformCourses && typeof window.PlatformCourses.getCourses === 'function'
+      ? window.PlatformCourses.getCourses()
+      : [];
+  return ids.map(function (id) {
+    var key = String(id || '');
+    var match = null;
+    for (var i = 0; i < catalog.length; i++) {
+      if (String(catalog[i].id) === key) {
+        match = catalog[i];
+        break;
+      }
+    }
+    return {
+      id: key,
+      title: match && match.title ? String(match.title) : 'دورة مسجّلة',
+    };
+  }).filter(function (course) {
+    return course.id;
+  });
+}
+
+function showMyCoursesToast(message) {
+  var toast = document.getElementById('myCoursesToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'myCoursesToast';
+    toast.className = 'my-courses-toast';
+    toast.setAttribute('role', 'status');
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.hidden = false;
+  window.clearTimeout(showMyCoursesToast._timer);
+  showMyCoursesToast._timer = window.setTimeout(function () {
+    toast.hidden = true;
+  }, 3200);
+}
+
+function toggleMyCoursesPanel(button) {
+  var panel = document.getElementById('userMenuCourses');
+  if (!panel) return;
+  var open = panel.hidden;
+  panel.hidden = !open;
+  button.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (!open) return;
+  var courses = myCoursesList();
+  if (!courses.length) {
+    panel.innerHTML =
+      '<p class="user-menu__courses-empty">لا توجد دورات مسجّلة بعد.</p>' +
+      '<a class="user-menu__course-link" href="index.html#courses">تصفح الكورسات</a>';
+    showMyCoursesToast('لم تسجّل في أي دورة بعد. تصفّح الكورسات للبدء.');
+    return;
+  }
+  panel.innerHTML = courses
+    .map(function (course) {
+      return (
+        '<a class="user-menu__course-link" role="menuitem" href="course-details.html?id=' +
+        encodeURIComponent(course.id) +
+        '">' +
+        escapeHtml(course.title) +
+        '</a>'
+      );
+    })
+    .join('');
+}
+
 function bindAuthClicks() {
   document.addEventListener('click', function (e) {
     var loginEl = e.target && e.target.closest ? e.target.closest('[data-auth-login]') : null;
@@ -1920,6 +2063,13 @@ function bindAuthClicks() {
       e.preventDefault();
       e.stopPropagation();
       logoutUser();
+      return;
+    }
+    var coursesBtn = e.target && e.target.closest ? e.target.closest('[data-my-courses]') : null;
+    if (coursesBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMyCoursesPanel(coursesBtn);
     }
   });
 }
@@ -2255,6 +2405,14 @@ function initAuthUI() {
       console.warn('[Auth] indexedDB persistence failed', err);
     })
     .then(function () {
+      return getRedirectResult(auth).catch(function (err) {
+        console.error('[Auth] Google redirect error:', err);
+        setAuthModalError(formatAuthError(err));
+        return null;
+      });
+    })
+    .then(function (redirectResult) {
+      if (redirectResult && redirectResult.user) finishSuccessfulLogin(redirectResult.user);
   onAuthStateChanged(auth, function (user) {
     authInitialized = true;
     lastUser = user || null;

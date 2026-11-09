@@ -532,7 +532,16 @@
       autoPricingPlan: !!raw.autoPricingPlan,
       suppressPricingPlan: raw.suppressPricingPlan === true,
       lessons: normalizeLessons(raw.lessons),
-      enrolledCount: Number(raw.enrolledCount) || 0,
+      enrolledCount: (function () {
+        var value =
+          raw.enrolled_students_count != null
+            ? raw.enrolled_students_count
+            : raw.enrolledStudentsCount != null
+              ? raw.enrolledStudentsCount
+              : raw.enrolledCount;
+        var count = Number(value);
+        return isFinite(count) && count > 0 ? Math.floor(count) : 0;
+      })(),
       views: Number(raw.views) || 0,
       source: raw.source === 'instructor' ? 'instructor' : 'admin',
       softDeleted: trashFromStatus ? true : !!raw.softDeleted,

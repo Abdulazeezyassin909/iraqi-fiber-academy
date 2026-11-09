@@ -128,7 +128,10 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read: if isAdmin()
         || (isSignedIn() && resource.data.userId == request.auth.uid)
-        || (isSignedIn() && resource.data.instructorId == request.auth.uid);
+        || (isSignedIn() && resource.data.instructorId == request.auth.uid)
+        || (isSignedIn()
+          && resource.data.instructorEmail is string
+          && resource.data.instructorEmail == request.auth.token.email.lower());
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'pending'

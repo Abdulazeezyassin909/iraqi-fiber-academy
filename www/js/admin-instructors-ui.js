@@ -313,6 +313,23 @@
       if (emailEl) emailEl.value = instructor.email || '';
       if (bioEl) bioEl.value = instructor.bio || '';
       if (coursesEl) coursesEl.value = instructor.courses || '';
+      var cvEl = document.getElementById('instructorEditorCv');
+      var cvOpen = document.getElementById('instructorEditorCvOpen');
+      if (cvEl) cvEl.value = instructor.cvLink || '';
+      if (cvOpen) {
+        var cvHref = String(instructor.cvLink || '').trim();
+        cvOpen.hidden = !cvHref;
+        cvOpen.href = cvHref || '#';
+      }
+      if (cvEl && cvEl.dataset.bound !== '1') {
+        cvEl.dataset.bound = '1';
+        cvEl.addEventListener('input', function () {
+          var href = String(cvEl.value || '').trim();
+          if (!cvOpen) return;
+          cvOpen.hidden = !href;
+          cvOpen.href = href || '#';
+        });
+      }
       modal.hidden = false;
       if (nameEl) nameEl.focus();
     }
@@ -896,6 +913,7 @@
             fullName: (document.getElementById('instructorEditorName') || {}).value,
             bio: (document.getElementById('instructorEditorBio') || {}).value,
             courses: (document.getElementById('instructorEditorCourses') || {}).value,
+            cvLink: (document.getElementById('instructorEditorCv') || {}).value,
           });
           closeInstructorEditor();
           refreshAfterAction({ type: 'edit-instructor' });

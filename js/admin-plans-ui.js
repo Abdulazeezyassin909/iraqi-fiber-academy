@@ -215,6 +215,10 @@
           '</span>' +
           '</div>' +
           '</div>' +
+          '<button type="button" class="admin-plan-card__toggle" data-plan-details="' +
+          escapeHtml(plan.id) +
+          '">عرض التفاصيل</button>' +
+          '<div class="admin-plan-card__more">' +
           '<ul class="admin-plan-card__features">' +
           (plan.features || [])
             .slice(0, 6)
@@ -230,6 +234,7 @@
             })
             .join('') +
           '</ul>' +
+          '</div>' +
           '<div class="admin-plan-card__actions">' +
           '<button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" data-edit-plan="' +
           escapeHtml(plan.id) +
@@ -452,6 +457,15 @@
       if (editBtn) {
         e.preventDefault();
         handleEditPlan(editBtn.getAttribute('data-edit-plan'));
+        return;
+      }
+      var detailsBtn = target.closest('#adminPlansList [data-plan-details]');
+      if (detailsBtn) {
+        e.preventDefault();
+        var card = detailsBtn.closest('.admin-plan-card');
+        if (!card) return;
+        var open = card.classList.toggle('is-open');
+        detailsBtn.textContent = open ? 'إخفاء التفاصيل' : 'عرض التفاصيل';
       }
     });
 

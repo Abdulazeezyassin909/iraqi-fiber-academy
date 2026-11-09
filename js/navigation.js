@@ -124,7 +124,8 @@
       menuItem &&
       menu &&
       !menuItem.hasAttribute('data-auth-login') &&
-      !menuItem.hasAttribute('data-auth-logout')
+      !menuItem.hasAttribute('data-auth-logout') &&
+      !menuItem.hasAttribute('data-my-courses')
     ) {
       menu.classList.remove('open');
       var toggleBtn = menu.querySelector('.user-menu__toggle');

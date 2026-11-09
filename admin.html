@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script src="js/shell-layout.js?v=20261106m"></script>
   <meta name="description" content="ENGINEER PATH °360 Admin — لوحة إدارة منصة المسار المهني الهندسي">
   <title>لوحة الإدارة | ENGINEER PATH °360 Admin</title>
   <link rel="icon" type="image/png" href="images/logo.png" />
@@ -14,7 +15,8 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
+        navigator.serviceWorker.register('/sw.js?v=20261108push6').then(registration => {
+          registration.update();
           console.log('PWA ServiceWorker registered successfully');
         }).catch(err => {
           console.log('PWA ServiceWorker registration failed: ', err);
@@ -23,7 +25,8 @@
     }
   </script>
   <link rel="stylesheet" href="css/style.css?v=20260921">
-  <link rel="stylesheet" href="css/admin.css?v=20261029f">
+  <link rel="stylesheet" href="css/admin.css?v=20261109badges">
+  <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alexandria&family=Almarai&family=Cairo&family=Inter&family=Montserrat&family=Noto+Kufi+Arabic&family=Poppins&family=Roboto&family=Tajawal&display=swap" rel="stylesheet">
@@ -69,6 +72,13 @@
           طلبات الشراء
           <span class="admin-nav__badge" id="adminOrdersPendingBadge" hidden aria-label="طلبات قيد المراجعة"></span>
         </a>
+        <a href="#lesson-comments" class="admin-nav__link" data-section="lesson-comments">
+          <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          مراجعة التعليقات
+          <span class="admin-nav__badge" id="adminCommentsPendingBadge" hidden aria-label="تعليقات قيد المراجعة"></span>
+        </a>
         <a href="#plans" class="admin-nav__link" data-section="plans">
           <svg class="admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -109,7 +119,7 @@
           <a href="#site-hero-slideshow" class="admin-nav__sublink" data-section="site-hero-slideshow">الصفحة الرئيسية</a>
           <a href="#site-articles" class="admin-nav__sublink" data-section="site-articles">المقالات التقنية</a>
           <a href="#site-faq" class="admin-nav__sublink" data-section="site-faq">الأسئلة الشائعة</a>
-          <a href="#site-testimonials" class="admin-nav__sublink" data-section="site-testimonials">آراء المستخدمين</a>
+          <a href="#site-testimonials" class="admin-nav__sublink" data-section="site-testimonials">آراء المستخدمين<span class="admin-nav__badge" id="adminTestimonialsPendingBadge" hidden aria-label="آراء قيد المراجعة"></span></a>
           <a href="#" class="admin-nav__sublink admin-sidebar-sublink" data-section="admin-instructors-section">مدربونا</a>
           <a href="#site-preview" class="admin-nav__sublink" data-section="site-preview">معاينة الموقع</a>
           <a href="#site-footer" class="admin-nav__sublink" data-section="site-footer">إعدادات التذييل</a>
@@ -448,12 +458,12 @@
 
       <div class="admin-modal" id="instructorEditorModal" hidden>
         <div class="admin-modal__backdrop" data-close-instructor-modal></div>
-        <div class="admin-modal__dialog admin-modal__dialog--compact" role="dialog" aria-modal="true" aria-labelledby="instructorEditorTitle">
+        <div class="admin-modal__dialog admin-modal__dialog--instructor" role="dialog" aria-modal="true" aria-labelledby="instructorEditorTitle">
           <div class="admin-modal__header">
             <h3 class="admin-modal__title" id="instructorEditorTitle">تعديل مدرب</h3>
             <button class="admin-modal__close" type="button" data-close-instructor-modal aria-label="إغلاق">×</button>
           </div>
-          <form class="admin-modal__body admin-modal__body--compact" id="instructorEditorForm">
+          <form class="admin-modal__body" id="instructorEditorForm">
             <input type="hidden" id="instructorEditorId" value="" />
             <label class="admin-field">
               <span class="admin-field__label">الاسم الكامل</span>
@@ -465,12 +475,17 @@
             </label>
             <label class="admin-field">
               <span class="admin-field__label">النبذة</span>
-              <textarea class="admin-field__input admin-field__textarea" id="instructorEditorBio" rows="3"></textarea>
+              <textarea class="admin-field__input admin-field__textarea" id="instructorEditorBio" rows="6"></textarea>
             </label>
             <label class="admin-field">
-              <span class="admin-field__label">الكورسات</span>
-              <textarea class="admin-field__input admin-field__textarea" id="instructorEditorCourses" rows="2"></textarea>
+              <span class="admin-field__label">الكورسات المقترحة</span>
+              <textarea class="admin-field__input admin-field__textarea" id="instructorEditorCourses" rows="4"></textarea>
             </label>
+            <label class="admin-field">
+              <span class="admin-field__label">رابط السيرة الذاتية</span>
+              <input class="admin-field__input" type="url" id="instructorEditorCv" dir="ltr" placeholder="https://" />
+            </label>
+            <p class="admin-field__hint"><a id="instructorEditorCvOpen" href="#" target="_blank" rel="noopener noreferrer" hidden>عرض السيرة الذاتية</a></p>
             <div class="admin-modal__actions">
               <button class="admin-btn admin-btn--ghost" type="button" data-close-instructor-modal>إلغاء</button>
               <button class="admin-btn admin-btn--primary" type="submit">حفظ</button>
@@ -741,6 +756,12 @@
           </div>
           <div class="admin-panel__tools">
             <label class="admin-field admin-field--inline">
+              <span class="admin-field__label">الكورس</span>
+              <select class="admin-field__input" id="adminOrdersProductFilter">
+                <option value="all">كل الكورسات</option>
+              </select>
+            </label>
+            <label class="admin-field admin-field--inline">
               <span class="admin-field__label">الحالة</span>
               <select class="admin-field__input" id="adminOrdersStatusFilter">
                 <option value="all">كل الطلبات</option>
@@ -773,6 +794,16 @@
         <div class="admin-panel__footer">
           <p class="admin-panel__meta" id="adminOrdersMeta">0 طلب</p>
         </div>
+      </section>
+
+      <section class="admin-panel admin-view" id="lesson-comments" data-admin-view="lesson-comments" aria-labelledby="lessonCommentsHeading" hidden>
+        <div class="admin-panel__header">
+          <div>
+            <h2 class="admin-panel__title" id="lessonCommentsHeading">مراجعة التعليقات</h2>
+            <p class="admin-panel__desc">التعليقات قيد المراجعة على صفحات الدروس. الموافقة تنشر التعليق فوراً.</p>
+          </div>
+        </div>
+        <div class="admin-table-wrap" id="lessonCommentsModeration"></div>
       </section>
 
       <section class="admin-panel admin-view" id="settings-checkout" data-admin-view="settings-checkout" aria-labelledby="checkoutSettingsHeading" hidden>
@@ -1192,6 +1223,8 @@
             <p class="admin-panel__desc">إدارة تقييمات وآراء الطلاب المعروضة على الصفحة الرئيسية</p>
           </div>
           <div class="admin-panel__actions">
+            <button class="admin-btn admin-btn--ghost" type="button" data-tst-filter="published" aria-pressed="true">منشورة</button>
+            <button class="admin-btn admin-btn--ghost" type="button" data-tst-filter="pending">قيد المراجعة</button>
             <button class="admin-btn admin-btn--ghost" type="button" data-tst-bin-toggle aria-pressed="false">سلة المهملات</button>
             <button class="admin-btn admin-btn--ghost" type="button" data-tst-restore-defaults>إعادة تعيين الافتراضيات</button>
             <button class="admin-btn admin-btn--primary" type="button" data-tst-add>رأي جديد</button>
@@ -1238,6 +1271,13 @@
                 </label>
               </div>
               <fieldset class="admin-field cms-footer-social-fieldset">
+                <legend class="admin-field__label">صفحات التذييل</legend>
+                <label class="admin-field">
+                  <span class="admin-field__label">مركز المساعدة (رابط)</span>
+                  <input class="admin-field__input" id="cmsFooterHelpLink" type="text" dir="ltr" placeholder="https://... أو صفحة داخل الموقع" />
+                </label>
+              </fieldset>
+              <fieldset class="admin-field cms-footer-social-fieldset">
                 <legend class="admin-field__label">روابط التواصل (تُخفى الأيقونة إذا كان الحقل فارغاً)</legend>
                 <div class="cms-footer-social-grid" id="cmsFooterSocialFields"></div>
               </fieldset>
@@ -1257,6 +1297,20 @@
               </div>
             </aside>
           </div>
+          <section class="cms-footer-pages" aria-label="صفحات التذييل">
+            <div class="admin-field cms-footer-page">
+              <span class="admin-field__label">تواصل معنا</span>
+              <div id="cmsFooterContactEditor" class="cms-footer-quill"></div>
+            </div>
+            <div class="admin-field cms-footer-page">
+              <span class="admin-field__label">سياسة الخصوصية</span>
+              <div id="cmsFooterPrivacyEditor" class="cms-footer-quill"></div>
+            </div>
+            <div class="admin-field cms-footer-page">
+              <span class="admin-field__label">شروط الاستخدام</span>
+              <div id="cmsFooterTermsEditor" class="cms-footer-quill"></div>
+            </div>
+          </section>
           <div class="admin-settings-form__actions">
             <button class="admin-btn admin-btn--primary" type="submit">حفظ إعدادات التذييل</button>
             <button class="admin-btn admin-btn--ghost" type="button" id="cmsFooterReset">استعادة الافتراضي</button>
@@ -1558,6 +1612,22 @@
               <p class="lab-settings-cms__status" id="admin-ftth-lab-settings-status"></p>
             </div>
           </fieldset>
+          <fieldset class="admin-field admin-field--fieldset">
+            <legend class="admin-field__label">إشعار عام للطلاب</legend>
+            <p class="admin-field__hint">يصل هذا الإشعار إلى كل الحسابات المسجّلة داخل الموقع، مثل تنبيه صيانة أو خبر عام. لا يغيّر إعدادات التجربة أو العرض.</p>
+            <label class="admin-field">
+              <span class="admin-field__label">عنوان الإشعار</span>
+              <input class="admin-field__input" id="adminBroadcastTitle" type="text" maxlength="120" placeholder="مثال: صيانة الموقع" />
+            </label>
+            <label class="admin-field">
+              <span class="admin-field__label">نص الإشعار</span>
+              <textarea class="admin-field__input admin-field__textarea" id="adminBroadcastMessage" rows="3" maxlength="500" placeholder="مثال: الموقع تحت الصيانة اليوم من الساعة 10 إلى 12"></textarea>
+            </label>
+            <button class="admin-btn admin-btn--primary" type="button" id="adminBroadcastSend">نشر الإشعار</button>
+            <p class="admin-panel__meta" id="adminBroadcastStatus" role="status"></p>
+            <h3 class="admin-field__label" id="adminBroadcastLogTitle">سجل الإشعارات</h3>
+            <div class="admin-broadcast-log" id="adminBroadcastLog" aria-labelledby="adminBroadcastLogTitle"></div>
+          </fieldset>
           <div class="admin-settings-form__actions">
             <button class="admin-btn admin-btn--primary" type="submit">حفظ الإعدادات</button>
             <p class="admin-panel__meta" id="settingsSaveStatus" role="status"></p>
@@ -1579,33 +1649,35 @@
   <script src="js/faq.js?v=20260921"></script>
   <script type="module" src="js/platform-faqs-firestore-sync.js?v=20260921"></script>
   <script src="js/testimonials.js?v=20260921"></script>
-  <script type="module" src="js/platform-testimonials-firestore-sync.js?v=20260921"></script>
+  <script type="module" src="js/platform-testimonials-firestore-sync.js?v=20261109role"></script>
   <script src="js/platform-stats.js?v=20260921"></script>
   <script type="module" src="js/platform-stats-firestore-sync.js?v=20260921"></script>
   <script type="module" src="js/firestore-user-metrics.js?v=20260921"></script>
-  <script src="js/platform-footer.js?v=20260921"></script>
-  <script type="module" src="js/platform-footer-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-footer.js?v=20261109legalkeep"></script>
+  <script type="module" src="js/platform-footer-firestore-sync.js?v=20261108page"></script>
   <script src="js/platform-hero-slideshow.js?v=20260921"></script>
   <script src="js/admin-users.js?v=20260921"></script>
   <script type="module" src="js/admin-users-firestore-sync.js?v=20260921"></script>
-  <script src="js/instructor-applications.js?v=20261014c"></script>
+  <script src="js/instructor-applications.js?v=20261108cv"></script>
   <script src="js/platform-courses.js?v=20260921"></script>
   <script type="module" src="js/platform-courses-firestore-sync.js?v=20260921"></script>
   <script src="js/platform-plans.js?v=20260921"></script>
   <script type="module" src="js/platform-plans-firestore-sync.js?v=20260921"></script>
   <script src="js/course-plan-sync.js?v=20260921"></script>
-  <script src="js/admin-courses-ui.js?v=20261029j"></script>
-  <script src="js/admin-plans-ui.js?v=20260921"></script>
+  <script src="js/admin-courses-ui.js?v=20261108c"></script>
+  <script src="js/admin-plans-ui.js?v=20261108plan"></script>
   <script src="js/settings/FtthLabSettings.js?v=20260921"></script>
   <script src="js/ftth-lab-settings-cms.js?v=20260921"></script>
-  <script src="js/admin-core.js?v=20260925"></script>
+  <script src="js/admin-core.js?v=20261108log"></script>
   <script src="js/admin-users-ui.js?v=20260921"></script>
-  <script src="js/admin-instructors-ui.js?v=20261014g"></script>
+  <script src="js/admin-instructors-ui.js?v=20261108cv"></script>
   <script type="module" src="js/admin-public-instructors.js?v=20261029m"></script>
   <script type="module" src="js/platform-simulators-firestore-sync.js?v=20260921"></script>
-  <script src="js/admin-site-cms.js?v=20260921"></script>
-  <script type="module" src="js/admin-orders-ui.js?v=20260921"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+  <script src="js/admin-site-cms.js?v=20261109badges"></script>
+  <script type="module" src="js/admin-orders-ui.js?v=20261109enrolled"></script>
   <script type="module" src="js/admin-checkout-settings-ui.js?v=20260921"></script>
+  <script type="module" src="js/lesson-comments.js?v=20261109badges"></script>
   <script src="js/admin.js?v=20260921"></script>
 </body>
 </html>

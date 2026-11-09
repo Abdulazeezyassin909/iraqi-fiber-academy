@@ -8,6 +8,7 @@
     uid: '',
     profile: null,
     lastReadAt: 0,
+    readIds: {},
     notifications: [],
     panelOpen: false,
     hydrated: false,
@@ -65,7 +66,24 @@
     }
   }
 
+  function isAdminViewer() {
+    var role = state.profile && state.profile.role ? String(state.profile.role) : '';
+    if (!role && typeof global.getSynchronousUserRole === 'function') {
+      role = String(global.getSynchronousUserRole() || '');
+    }
+    return role.toLowerCase() === 'admin';
+  }
+
+  function adminMaySee(notification) {
+    var type = String((notification && notification.type) || '');
+    return type === 'new_order' || type === 'course_published' || type === 'instructor_application';
+  }
+
   function appliesToCurrentUser(notification) {
+    if (!notification || notification.active === false) return false;
+    if (isAdminViewer()) return adminMaySee(notification);
+    if (String((notification && notification.target) || '').toLowerCase() === 'admins') return false;
+    if (String(notification.type || '') === 'instructor_application') return false;
     var api = getFirestoreApi();
     if (api && typeof api.notificationAppliesToUser === 'function') {
       return api.notificationAppliesToUser(notification, state.profile);
@@ -79,11 +97,52 @@
     return state.notifications.filter(appliesToCurrentUser);
   }
 
+  function isUnread(notification) {
+    if (!notification) return false;
+    if (notification.isRead === true) return false;
+    if (state.readIds[notification.id]) return false;
+    return Number(notification.createdAt) > (Number(state.lastReadAt) || 0);
+  }
+
+  async function authToken() {
+    var user =
+      global.IFAAuth && typeof global.IFAAuth.getCurrentUser === 'function'
+        ? global.IFAAuth.getCurrentUser()
+        : null;
+    if (!user || typeof user.getIdToken !== 'function') return '';
+    return user.getIdToken();
+  }
+
+  async function loadApiNotifications() {
+    var token = await authToken();
+    if (!token) return;
+    var response = await fetch('/api/notifications', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    if (!response.ok) return;
+    var data = await response.json();
+    var rows = Array.isArray(data.notifications) ? data.notifications : [];
+    state.notifications = rows.map(function (row) {
+      return {
+        id: row.id,
+        title: row.title || '',
+        body: row.message || '',
+        message: row.message || '',
+        type: row.type || (/course-details\.html/i.test(row.linkUrl || '') ? 'course_published' : 'announcement'),
+        target: row.target || '',
+        targetAudience: 'all_students',
+        active: true,
+        linkUrl: row.linkUrl || '',
+        createdAt: Date.parse(row.createdAt) || Date.now(),
+        isRead: !!row.isRead,
+      };
+    });
+    state.apiMode = true;
+    renderBell();
+  }
+
   function unreadCount() {
-    var lastRead = Number(state.lastReadAt) || 0;
-    return visibleNotifications().filter(function (n) {
-      return Number(n.createdAt) > lastRead;
-    }).length;
+    return visibleNotifications().filter(isUnread).length;
   }
 
   function panelTitle() {
@@ -142,6 +201,18 @@
     }, 5200);
   }
 
+  function courseLink(notification) {
+    var link = String((notification && notification.linkUrl) || '');
+    var type = String((notification && notification.type) || '');
+    if (type === 'new_order' || type === 'order_approved' || type === 'order_rejected') {
+      if (isAdminViewer() && type === 'new_order') return 'admin.html#orders';
+      return 'instructor.html#orders';
+    }
+    if (type === 'instructor_application') return link || 'admin.html#instructors';
+    if (type === 'course_published' || /course-details\.html/i.test(link)) return link;
+    return '';
+  }
+
   function renderBell() {
     var roots = document.querySelectorAll('[data-settings-root]');
     if (!roots.length) return;
@@ -183,14 +254,16 @@
       } else {
         list.innerHTML = items
           .map(function (n) {
-            var isUnread = Number(n.createdAt) > (Number(state.lastReadAt) || 0);
+            var unread = isUnread(n);
             return (
               '<button type="button" class="notif-item' +
-              (isUnread ? ' notif-item--unread' : '') +
+              (unread ? ' notif-item--unread' : '') +
               '" data-notification-id="' +
               escapeHtml(n.id) +
+              '" data-notification-type="' +
+              escapeHtml(n.type || '') +
               '" data-notification-link="' +
-              escapeHtml(n.linkUrl || '') +
+              escapeHtml(courseLink(n) ? n.linkUrl : '') +
               '">' +
               '<span class="notif-item__title">' +
               escapeHtml(n.title) +
@@ -227,11 +300,31 @@
 
   function openPanel() {
     if (!state.uid) return;
-    if (global.PlatformSettings && typeof global.PlatformSettings.setPanelOpen === 'function') {
-      global.PlatformSettings.setPanelOpen(false);
-    }
     state.panelOpen = true;
     renderBell();
+  }
+
+  async function markOneRead(id) {
+    var api = getFirestoreApi();
+    if (!id) return;
+    state.readIds[id] = true;
+    renderBell();
+    try {
+      if (state.apiMode) {
+        var token = await authToken();
+        if (token) {
+          await fetch('/api/notifications/read/' + encodeURIComponent(id), {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + token },
+          });
+        }
+      }
+      if (api && state.uid && typeof api.markNotificationRead === 'function') {
+        await api.markNotificationRead(state.uid, id);
+      }
+    } catch (err) {
+      console.error('[PlatformNotifications] markOneRead failed', err);
+    }
   }
 
   async function markAllRead() {
@@ -254,6 +347,10 @@
   }
 
   function handleFirestoreUpdate(list, meta) {
+    if (state.apiMode) {
+      renderBell();
+      return;
+    }
     state.notifications = Array.isArray(list) ? list.slice() : [];
     if (!state.hydrated) {
       state.hydrated = true;
@@ -271,14 +368,23 @@
 
     document.addEventListener('click', function (e) {
       var rowToggle = e.target.closest ? e.target.closest('[data-notifications-toggle]') : null;
-      if (rowToggle) {
+      if (!rowToggle) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      state.panelOpen = !state.panelOpen;
+      renderBell();
+    }, true);
+
+    document.addEventListener('click', function (e) {
+      var back = e.target.closest ? e.target.closest('[data-notifications-back]') : null;
+      if (back) {
         e.preventDefault();
         e.stopPropagation();
-        state.panelOpen = !state.panelOpen;
-        if (state.panelOpen && global.PlatformSettings && typeof global.PlatformSettings.setPanelOpen === 'function') {
-          global.PlatformSettings.setPanelOpen(false);
+        closePanel();
+        if (global.PlatformSettings && typeof global.PlatformSettings.setPanelOpen === 'function') {
+          global.PlatformSettings.setPanelOpen(true);
         }
-        renderBell();
         return;
       }
 
@@ -293,7 +399,8 @@
       if (item) {
         e.preventDefault();
         var link = item.getAttribute('data-notification-link') || '';
-        markAllRead().then(function () {
+        var noteId = item.getAttribute('data-notification-id') || '';
+        markOneRead(noteId).then(function () {
           if (link) global.location.href = link;
         });
         return;
@@ -323,9 +430,6 @@
     bindUi();
     state.uid = String(uid || '');
     state.profile = profile || null;
-    state.panelOpen = false;
-    state.hydrated = false;
-
     if (!state.uid) {
       stop();
       return;
@@ -333,6 +437,29 @@
 
     ensureNotificationsFirestoreSync();
     await refreshLastReadAt();
+    var readApi = getFirestoreApi();
+    if (readApi && typeof readApi.getUserNotificationReadIds === 'function') {
+      var ids = await readApi.getUserNotificationReadIds(state.uid);
+      state.readIds = {};
+      ids.forEach(function (id) {
+        state.readIds[id] = true;
+      });
+    }
+    try {
+      await loadApiNotifications();
+    } catch (err) {
+      console.warn('[PlatformNotifications] API list failed', err);
+    }
+    if (readApi && typeof readApi.fetchNotifications === 'function') {
+      try {
+        var fetched = await readApi.fetchNotifications();
+        if (Array.isArray(fetched) && fetched.length) {
+          handleFirestoreUpdate(fetched, { initial: true, added: [] });
+        }
+      } catch (err) {
+        console.warn('[PlatformNotifications] fetchNotifications failed', err);
+      }
+    }
 
     var api = getFirestoreApi();
     if (api) {
@@ -345,6 +472,92 @@
       }
     }
     renderBell();
+    scheduleLiveStream();
+  }
+
+  var reconnectTimer = null;
+
+  function scheduleLiveStream() {
+    var open = function () {
+      if (state.uid) openLiveStream();
+    };
+    if (document.readyState === 'complete') {
+      global.setTimeout(open, 0);
+      return;
+    }
+    global.addEventListener('load', function () {
+      global.setTimeout(open, 0);
+    }, { once: true });
+  }
+
+  function closeLiveStream() {
+    if (reconnectTimer) {
+      global.clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    if (state.liveSource) {
+      state.liveSource.close();
+      state.liveSource = null;
+    }
+  }
+
+  function onLiveNotification(row) {
+    if (!row || !row.id) return;
+    var exists = state.notifications.some(function (item) {
+      return item.id === row.id;
+    });
+    if (exists) return;
+    var link = row.linkUrl || '';
+    var item = {
+      id: row.id,
+      title: row.title || '',
+      body: row.message || '',
+      message: row.message || '',
+      type: row.type || (/course-details\.html/i.test(link) ? 'course_published' : 'announcement'),
+      target: row.target || '',
+      targetAudience: 'all_students',
+      active: true,
+      linkUrl: link,
+      createdAt: Date.parse(row.createdAt) || Date.now(),
+      isRead: false,
+    };
+    if (!appliesToCurrentUser(item)) return;
+    state.notifications = [item].concat(state.notifications);
+    state.apiMode = true;
+    renderBell();
+    showNotificationToast({
+      title: 'إشعار جديد: ' + item.title,
+      body: item.body,
+      linkUrl: courseLink(item),
+      active: true,
+      targetAudience: 'all_students',
+    });
+  }
+
+  async function openLiveStream() {
+    closeLiveStream();
+    if (!state.uid || typeof EventSource === 'undefined') return;
+    var token = await authToken();
+    if (!token || !state.uid) return;
+    var source = new EventSource('/api/notifications/stream?token=' + encodeURIComponent(token));
+    state.liveSource = source;
+    source.onmessage = function (event) {
+      try {
+        onLiveNotification(JSON.parse(event.data));
+      } catch (err) {
+        /* ignore malformed events */
+      }
+    };
+    source.onerror = function () {
+      if (state.liveSource !== source) return;
+      source.close();
+      state.liveSource = null;
+      if (reconnectTimer) global.clearTimeout(reconnectTimer);
+      reconnectTimer = global.setTimeout(function () {
+        reconnectTimer = null;
+        if (state.uid) openLiveStream();
+      }, 8000);
+    };
   }
 
   function stop() {
@@ -357,6 +570,7 @@
       state.firestoreUnsub();
       state.firestoreUnsub = null;
     }
+    closeLiveStream();
     renderBell();
   }
 

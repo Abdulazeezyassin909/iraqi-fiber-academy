@@ -26,7 +26,11 @@
       "firestore.rules",
       "storage.rules",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*.exe",
+      "**/*.dll",
+      "android/**",
+      "fiber_academy_platform/**"
     ],
     "headers": [
       {

@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl" data-i18n-document-title="page.title.home">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script src="js/shell-layout.js?v=20261106o"></script>
   <meta name="description" content="مسار المهندس ‎°360 — منصة المسار المهني الهندسي | Engineer Path °360 Engineering Career Path Platform">
   <title>مسار المهندس ‎°360 | Engineer Path °360</title>
   <link rel="icon" type="image/png" href="images/logo.png" />
@@ -22,7 +23,8 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
+        navigator.serviceWorker.register('/sw.js?v=20261108push6').then(registration => {
+          registration.update();
           console.log('PWA ServiceWorker registered successfully');
         }).catch(err => {
           console.log('PWA ServiceWorker registration failed: ', err);
@@ -30,16 +32,16 @@
       });
     }
   </script>
-  <link rel="stylesheet" href="css/style.css?v=20261029p">
-  <link rel="stylesheet" href="css/header.css?v=20260921">
+  <link rel="stylesheet" href="css/style.css?v=20261109back">
+  <link rel="stylesheet" href="css/header.css?v=20261109courses">
   <link rel="stylesheet" href="css/hero.css?v=20260921">
   <link rel="stylesheet" href="css/features.css?v=20260921">
   <link rel="stylesheet" href="css/pricing.css?v=20260921">
-  <link rel="stylesheet" href="css/footer.css?v=20260921">
+  <link rel="stylesheet" href="css/footer.css?v=20261106b">
   <link rel="stylesheet" href="css/instructor-apply.css?v=20260921">
-  <link rel="stylesheet" href="css/notifications.css?v=20260921">
+  <link rel="stylesheet" href="css/notifications.css?v=20261108ios">
   <script defer src="js/i18n.js?v=20260921"></script>
-  <script defer src="js/settings-manager.js?v=20260921"></script>
+  <script defer src="js/settings-manager.js?v=20261108t"></script>
 </head>
 <body>
 
@@ -473,8 +475,8 @@
           <h4 class="footer__column-title" data-i18n="footer.support">الدعم</h4>
           <ul class="footer__links">
             <li><a href="#faq" data-i18n="nav.faq">الأسئلة الشائعة</a></li>
-            <li><a href="#" data-i18n="footer.helpCenter">مركز المساعدة</a></li>
-            <li><a href="#" data-i18n="footer.contact">تواصل معنا</a></li>
+            <li><a href="#" data-footer-link="helpCenter" data-i18n="footer.helpCenter">مركز المساعدة</a></li>
+            <li><a href="#" data-footer-link="contact" data-i18n="footer.contact">تواصل معنا</a></li>
           </ul>
         </div>
         <div class="footer__column">
@@ -486,7 +488,7 @@
       </div>
       <div class="footer__bottom">
         <p class="footer__copyright" data-i18n="footer.copyright">© 2026 مسار المهندس ‎°360. جميع الحقوق محفوظة.</p>
-        <div class="footer__legal"><a href="#" data-i18n="footer.privacy">سياسة الخصوصية</a><a href="#" data-i18n="footer.terms">شروط الاستخدام</a></div>
+        <div class="footer__legal"><a href="#" data-footer-link="privacy" data-i18n="footer.privacy">سياسة الخصوصية</a><a href="#" data-footer-link="terms" data-i18n="footer.terms">شروط الاستخدام</a></div>
       </div>
     </div>
   </footer>
@@ -577,13 +579,13 @@
   <script src="js/faq.js?v=20260921"></script>
   <script type="module" src="js/public-instructors.js?v=20261029q"></script>
   <script type="module" src="js/platform-faqs-firestore-sync.js?v=20260921"></script>
-  <script src="js/testimonials.js?v=20260921"></script>
-  <script type="module" src="js/platform-testimonials-firestore-sync.js?v=20260921"></script>
+  <script src="js/testimonials.js?v=20261109role"></script>
+  <script type="module" src="js/platform-testimonials-firestore-sync.js?v=20261109role"></script>
   <script src="js/platform-stats.js?v=20260921"></script>
   <script type="module" src="js/platform-stats-firestore-sync.js?v=20260921"></script>
   <script type="module" src="js/firestore-user-metrics.js?v=20260921"></script>
-  <script src="js/platform-footer.js?v=20260921"></script>
-  <script type="module" src="js/platform-footer-firestore-sync.js?v=20260921"></script>
+  <script src="js/platform-footer.js?v=20261109legalkeep"></script>
+  <script type="module" src="js/platform-footer-firestore-sync.js?v=20261108page"></script>
   <script src="js/platform-hero-slideshow.js?v=20260921"></script>
   <script>
     (function bootPublicCms() {
@@ -642,10 +644,10 @@
       window.addEventListener('load', run);
     })();
   </script>
-  <script src="js/instructor-applications.js?v=20261014d"></script>
-  <script src="js/platform-courses.js?v=20260921"></script>
+  <script src="js/instructor-applications.js?v=20261108cv"></script>
+  <script src="js/platform-courses.js?v=20261109enrolled"></script>
   <script type="module" src="js/platform-courses-firestore-sync.js?v=20261029q"></script>
-  <script src="js/platform-courses-public.js?v=20261029j"></script>
+  <script src="js/platform-courses-public.js?v=20261109back"></script>
   <script src="js/platform-plans.js?v=20260921"></script>
   <script type="module" src="js/platform-plans-firestore-sync.js?v=20260921"></script>
   <script src="js/platform-plans-public.js?v=20260921"></script>
@@ -889,12 +891,12 @@
       });
     })();
   </script>
-  <script src="js/navigation.js?v=20260921"></script>
+  <script src="js/navigation.js?v=20261109menu"></script>
   <script src="js/animations.js?v=20260921"></script>
   <script src="js/main.js?v=20261014d"></script>
-  <script src="js/platform-notifications.js?v=20260921"></script>
-  <script type="module" src="js/platform-notifications-firestore-sync.js?v=20260921"></script>
-  <script src="js/auth-manager.js?v=20261101b" type="module"></script>
+  <script src="js/platform-notifications.js?v=20261108clk"></script>
+  <script type="module" src="js/platform-notifications-firestore-sync.js?v=20261108"></script>
+  <script src="js/auth-manager.js?v=20261109courses" type="module"></script>
   <script src="js/capacitor-back.js?v=20261029q"></script>
   <nav class="mobile-only mobile-bottom-nav" aria-label="التنقل السفلي">
     <a class="nav-item mobile-bottom-nav__item is-active" href="#view-home" data-view="home">

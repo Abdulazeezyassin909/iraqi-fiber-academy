@@ -13,7 +13,7 @@ import {
   deleteDoc,
   serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { notifyStudentOrderApproved, notifyStudentOrderStatus } from './mail-notifications.js';
+import { notifyStudentOrderApproved, notifyStudentOrderStatus } from './mail-notifications.js?v=20261107j';
 import { syncEntitlementsFromApprovedOrders } from './entitlements-sync.js';
 
 var ordersUnsubscribe = null;
@@ -286,16 +286,39 @@ function closeReceiptModal() {
   if (img) img.removeAttribute('src');
 }
 
+function fillProductFilter() {
+  var select = document.getElementById('adminOrdersProductFilter');
+  if (!select) return;
+  var current = select.value || 'all';
+  var titles = {};
+  cachedOrders.forEach(function (order) {
+    var title = String(order.productTitle || '').trim();
+    if (title) titles[title] = true;
+  });
+  var options = ['<option value="all">كل الكورسات</option>'];
+  Object.keys(titles)
+    .sort()
+    .forEach(function (title) {
+      options.push('<option value="' + escapeHtml(title) + '">' + escapeHtml(title) + '</option>');
+    });
+  select.innerHTML = options.join('');
+  select.value = current === 'all' || titles[current] ? current : 'all';
+}
+
 function renderOrdersTable() {
   var body = document.getElementById('adminOrdersBody');
   var meta = document.getElementById('adminOrdersMeta');
   if (!body) return;
 
+  fillProductFilter();
   var filter = document.getElementById('adminOrdersStatusFilter');
+  var productFilterEl = document.getElementById('adminOrdersProductFilter');
   var statusFilter = filter ? filter.value : 'all';
+  var productFilter = productFilterEl ? productFilterEl.value : 'all';
   var list = sortOrders(cachedOrders).filter(function (order) {
-    if (statusFilter === 'all') return true;
-    return String(order.status || 'pending') === statusFilter;
+    if (statusFilter !== 'all' && String(order.status || 'pending') !== statusFilter) return false;
+    if (productFilter !== 'all' && String(order.productTitle || '').trim() !== productFilter) return false;
+    return true;
   });
 
   if (meta) {
@@ -315,7 +338,7 @@ function renderOrdersTable() {
   }
 
   body.innerHTML = list
-    .map(function (order) {
+    .map(function (order, index) {
       var id = escapeHtml(order.id);
       var status = String(order.status || 'pending');
       var isPending = status === 'pending';
@@ -345,31 +368,29 @@ function renderOrdersTable() {
           deleteBtn +
           '</div>';
       } else {
-        actions =
-          '<div class="admin-table__actions admin-table__actions--row">' +
-          '<span class="admin-row-status-note">' +
-          (order.adminNote || order.rejectNote
-            ? escapeHtml(order.adminNote || order.rejectNote)
-            : status === 'approved'
-              ? 'تم التفعيل'
-              : '—') +
-          '</span>' +
-          deleteBtn +
-          '</div>';
+        actions = '<div class="admin-table__actions admin-table__actions--row">' + deleteBtn + '</div>';
       }
+      var noteText = String(order.adminNote || order.rejectNote || '').trim();
+      var noteHtml = noteText
+        ? '<span class="admin-order-note" title="' + escapeHtml(noteText) + '">' + escapeHtml(noteText) + '</span>'
+        : '';
+      var orderRef = String(index + 1);
 
       return (
         '<tr data-order-id="' +
         id +
         '">' +
-        '<td>' +
+        '<td><div class="admin-order-receipt">' +
+        '<span class="admin-order-ref" dir="ltr" title="تسلسل">' + escapeHtml(orderRef) + '</span>' +
         thumb +
-        '</td>' +
+        '</div></td>' +
         '<td><div class="admin-order-user"><strong>' +
         escapeHtml(order.userName || '—') +
         '</strong><span dir="ltr">' +
         escapeHtml(order.userEmail || '') +
-        '</span></div></td>' +
+        '</span>' +
+        noteHtml +
+        '</div></td>' +
         '<td>' +
         escapeHtml(order.productTitle || '—') +
         '</td>' +
@@ -402,6 +423,10 @@ function bindOrdersPanel() {
   var filter = document.getElementById('adminOrdersStatusFilter');
   if (filter) {
     filter.addEventListener('change', renderOrdersTable);
+  }
+  var productFilter = document.getElementById('adminOrdersProductFilter');
+  if (productFilter) {
+    productFilter.addEventListener('change', renderOrdersTable);
   }
 
   var body = document.getElementById('adminOrdersBody');
@@ -481,7 +506,9 @@ function openApproveModal(orderId) {
   pendingApproveOrderId = orderId;
   var modal = document.getElementById('adminOrderApproveModal');
   var note = document.getElementById('adminOrderApproveNote');
-  if (note) note.value = '';
+  if (note) {
+    note.value = 'يسعدنا انضمامك لعائلة مسار المهندس 360 إذا كان لديك أي استفسار علمي أثناء التعلم، يمكنك طرحه في الجروب الخاص بالمشتركين. أما لحل أي مشكلة تقنية، ففريق الدعم الفني متواجد لمساعدتك. نتمنى لك رحلة تعليمية ممتعة ومفيدة';
+  }
   if (modal) {
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
@@ -562,16 +589,25 @@ function handleReject(orderId) {
   openRejectModal(orderId);
 }
 
+var submitApproveBusy = false;
+
 async function submitApprove() {
   var orderId = pendingApproveOrderId;
-  if (!orderId) return;
+  if (!orderId || submitApproveBusy) return;
   var order = cachedOrders.find(function (o) {
     return o.id === orderId;
   });
-  if (!order) return;
+  if (!order || order.status === 'approved' || order.approvalEmailSent === true) {
+    if (order && (order.status === 'approved' || order.approvalEmailSent === true)) {
+      showToast('هذا الطلب مقبول مسبقاً، ولن يُعاد إرسال إيميل الموافقة.');
+    }
+    return;
+  }
+  submitApproveBusy = true;
 
   var noteEl = document.getElementById('adminOrderApproveNote');
   var note = noteEl ? String(noteEl.value || '').trim() : '';
+  closeApproveModal();
 
   try {
     await grantUserAccess(order);
@@ -582,20 +618,60 @@ async function submitApprove() {
       reviewedAt: serverTimestamp(),
       reviewedBy: auth.currentUser ? auth.currentUser.uid : '',
     });
+    try {
+      await notifyInstructorOrderStatus(order, 'approved');
+    } catch (noteErr) {
+      console.warn('[AdminOrders] instructor approval notification failed', noteErr);
+    }
     var entitlements = await syncEntitlementsFromApprovedOrders(order.userId);
     dispatchSubscriptionChanged(order, entitlements);
     var approvedOrder = Object.assign({}, order, {
       id: orderId,
       amountLabel: formatIqd(order.amount),
     });
+    var studentEmail = String(approvedOrder.userEmail || '').trim();
+    console.log('[AdminOrders] approval recipient:', { orderId: orderId, userEmail: studentEmail });
     var mailResult = await notifyStudentOrderApproved(approvedOrder, note);
     warnIfMailNotSent(mailResult, 'approve');
+    if (mailResult && mailResult.sent && !mailResult.duplicate) {
+      try {
+        await updateDoc(doc(db, 'orders', orderId), { approvalEmailSent: true });
+      } catch (markErr) {
+        console.error('[AdminOrders] Failed to mark approval email sent', markErr && markErr.message);
+      }
+    }
     closeApproveModal();
-    showToast('تم قبول الطلب وتفعيل وصول الطالب.');
+    if (mailResult && mailResult.sent) {
+      showToast('تم قبول الطلب، ووصل إشعار الموافقة إلى ' + studentEmail + '.');
+    } else {
+      var reason = (mailResult && mailResult.error) || 'سبب غير معروف';
+      alert('تم قبول الطلب وتفعيل الوصول، لكن إيميل الطالب ما انرسل.\n' + reason);
+    }
   } catch (err) {
     console.error('[AdminOrders] approve failed', err);
     alert((err && err.message) || 'تعذر قبول الطلب.');
+  } finally {
+    submitApproveBusy = false;
   }
+}
+
+async function notifyInstructorOrderStatus(order, status) {
+  var user = auth.currentUser;
+  if (!user || typeof user.getIdToken !== 'function' || !order || !order.id) return;
+  var token = await user.getIdToken();
+  await fetch('/api/notifications/order-status', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + token,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      orderId: order.id,
+      status: status,
+      courseId: order.courseId || '',
+      courseName: order.productTitle || '',
+    }),
+  });
 }
 
 async function deleteOrder(orderId) {
@@ -642,6 +718,11 @@ async function submitReject() {
       reviewedAt: serverTimestamp(),
       reviewedBy: auth.currentUser ? auth.currentUser.uid : '',
     });
+    try {
+      await notifyInstructorOrderStatus(order, 'rejected');
+    } catch (noteErr) {
+      console.warn('[AdminOrders] instructor rejection notification failed', noteErr);
+    }
     var mailResult = await notifyStudentOrderStatus(
       Object.assign({}, order, { amountLabel: formatIqd(order.amount) }),
       'rejected',
@@ -656,6 +737,58 @@ async function submitReject() {
   }
 }
 
+var instructorBackfillStarted = {};
+
+async function backfillOrderInstructors(orders) {
+  for (var i = 0; i < orders.length; i++) {
+    var order = orders[i];
+    if (!order || !order.id || !order.courseId || order.instructorEmail || instructorBackfillStarted[order.id]) continue;
+    instructorBackfillStarted[order.id] = true;
+    try {
+      var courseSnap = await getDoc(doc(db, 'courses', String(order.courseId)));
+      if (!courseSnap.exists()) continue;
+      var course = courseSnap.data() || {};
+      var email = String(course.instructorEmail || '').trim().toLowerCase();
+      var instructorId = String(course.instructorId || order.instructorId || '').trim();
+      if (!email && !instructorId) continue;
+      var patch = {};
+      if (email) patch.instructorEmail = email;
+      if (instructorId && !order.instructorId) patch.instructorId = instructorId;
+      if (!Object.keys(patch).length) continue;
+      await updateDoc(doc(db, 'orders', order.id), patch);
+    } catch (err) {
+      console.warn('[AdminOrders] instructor backfill skipped', order.id, err);
+    }
+  }
+}
+
+async function syncEnrollmentCounts(orders) {
+  var counts = {};
+  (orders || []).forEach(function (order) {
+    if (!order || String(order.status || '') !== 'approved') return;
+    var courseId = String(order.courseId || '').trim();
+    if (!courseId) return;
+    counts[courseId] = (counts[courseId] || 0) + 1;
+  });
+  var coursesSnap = await getDocs(collection(db, 'courses'));
+  var writes = [];
+  coursesSnap.forEach(function (courseDoc) {
+    var next = counts[courseDoc.id] || 0;
+    var data = courseDoc.data() || {};
+    var current = Number(data.enrolled_students_count);
+    if (!isFinite(current)) current = Number(data.enrolledStudentsCount);
+    if (!isFinite(current)) current = 0;
+    if (current === next && data.enrolledStudentsCount === next) return;
+    writes.push(
+      updateDoc(courseDoc.ref, {
+        enrolled_students_count: next,
+        enrolledStudentsCount: next,
+      })
+    );
+  });
+  if (writes.length) await Promise.all(writes);
+}
+
 function subscribeOrders() {
   if (ordersUnsubscribe) return;
   ordersUnsubscribe = onSnapshot(
@@ -664,6 +797,10 @@ function subscribeOrders() {
       cachedOrders = snap.docs.map(function (d) {
         return Object.assign({ id: d.id }, d.data());
       });
+      syncEnrollmentCounts(cachedOrders).catch(function (err) {
+        console.warn('[AdminOrders] enrollment count sync failed', err);
+      });
+      backfillOrderInstructors(cachedOrders);
       updatePendingOrdersNavBadge();
       renderOrdersTable();
     },

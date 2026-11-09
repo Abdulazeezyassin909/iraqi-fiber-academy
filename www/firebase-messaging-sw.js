@@ -26,6 +26,10 @@ messaging.onBackgroundMessage(function (payload) {
   var options = {
     body: body,
     icon: '/images/logo.png',
+    badge: '/images/badge.png',
+    dir: 'rtl',
+    tag: 'general-notification',
+    renotify: false,
     data: { url: linkUrl },
   };
   return self.registration.showNotification(title, options);

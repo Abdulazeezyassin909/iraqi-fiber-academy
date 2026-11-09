@@ -107,28 +107,21 @@
     var authUser = (window.IFAAuth && window.IFAAuth.getCurrentUser && window.IFAAuth.getCurrentUser())
       || (window.IFAAuth && window.IFAAuth.auth && window.IFAAuth.auth.currentUser)
       || null;
-    var uid = authUser ? (authUser.uid || authUser.id || '') : '';
-    if (!uid) {
+    if (!authUser || typeof authUser.getIdToken !== 'function') {
       body.innerHTML = '<tr><td colspan="7" class="admin-empty-cell">سجّل الدخول لعرض طلبات الشراء.</td></tr>';
       return;
     }
-    Promise.all([
-      import('./firebase-config.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
-    ]).then(function (mods) {
-      var db = mods[0].db;
-      var fs = mods[1];
-      var q = fs.query(fs.collection(db, 'orders'), fs.where('instructorId', '==', uid));
-      return fs.getDocs(q);
-    }).then(function (snap) {
-      var rows = [];
-      snap.forEach(function (docSnap) {
-        rows.push(Object.assign({ id: docSnap.id }, docSnap.data() || {}));
+    authUser.getIdToken().then(function (token) {
+      return fetch('/api/instructor/orders', {
+        headers: { Authorization: 'Bearer ' + token },
       });
+    }).then(function (response) {
+      if (!response.ok) throw new Error('orders request failed');
+      return response.json();
+    }).then(function (data) {
+      var rows = Array.isArray(data.orders) ? data.orders : [];
       rows.sort(function (a, b) {
-        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : Date.parse(a.createdAt) || 0;
-        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : Date.parse(b.createdAt) || 0;
-        return tb - ta;
+        return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
       });
       instructorOrdersCache = rows;
       var filterEl = document.getElementById('instructorOrderStatusFilter');
@@ -783,6 +776,10 @@
     renderOverview();
     bindInstructorPublicProfile();
     loadInstructorPublicProfile();
+    if (String(window.location.hash || '').replace('#', '') === 'orders') showSection('orders');
+    window.addEventListener('hashchange', function () {
+      if (String(window.location.hash || '').replace('#', '') === 'orders') showSection('orders');
+    });
 
     /* Sidebar */
     document.querySelectorAll('[data-inst-section]').forEach(function (link) {

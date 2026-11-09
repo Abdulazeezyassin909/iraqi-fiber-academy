@@ -226,6 +226,24 @@
         if (snap.exists()) return api.fs.setDoc(ref, payloadDoc, { merge: true });
         return api.fs.setDoc(ref, payloadDoc);
       }).then(function () {
+        if (user.getIdToken) {
+          user.getIdToken().then(function (token) {
+            return fetch('/api/notifications', {
+              method: 'POST',
+              headers: {
+                Authorization: 'Bearer ' + token,
+                'content-type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'طلب انضمام مدرب',
+                message: 'قدّم ' + fullName + ' طلب انضمام كمدرب وهو بانتظار المراجعة.',
+                type: 'instructor_application',
+                target: 'all',
+                linkUrl: 'admin.html#instructors',
+              }),
+            });
+          }).catch(function () {});
+        }
         return mapApplicationDoc(user.uid, {
           uid: user.uid,
           email: email,
@@ -350,18 +368,30 @@
       return api.fs.getDoc(userRef).then(function (userSnap) {
         var existing = userSnap.exists() ? userSnap.data() || {} : {};
         var nextRole = existing.role === 'admin' ? 'admin' : 'instructor';
-        return api.fs.updateDoc(appRef, {
-          status: 'approved',
-          reviewedAt: api.fs.serverTimestamp(),
-          reviewedBy: adminUid,
-        }).then(function () {
-          return api.fs.setDoc(userRef, {
-            isInstructor: true,
-            role: nextRole,
-            updatedAt: api.fs.serverTimestamp(),
-          }, { merge: true });
-        }).then(function () {
-          return { id: uid, uid: uid, email: existing.email || '', status: 'approved' };
+        return api.fs.getDoc(appRef).then(function (appSnap) {
+          var app = appSnap.exists() ? appSnap.data() || {} : {};
+          var bio = String(app.bio || '').trim();
+          var courses = String(app.specialization || app.courses || app.proposedCourses || '').trim();
+          var cvLink = String(app.cvLink || app.cvUrl || '').trim();
+          return api.fs.updateDoc(appRef, {
+            status: 'approved',
+            reviewedAt: api.fs.serverTimestamp(),
+            reviewedBy: adminUid,
+          }).then(function () {
+            return api.fs.setDoc(userRef, {
+              isInstructor: true,
+              role: nextRole,
+              name: app.fullName || existing.name || existing.fullName || '',
+              fullName: app.fullName || existing.fullName || existing.name || '',
+              bio: bio,
+              specialization: courses,
+              courses: courses,
+              cvLink: cvLink,
+              updatedAt: api.fs.serverTimestamp(),
+            }, { merge: true });
+          }).then(function () {
+            return { id: uid, uid: uid, email: existing.email || app.email || '', status: 'approved', bio: bio, courses: courses, cvLink: cvLink };
+          });
         });
       });
     });
@@ -680,13 +710,29 @@
             email: data.email || '',
             fullName: data.name || data.fullName || data.email || docSnap.id,
             bio: data.bio || '',
-            courses: data.specialization || '',
+            courses: data.specialization || data.courses || data.proposedCourses || '',
+            cvLink: data.cvLink || data.cvUrl || '',
             approvedAt: stampToIso(data.updatedAt) || stampToIso(data.createdAt),
             accountStatus: data.instructorStatus === 'suspended' ? 'suspended' : 'active',
             isInstructor: true,
           });
         });
-        if (typeof onChange === 'function') onChange(remoteInstructors.slice());
+        api.fs.getDocs(api.fs.collection(api.db, 'instructor_applications')).then(function (appSnap) {
+          var apps = {};
+          appSnap.forEach(function (docSnap) {
+            apps[docSnap.id] = docSnap.data() || {};
+          });
+          remoteInstructors.forEach(function (row) {
+            var app = apps[row.id];
+            if (!app) return;
+            if (!row.bio) row.bio = app.bio || '';
+            if (!row.courses) row.courses = app.specialization || app.courses || app.proposedCourses || '';
+            if (!row.cvLink) row.cvLink = app.cvLink || app.cvUrl || '';
+          });
+          if (typeof onChange === 'function') onChange(remoteInstructors.slice());
+        }).catch(function () {
+          if (typeof onChange === 'function') onChange(remoteInstructors.slice());
+        });
       }, function (err) {
         instructorsLoadError = (err && err.message) || 'تعذر تحميل قائمة المدربين';
         console.error('[InstructorApps] instructors snapshot failed:', err);
@@ -770,6 +816,7 @@
     if (patch && patch.fullName != null) next.fullName = String(patch.fullName).trim();
     if (patch && patch.bio != null) next.bio = String(patch.bio).trim();
     if (patch && patch.courses != null) next.courses = String(patch.courses).trim();
+    if (patch && patch.cvLink != null) next.cvLink = String(patch.cvLink).trim();
     if (patch && patch.accountStatus != null) {
       next.accountStatus = patch.accountStatus === 'suspended' ? 'suspended' : 'active';
     }
@@ -783,10 +830,41 @@
           if (patch && patch.fullName != null) list[i].fullName = next.fullName;
           if (patch && patch.bio != null) list[i].bio = next.bio;
           if (patch && patch.courses != null) list[i].courses = next.courses;
+          if (patch && patch.cvLink != null) list[i].cvLink = next.cvLink;
           break;
         }
       }
       saveApplications(list);
+    }
+
+    var uid = instructor.id;
+    if (uid && remoteInstructors) {
+      loadFirestore().then(function (api) {
+        var userRef = api.fs.doc(api.db, 'users', uid);
+        var appRef = api.fs.doc(api.db, 'instructor_applications', uid);
+        var payload = {
+          fullName: next.fullName || '',
+          name: next.fullName || '',
+          bio: next.bio || '',
+          specialization: next.courses || '',
+          courses: next.courses || '',
+          cvLink: next.cvLink || '',
+          updatedAt: api.fs.serverTimestamp(),
+        };
+        return api.fs.setDoc(userRef, payload, { merge: true }).then(function () {
+          return api.fs.getDoc(appRef).then(function (snap) {
+            if (!snap.exists()) return null;
+            return api.fs.setDoc(appRef, {
+              fullName: payload.fullName,
+              bio: payload.bio,
+              specialization: payload.specialization,
+              cvLink: payload.cvLink,
+            }, { merge: true });
+          });
+        });
+      }).catch(function (err) {
+        console.error('[InstructorApps] instructor profile save failed', err);
+      });
     }
 
     return findActiveInstructor(key);

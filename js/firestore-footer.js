@@ -42,9 +42,21 @@ function normalizeSettings(raw) {
   if (src.fontSize != null && typeof src.description !== 'object') {
     fontSize = Number(src.fontSize) || fontSize;
   }
+  var links = src.links && typeof src.links === 'object' ? src.links : {};
   return {
     description: { text: text, fontSize: fontSize, color: color },
     social: social,
+    links: {
+      helpCenter: String(links.helpCenter || ''),
+      contact: 'contact.html',
+      privacy: 'privacy-policy.html',
+      terms: 'terms.html',
+    },
+    pages: {
+      contact: String((src.pages && src.pages.contact) || ''),
+      privacy: String((src.pages && src.pages.privacy) || ''),
+      terms: String((src.pages && src.pages.terms) || ''),
+    },
   };
 }
 
@@ -74,6 +86,8 @@ function mergeFooterPatch(current, patch) {
     description: Object.assign({}, current.description, incoming.description || {}),
     logoSubtitle: Object.assign({}, current.logoSubtitle, incoming.logoSubtitle || {}),
     social: Object.assign({}, current.social),
+    links: Object.assign({}, current.links),
+    pages: Object.assign({}, current.pages),
   };
   if (typeof incoming.description === 'string') {
     merged.description.text = incoming.description;
@@ -93,6 +107,12 @@ function mergeFooterPatch(current, patch) {
         }
       }
     });
+  }
+  if (incoming.links) {
+    merged.links = Object.assign({}, current.links, incoming.links);
+  }
+  if (incoming.pages) {
+    merged.pages = Object.assign({}, current.pages, incoming.pages);
   }
   return normalizeSettings(merged);
 }

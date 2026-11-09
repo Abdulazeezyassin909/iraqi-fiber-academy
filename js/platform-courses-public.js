@@ -128,6 +128,7 @@
           c.durationWeeks || 0,
           c.startDate || '',
           c.price || 0,
+          c.enrolled_students_count || c.enrolledStudentsCount || c.enrolledCount || 0,
           c.imageUrl || c.thumbnailUrl || '',
           c.requiredPlanId || '',
           c.accessLevel || '',
@@ -258,6 +259,19 @@
     filterOneGrid(document.getElementById('homeCoursesGrid'), key);
   }
 
+  function enrolledStudentsCount(course) {
+    var count = Number(
+      course &&
+        (course.enrolled_students_count != null
+          ? course.enrolled_students_count
+          : course.enrolledStudentsCount != null
+            ? course.enrolledStudentsCount
+            : course.enrolledCount)
+    );
+    if (!isFinite(count) || count < 0) return 0;
+    return Math.floor(count);
+  }
+
   function renderCourseCard(course, index) {
     var title = course.title || 'كورس بدون عنوان';
     var description = course.shortDescription || course.description || '';
@@ -307,12 +321,61 @@
       escapeHtml(priceLabel) +
       '</span>' +
       '</div>' +
+      '<div class="meta-row custom-course-card__enrolled">' +
+      '<span class="meta-label">المسجلون:</span>' +
+      '<span class="meta-value custom-course-card__enrolled-value">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
+      '<span>' +
+      enrolledStudentsCount(course) +
+      ' طالب</span></span>' +
       '</div>' +
-      '<a href="course-details.html?id=' +
-      encodeURIComponent(course.id) +
-      '" class="custom-course-card__btn">تفاصيل الكورس</a>' +
+      '</div>' +
+      courseCardActionHtml(course) +
       '</div>' +
       '</article>'
+    );
+  }
+
+  function courseCardActionHtml(course) {
+    var user = readAuthUser();
+    var enrolled =
+      user &&
+      Array.isArray(user.enrolledCourseIds) &&
+      user.enrolledCourseIds.some(function (id) {
+        return String(id) === String(course.id);
+      });
+    if (!enrolled) {
+      return (
+        '<a href="course-details.html?id=' +
+        encodeURIComponent(course.id) +
+        '" class="custom-course-card__btn">تفاصيل الكورس</a>'
+      );
+    }
+    var lessons = orderedCourseLessons(course);
+    var done = 0;
+    var next = lessons[0] || null;
+    lessons.forEach(function (lesson) {
+      if (isLessonPassed(course, lesson)) done += 1;
+      else if (next && isLessonPassed(course, next)) next = lesson;
+    });
+    var pct = lessons.length ? Math.round((done / lessons.length) * 100) : 0;
+    var href = 'course-details.html?id=' + encodeURIComponent(course.id);
+    if (next && next.id) href += '&lesson=' + encodeURIComponent(next.id);
+    var play =
+      '<svg class="custom-course-card__play" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor"/></svg>';
+    return (
+      '<div class="custom-course-card__progress" aria-label="تقدم الكورس">' +
+      '<span>' +
+      pct +
+      '% مكتمل</span>' +
+      '<span class="custom-course-card__progress-track"><span style="width:' +
+      pct +
+      '%"></span></span></div>' +
+      '<a href="' +
+      href +
+      '" class="custom-course-card__btn custom-course-card__btn--continue">' +
+      play +
+      'متابعة التعلم</a>'
     );
   }
 
@@ -397,6 +460,12 @@
     document.addEventListener('ifa:pricing-firestore-changed', renderPublicCourses);
     window.addEventListener('ifa:pricing-firestore-changed', renderPublicCourses);
 
+    document.addEventListener('ifa:subscription-changed', refreshCourseAfterAccessSync);
+    window.addEventListener('ifa:subscription-changed', refreshCourseAfterAccessSync);
+    document.addEventListener('ifa:local-auth-changed', refreshCourseAfterAccessSync);
+    window.addEventListener('ifa:local-auth-changed', refreshCourseAfterAccessSync);
+    document.addEventListener('ifa:lesson-progress-changed', refreshCourseAfterAccessSync);
+    window.addEventListener('ifa:lesson-progress-changed', refreshCourseAfterAccessSync);
     document.addEventListener('ifa:platform-courses-changed', renderCourseDetailsPage);
     window.addEventListener('ifa:platform-courses-changed', renderCourseDetailsPage);
     document.addEventListener('ifa:courses-firestore-changed', renderCourseDetailsPage);
@@ -570,8 +639,20 @@
     return 'passed_' + courseId + '_' + lessonId;
   }
 
+  function readPassedTokens() {
+    try {
+      var raw = localStorage.getItem('ifa_passed_lessons');
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
   function isLessonPassed(course, lesson) {
     if (!course || !lesson) return false;
+    var token = String(course.id) + '::' + String(lesson.id);
+    if (readPassedTokens().indexOf(token) !== -1) return true;
     try {
       return localStorage.getItem(lessonPassedKey(course.id, lesson.id)) === 'true';
     } catch (err) {
@@ -581,11 +662,45 @@
 
   function markLessonPassed(course, lesson) {
     if (!course || !lesson) return;
+    var token = String(course.id) + '::' + String(lesson.id);
     try {
       localStorage.setItem(lessonPassedKey(course.id, lesson.id), 'true');
+      var list = readPassedTokens();
+      if (list.indexOf(token) === -1) {
+        list.push(token);
+        localStorage.setItem('ifa_passed_lessons', JSON.stringify(list));
+      }
     } catch (err) {
       /* ignore */
     }
+    if (window.IFALessonProgress && typeof window.IFALessonProgress.save === 'function') {
+      window.IFALessonProgress.save(course.id, lesson.id);
+    }
+  }
+
+  var lastCourseAccessSig = '';
+
+  function courseAccessSignature() {
+    var user = readAuthUser();
+    return [
+      user ? user.email : '',
+      user ? String(user.planId || '') : '',
+      user && Array.isArray(user.enrolledCourseIds) ? user.enrolledCourseIds.join(',') : '',
+      readPassedTokens().join(','),
+    ].join('|');
+  }
+
+  function refreshCourseAfterAccessSync() {
+    var root = document.getElementById('courseDetailsRoot');
+    if (!root) return;
+    var next = courseAccessSignature();
+    if (next === lastCourseAccessSig) return;
+    if (root.querySelector('.course-details__player') && !root.querySelector('.course-details__locked-panel')) {
+      lastCourseAccessSig = next;
+      return;
+    }
+    lastCourseAccessSig = next;
+    renderCourseDetailsPage();
   }
 
   function orderedCourseLessons(course) {
@@ -818,6 +933,26 @@
     );
   }
 
+  function syncHeaderCourseBack() {
+    var link = document.getElementById('headerCourseBack');
+    if (!link) return;
+    var params;
+    try {
+      params = new URLSearchParams(window.location.search);
+    } catch (err) {
+      return;
+    }
+    var courseId = String(params.get('id') || '').trim();
+    var lessonId = String(params.get('lesson') || '').trim();
+    if (courseId && lessonId) {
+      link.textContent = '← العودة للكورس';
+      link.href = 'course-details.html?id=' + encodeURIComponent(courseId);
+      return;
+    }
+    link.textContent = '← العودة للكورسات';
+    link.href = 'index.html#courses';
+  }
+
   function getCourseIdFromUrl() {
     try {
       return String(new URLSearchParams(window.location.search).get('id') || '').trim();
@@ -871,6 +1006,7 @@
   async function renderCourseDetailsPage() {
     var root = document.getElementById('courseDetailsRoot');
     if (!root) return;
+    syncHeaderCourseBack();
 
     destroyCoursePlyrPlayer();
 
@@ -937,11 +1073,14 @@
               encodeURIComponent(course.id) +
               '&lesson=' +
               encodeURIComponent(lesson.id);
-            var badge = free
+            var examLocked = subscribed && !canPlay;
+            var badge = free && canPlay
               ? '<span class="course-lesson__badge course-lesson__badge--free">معاينة مجانية</span>'
               : canPlay
                 ? ''
-                : '<span class="course-lesson__badge course-lesson__badge--lock">🔒 يتطلب الاشتراك بالباقة</span>';
+                : examLocked
+                  ? '<span class="course-lesson__badge course-lesson__badge--lock">🔒 تُفتح بعد اجتياز امتحان المحاضرة السابقة</span>'
+                  : '<span class="course-lesson__badge course-lesson__badge--lock">🔒 يتطلب الاشتراك بالباقة</span>';
             if (canPlay) {
               return (
                 '<a class="course-lesson' +
@@ -964,7 +1103,7 @@
               escapeHtml(lesson.title || 'حلقة') +
               '</span>' +
               badge +
-              '<a class="course-lesson__plans" href="index.html#plans">عرض الباقات</a>' +
+              (examLocked ? '' : '<a class="course-lesson__plans" href="index.html#plans">عرض الباقات</a>') +
               '</div>'
             );
           })
@@ -990,6 +1129,50 @@
           formattedDuration && formattedDuration !== 'كورس تدريبي' ? formattedDuration : 'TBA';
       }
       var priceLabel = formatCoursePrice(course);
+      function courseEnrollButtonHtml(course, fallbackHref) {
+        var api = window.PlatformPlansPublic;
+        var plan = null;
+        if (api && typeof api.findPlanById === 'function') {
+          var requiredId = String(course.requiredPlanId || '').trim();
+          if (requiredId) plan = api.findPlanById(requiredId);
+          if (!plan) plan = api.findPlanById('plan_course_' + course.id);
+        }
+        if (plan && api && typeof api.resolvePlanCta === 'function') {
+          var cta = api.resolvePlanCta(plan);
+          var label = escapeHtml(cta.label || 'اشترك الآن');
+          if (cta.disabled) {
+            return '<button type="button" class="course-enroll-btn" disabled>' + label + '</button>';
+          }
+          return '<a class="course-enroll-btn" href="' + escapeHtml(cta.href || fallbackHref) + '">' + label + '</a>';
+        }
+        return '<a class="course-enroll-btn" href="' + fallbackHref + '">اشترك الآن</a>';
+      }
+      var progressLessons = orderedCourseLessons(course);
+      var progressDone = 0;
+      progressLessons.forEach(function (lesson) {
+        if (isLessonPassed(course, lesson)) progressDone += 1;
+      });
+      var progressTotal = progressLessons.length;
+      var progressPct = progressTotal ? Math.round((progressDone / progressTotal) * 100) : 0;
+      var progressLeft = Math.max(0, progressTotal - progressDone);
+      var progressMessage = !progressTotal
+        ? 'الدروس ستظهر هنا قريباً'
+        : progressLeft === 0
+          ? 'أنهيت كل الدروس. ممتاز!'
+          : progressDone === 0
+            ? 'ابدأ الآن، باقي ' + progressLeft + ' دروس'
+            : 'باقي ' + progressLeft + (progressLeft === 1 ? ' درس' : ' دروس') + ' وتخلّص الكورس';
+      var progressHtml =
+        '<div class="course-progress" aria-label="تقدم الكورس">' +
+        '<div class="course-progress__head"><span>إنجازك</span><strong>' +
+        progressPct +
+        '%</strong></div>' +
+        '<div class="course-progress__track"><div class="course-progress__fill" style="width:' +
+        progressPct +
+        '%"></div></div>' +
+        '<p class="course-progress__msg">' +
+        escapeHtml(progressMessage) +
+        '</p></div>';
       var enrollHref = 'index.html#plans';
       if (targetLesson && (subscribed || lessonCanPlay(targetLesson, course))) {
         enrollHref = overviewUrl + '&lesson=' + encodeURIComponent(targetLesson.id);
@@ -1001,6 +1184,7 @@
         '<h1 class="course-floating-title" id="courseTitle">' +
         escapeHtml(course.title || '') +
         '</h1>' +
+        progressHtml +
         '<div class="course-floating-meta">' +
         '<div class="meta-item">' +
         '<span class="meta-label">السعر</span>' +
@@ -1015,9 +1199,7 @@
         '</span>' +
         '</div>' +
         '</div>' +
-        '<a class="course-enroll-btn" href="' +
-        enrollHref +
-        '">اشترك الآن</a>' +
+        courseEnrollButtonHtml(course, enrollHref) +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -1046,20 +1228,21 @@
           (active.description ? '<p class="course-details__lesson-desc">' + escapeHtml(active.description) + '</p>' : '') +
           renderLessonPlayer(active) +
           renderStudentLessonQuiz(active) +
+          '<div id="lessonQaHost"></div>' +
           '<div id="course-lesson-next"></div>';
       } else {
-        playerHtml =
-          '<div class="course-details__locked-panel">' +
-          '<p>🔒 يتطلب الاشتراك بالباقة</p>' +
-          '<a class="btn btn--primary" href="index.html#plans">عرض الباقات</a>' +
-          '</div>';
+        playerHtml = subscribed
+          ? '<div class="course-details__locked-panel">' +
+            '<p>🔒 تُفتح بعد اجتياز امتحان المحاضرة السابقة</p>' +
+            '</div>'
+          : '<div class="course-details__locked-panel">' +
+            '<p>🔒 يتطلب الاشتراك بالباقة</p>' +
+            '<a class="btn btn--primary" href="index.html#plans">عرض الباقات</a>' +
+            '</div>';
       }
       pageHtml =
         '<div class="container">' +
         '<header class="course-details__header">' +
-        '<p class="course-details__back"><a href="' +
-        overviewUrl +
-        '">← العودة للكورس</a></p>' +
         '<h1 class="course-details__title">' +
         escapeHtml(course.title || '') +
         '</h1>' +
@@ -1070,6 +1253,7 @@
         '</div>';
     }
 
+    lastCourseAccessSig = courseAccessSignature();
     root.innerHTML = pageHtml;
 
     if (!active) {
@@ -1087,6 +1271,23 @@
         initCoursePlyrPlayer(root);
         bindNativeVideoEnded(root);
         bindQuizSubmit(root);
+        var qaHost = document.getElementById('lessonQaHost');
+        function mountQa(attempt) {
+          if (!qaHost) return;
+          if (window.LessonComments && typeof window.LessonComments.mountLesson === 'function') {
+            window.LessonComments.mountLesson(qaHost, {
+              id: active.id,
+              title: active.title || '',
+              courseTitle: course.title || '',
+            });
+            return;
+          }
+          if (attempt > 30) return;
+          window.setTimeout(function () {
+            mountQa(attempt + 1);
+          }, 100);
+        }
+        mountQa(0);
       });
     } else {
       activeLessonContext = null;

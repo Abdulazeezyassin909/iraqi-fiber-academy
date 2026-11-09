@@ -96,6 +96,35 @@ export function buildStudentStatusHtml(status, order, customMessage) {
   );
 }
 
+function buildStudentApprovalEmailHtml(order, customMessage) {
+  var note = String(customMessage || '').trim();
+  var noteBlock = note.length > 1
+    ? '<p style="margin:20px 0 0;padding:12px 14px;background:#f8fafc;border-radius:10px;font-size:14px;line-height:1.7;color:#334155;text-align:right;"><strong>ملاحظة من الإدارة</strong><br>' +
+      escapeHtml(note) +
+      '</p>'
+    : '';
+  var course = String((order && order.productTitle) || '').trim();
+  var courseEnglish = course.indexOf('FTTH') !== -1 ? 'FTTH Quality Engineer Course' : '';
+  var courseLine = course
+    ? '<div dir="rtl" style="font-weight:bold;text-align:center;margin:0 0 15px;font-size:16px;color:#0f172a;">' +
+      '<div>' + escapeHtml(course) + '</div>' +
+      (courseEnglish
+        ? '<div style="font-size:0.9em;color:#555;font-weight:600;margin-top:6px;" dir="ltr">' + escapeHtml(courseEnglish) + '</div>'
+        : '') +
+      '</div>'
+    : '';
+  return (
+    '<div dir="rtl" style="margin:0;padding:28px 12px;background:#f1f5f9;">' +
+    '<div dir="rtl" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;padding:36px 28px;text-align:center;font-family:Tahoma,Arial,sans-serif;">' +
+    '<h2 dir="rtl" style="color:#4CAF50;text-align:center;margin-top:0;font-size:24px;line-height:1.5;">تم تفعيل اشتراكك بنجاح</h2>' +
+    courseLine +
+    '<p dir="rtl" style="text-align:center;margin-bottom:20px;font-size:15px;line-height:1.8;color:#334155;">تم تفعيل وصولك للمحتوى، يمكنك الآن متابعة التعلم من المنصة.</p>' +
+    noteBlock +
+    '<a href="https://iraqi-fiber-academy.abdulazizyassin909.workers.dev/index.html#courses" style="display:inline-block;margin-top:28px;padding:12px 24px;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">الذهاب إلى الكورسات</a>' +
+    '</div></div>'
+  );
+}
+
 function notifyEmailDeliveryUnconfigured(message) {
   if (!message) return;
   console.warn('[MailNotifications] ' + message);
@@ -425,8 +454,76 @@ export async function dispatchStudentApprovalEmail(order, options) {
   };
 }
 
+var studentApprovalEmailState = {};
+
 export async function notifyStudentOrderApproved(order, customMessage) {
-  return dispatchStudentApprovalEmail(order, {});
+  var target = order || {};
+  var orderId = String(target.id || target.orderId || '').trim();
+  var toEmail = String(target.userEmail || '').trim();
+  if (orderId && (studentApprovalEmailState[orderId] === 'sent' || target.approvalEmailSent === true)) {
+    console.log('[MailNotifications] Student approval email already sent for', orderId);
+    return { queued: false, sent: true, duplicate: true, error: null, notificationId: 'emailjs_student_' + orderId };
+  }
+  if (orderId && studentApprovalEmailState[orderId] === 'sending') {
+    console.warn('[MailNotifications] Student approval email already in flight for', orderId);
+    return { queued: false, sent: false, duplicate: true, error: 'approval_email_in_flight' };
+  }
+  if (!toEmail || toEmail.indexOf('@') === -1) {
+    console.error('[MailNotifications] Student approval skipped — order.userEmail missing', { orderId: orderId });
+    return { queued: false, sent: false, error: 'no_student_email' };
+  }
+  if (orderId) studentApprovalEmailState[orderId] = 'sending';
+
+  var config = await fetchCheckoutConfig();
+  var serviceId = String(config.emailjsServiceId || '').trim() || 'service_8mp116m';
+  var templateId = 'template_vaqmeo6';
+  var subject = 'أهلاً بك في مسار المهندس \u2066360\u2069 تمت الموافقة على طلبك.';
+  var messageHtml = buildStudentApprovalEmailHtml(target, customMessage);
+  var replyTo = 'engineerpath360@gmail.com';
+  var templateParams = {
+    to_email: toEmail,
+    subject: subject,
+    message_html: messageHtml,
+    reply_to: replyTo,
+  };
+  console.log('[MailNotifications] Student approval send:', {
+    serviceId: serviceId,
+    templateId: templateId,
+    to_email: toEmail,
+    subject: subject,
+    publicKeyPresent: !!String(config.emailjsPublicKey || '').trim(),
+  });
+
+  var dispatchResult = null;
+  try {
+    dispatchResult = await tryEmailJsDispatch(toEmail, subject, messageHtml, config, target, {
+      strict: true,
+      serviceId: serviceId,
+      templateId: templateId,
+      templateParams: templateParams,
+    });
+  } catch (error) {
+    if (orderId) delete studentApprovalEmailState[orderId];
+    console.error('[MailNotifications] EmailJS Error Details:', error && error.message ? error.message : error);
+    return { queued: false, sent: false, error: String((error && error.message) || error) };
+  }
+
+  var sent = !!(dispatchResult && dispatchResult.sent);
+  if (sent) {
+    if (orderId) studentApprovalEmailState[orderId] = 'sent';
+    console.log('[MailNotifications] EmailJS Success:', { orderId: orderId, templateId: templateId, to_email: toEmail });
+  } else {
+    if (orderId) delete studentApprovalEmailState[orderId];
+    console.error('[MailNotifications] EmailJS Error Details:', dispatchResult && dispatchResult.error);
+  }
+  return {
+    queued: false,
+    sent: sent,
+    notificationId: orderId ? 'emailjs_student_' + orderId : '',
+    deliveryChannel: 'emailjs',
+    deliveryStatus: sent ? 'sent' : 'failed',
+    error: dispatchResult && dispatchResult.error,
+  };
 }
 
 export async function notifyStudentOrderStatus(order, status, customMessage) {

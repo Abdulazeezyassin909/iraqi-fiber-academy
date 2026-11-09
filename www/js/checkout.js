@@ -134,9 +134,14 @@ async function loadProduct(planId, courseId) {
     var amount = parsePrice(plan.price);
     if (amount <= 0) throw new Error('هذه الباقة مجانية ولا تتطلب دفعاً.');
     var instructorId = '';
+    var instructorEmail = '';
     if (plan.sourceCourseId) {
       var sourceSnap = await getDoc(doc(db, 'courses', String(plan.sourceCourseId)));
-      if (sourceSnap.exists()) instructorId = String((sourceSnap.data() || {}).instructorId || '').trim();
+      if (sourceSnap.exists()) {
+        var sourceCourse = sourceSnap.data() || {};
+        instructorId = String(sourceCourse.instructorId || '').trim();
+        instructorEmail = String(sourceCourse.instructorEmail || '').trim().toLowerCase();
+      }
     }
     return {
       type: 'plan',
@@ -149,6 +154,7 @@ async function loadProduct(planId, courseId) {
       currency: String(plan.currency || 'IQD').toUpperCase(),
       period: String(plan.period || '').trim(),
       instructorId: instructorId,
+      instructorEmail: instructorEmail,
     };
   }
 
@@ -172,6 +178,7 @@ async function loadProduct(planId, courseId) {
       currency: String(course.currency || 'IQD').toUpperCase(),
       period: 'شراء لمرة واحدة',
       instructorId: String(course.instructorId || '').trim(),
+      instructorEmail: String(course.instructorEmail || '').trim().toLowerCase(),
     };
   }
 
@@ -524,8 +531,28 @@ async function handleSubmit() {
       createdAt: serverTimestamp(),
     };
     if (product.instructorId) orderData.instructorId = product.instructorId;
+    if (product.instructorEmail) orderData.instructorEmail = product.instructorEmail;
 
     await setDoc(doc(db, 'orders', orderId), orderData);
+
+    if (orderData.courseId && user.getIdToken) {
+      try {
+        var purchaseToken = await user.getIdToken();
+        await fetch('/api/notifications/purchase', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + purchaseToken,
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            courseId: orderData.courseId,
+            studentName: userName,
+          }),
+        });
+      } catch (purchaseNoteErr) {
+        console.warn('[Checkout] Instructor purchase notification failed', purchaseNoteErr);
+      }
+    }
 
     try {
       await recordAdminOrderNotification(orderId, product, user.uid);

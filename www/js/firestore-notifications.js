@@ -13,6 +13,8 @@ import {
   limit,
   serverTimestamp,
   getDoc,
+  getDocs,
+  arrayUnion,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { scheduleLazyFirestoreSync } from './firestore-sync-scheduler.js';
 
@@ -35,9 +37,15 @@ function normalizeNotification(raw, docId) {
   return {
     id: String(docId || src.id || ''),
     title: String(src.title || '').trim(),
-    body: String(src.body || '').trim(),
+    body: String(src.body || src.message || '').trim(),
+    message: String(src.message || src.body || '').trim(),
     type: String(src.type || 'announcement'),
-    targetAudience: src.targetAudience === 'all' ? 'all' : 'subscribers',
+    targetAudience:
+      src.targetAudience === 'all' || src.target === 'all'
+        ? 'all'
+        : src.targetAudience === 'all_students' || src.target === 'all_students'
+          ? 'all_students'
+          : 'subscribers',
     courseId: String(src.courseId || ''),
     courseTitle: String(src.courseTitle || ''),
     linkUrl: String(src.linkUrl || ''),
@@ -104,7 +112,9 @@ export function subscribeNotifications(callback) {
 
 export function notificationAppliesToUser(notification, profile) {
   if (!notification || !notification.active) return false;
-  if (notification.targetAudience === 'all') return true;
+  if (notification.targetAudience === 'all' || notification.targetAudience === 'all_students') {
+    return true;
+  }
   if (notification.targetAudience === 'subscribers') {
     return !!(profile && profile.isSubscriber === true);
   }
@@ -125,6 +135,37 @@ export async function getUserNotificationsLastReadAt(uid) {
     console.warn('[PlatformNotificationsFirestore] getUserNotificationsLastReadAt failed', err);
     return 0;
   }
+}
+
+export async function getUserNotificationReadIds(uid) {
+  if (!uid) return [];
+  try {
+    var snap = await getDoc(doc(db, 'users', uid));
+    if (!snap.exists()) return [];
+    var ids = (snap.data() || {}).notificationReadIds;
+    return Array.isArray(ids) ? ids.map(String) : [];
+  } catch (err) {
+    console.warn('[PlatformNotificationsFirestore] getUserNotificationReadIds failed', err);
+    return [];
+  }
+}
+
+export async function markNotificationRead(uid, notificationId) {
+  var id = String(notificationId || '').trim();
+  if (!uid || !id) return;
+  await setDoc(
+    doc(db, 'users', uid),
+    { notificationReadIds: arrayUnion(id) },
+    { merge: true }
+  );
+}
+
+export async function fetchNotifications() {
+  var q = notificationsQuery();
+  var snap = await getDocs(q);
+  return snap.docs.map(function (docSnap) {
+    return normalizeNotification(docSnap.data(), docSnap.id);
+  });
 }
 
 export async function markNotificationsRead(uid) {
@@ -151,12 +192,12 @@ export async function createCourseAnnouncement(course, options) {
     options.linkUrl ||
     'course-details.html?id=' + encodeURIComponent(courseId);
   var payload = {
-    title: String(options.title || 'كورس جديد متاح').trim(),
-    body: String(
-      options.body || 'تم نشر كورس جديد: ' + courseTitle
-    ).trim(),
-    type: 'course_announcement',
-    targetAudience: options.targetAudience === 'all' ? 'all' : 'subscribers',
+    title: String(options.title || 'تم نشر كورس جديد').trim(),
+    body: String(options.body || options.message || courseTitle).trim(),
+    message: String(options.message || options.body || courseTitle).trim(),
+    type: 'course_published',
+    target: 'all_students',
+    targetAudience: 'all_students',
     courseId: courseId,
     courseTitle: courseTitle,
     linkUrl: linkUrl,
@@ -175,15 +216,19 @@ export async function createCourseAnnouncement(course, options) {
   );
 }
 
-export function startNotificationsFirestoreSync() {
-  if (unsubscribeSnapshot) return unsubscribeSnapshot;
-  var q = query(
+function notificationsQuery() {
+  return query(
     collection(db, COLLECTION),
     where('active', '==', true),
-    where('targetAudience', 'in', ['all', 'subscribers']),
+    where('targetAudience', 'in', ['all', 'subscribers', 'all_students']),
     orderBy('createdAt', 'desc'),
     limit(50)
   );
+}
+
+export function startNotificationsFirestoreSync() {
+  if (unsubscribeSnapshot) return unsubscribeSnapshot;
+  var q = notificationsQuery();
   unsubscribeSnapshot = onSnapshot(
     q,
     handleSnapshot,
@@ -202,6 +247,9 @@ var api = {
   isReady: isNotificationsSnapshotReady,
   createCourseAnnouncement: createCourseAnnouncement,
   markNotificationsRead: markNotificationsRead,
+  markNotificationRead: markNotificationRead,
+  fetchNotifications: fetchNotifications,
+  getUserNotificationReadIds: getUserNotificationReadIds,
   getUserNotificationsLastReadAt: getUserNotificationsLastReadAt,
   notificationAppliesToUser: notificationAppliesToUser,
   start: startNotificationsFirestoreSync,

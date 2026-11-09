@@ -81,13 +81,18 @@
   }
 
   function syncPanelControls() {
-    document.querySelectorAll('[data-settings-root]').forEach(function (root) {
-      var themeToggle = root.querySelector('[data-settings-theme-toggle]');
-      if (themeToggle) themeToggle.checked = getTheme() === 'light';
-
-      var langToggle = root.querySelector('[data-settings-lang-toggle]');
-      if (langToggle) langToggle.checked = getLang() === 'en';
-
+    document.querySelectorAll('[data-settings-theme-toggle]').forEach(function (themeToggle) {
+      themeToggle.checked = getTheme() === 'light';
+    });
+    document.querySelectorAll('[data-settings-lang-toggle]').forEach(function (langToggle) {
+      langToggle.checked = getLang() === 'en';
+    });
+    document.querySelectorAll('[data-settings-desktop-toggle]').forEach(function (desktopToggle) {
+      var desktopOn = false;
+      try { desktopOn = localStorage.getItem('ifa_desktop_site') === '1'; } catch (errDesktop) { desktopOn = false; }
+      desktopToggle.checked = desktopOn;
+    });
+    document.querySelectorAll('[data-settings-root], .user-menu').forEach(function (root) {
       if (global.PlatformI18n && typeof global.PlatformI18n.applyTo === 'function') {
         global.PlatformI18n.applyTo(root);
       }
@@ -108,8 +113,7 @@
     }
   }
 
-  function buildSettingsControlsHtml(pushToggleId) {
-    var pushIdAttr = pushToggleId ? ' id="' + pushToggleId + '"' : '';
+  function buildSettingsControlsHtml() {
     return (
       '<button type="button" class="settings-dropdown__row settings-dropdown__row--notifications" data-notifications-toggle hidden>' +
       '<span class="settings-dropdown__row-main">' +
@@ -123,23 +127,6 @@
       '</span>' +
       '<span class="settings-dropdown__badge" data-notifications-badge hidden>0</span>' +
       '</button>' +
-      '<div class="settings-dropdown__row">' +
-      '<div class="settings-dropdown__row-main">' +
-      '<span class="settings-dropdown__row-icon" aria-hidden="true">' +
-      '<svg class="settings-dropdown__bell-icon" viewBox="0 0 24 24">' +
-      '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '<path d="M13.7 21a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
-      '</svg>' +
-      '</span>' +
-      '<span class="settings-dropdown__row-label" data-i18n="settings.pushNotifications">إشعارات المتصفح</span>' +
-      '</div>' +
-      '<label class="toggle-switch" title="Push notifications">' +
-      '<input type="checkbox"' +
-      pushIdAttr +
-      ' data-settings-push-toggle />' +
-      '<span class="toggle-switch__track" aria-hidden="true"><span class="toggle-switch__thumb"></span></span>' +
-      '</label>' +
-      '</div>' +
       '<div class="settings-dropdown__row">' +
       '<div class="settings-dropdown__row-main">' +
       '<span class="settings-dropdown__row-icon settings-dropdown__row-icon--theme" aria-hidden="true">' +
@@ -166,18 +153,41 @@
       '<span class="toggle-switch__thumb"></span>' +
       '</span>' +
       '</label>' +
+      '</div>' +
+      '<div class="settings-dropdown__row">' +
+      '<div class="settings-dropdown__row-main">' +
+      '<span class="settings-dropdown__row-icon" aria-hidden="true">▭</span>' +
+      '<span class="settings-dropdown__row-label">وضع سطح المكتب</span>' +
+      '</div>' +
+      '<label class="toggle-switch" title="وضع سطح المكتب">' +
+      '<input type="checkbox" data-settings-desktop-toggle />' +
+      '<span class="toggle-switch__track" aria-hidden="true"><span class="toggle-switch__thumb"></span></span>' +
+      '</label>' +
       '</div>'
     );
   }
 
-  function buildNotificationsPanelHtml() {
+  function buildNotificationsPanelHtml(pushToggleId) {
+    var pushIdAttr = pushToggleId ? ' id="' + pushToggleId + '"' : '';
     return (
       '<div class="notif-panel notif-panel--menu" data-notifications-panel hidden>' +
       '<div class="notif-panel__head">' +
       '<h3 class="notif-panel__title" data-notifications-panel-title data-i18n="settings.notifications">الإشعارات</h3>' +
+      '<div class="notif-panel__head-actions">' +
+      '<button type="button" class="notif-panel__back" data-notifications-back>رجوع</button>' +
       '<button type="button" class="notif-panel__mark-all" data-notifications-mark-all data-i18n="settings.markAllRead">تعيين الكل كمقروء</button>' +
       '</div>' +
+      '</div>' +
       '<div class="notif-panel__list" data-notifications-list></div>' +
+      '<div class="notif-panel__push">' +
+      '<span class="notif-panel__push-label" data-i18n="settings.pushNotifications">إشعارات المتصفح</span>' +
+      '<label class="toggle-switch" title="Push notifications">' +
+      '<input type="checkbox"' +
+      pushIdAttr +
+      ' data-settings-push-toggle />' +
+      '<span class="toggle-switch__track" aria-hidden="true"><span class="toggle-switch__thumb"></span></span>' +
+      '</label>' +
+      '</div>' +
       '</div>'
     );
   }
@@ -185,6 +195,9 @@
   var MOBILE_BREAKPOINT_MQ = '(max-width: 1024px)';
 
   function isMobileLayout() {
+    try {
+      if (document.documentElement.classList.contains('is-phone-desktop')) return true;
+    } catch (errPhone) { /* ignore */ }
     return global.innerWidth <= 1024 || global.matchMedia(MOBILE_BREAKPOINT_MQ).matches;
   }
 
@@ -202,34 +215,42 @@
     });
   }
 
-  function mountHeaderSettingsMenu() {
-    if (isMobileLayout()) return;
-
+  function mountHeaderBell() {
     document.querySelectorAll('.header__actions').forEach(function (actions) {
-      if (actions.querySelector('[data-settings-root]:not(.settings-menu--drawer)')) return;
+      actions.querySelectorAll('.settings-menu:not([data-notif-bell])').forEach(function (oldMenu) {
+        oldMenu.remove();
+      });
 
       var root = document.createElement('div');
-      root.className = 'settings-menu';
+      root.className = 'settings-menu notif-bell';
       root.setAttribute('data-settings-root', '');
+      root.setAttribute('data-notif-bell', '');
       root.innerHTML =
-        '<button type="button" id="settingsMenuBtn" class="settings-menu__btn" data-settings-toggle data-settings-trigger data-i18n-aria="settings.menu" aria-label="الإعدادات" aria-expanded="false" aria-haspopup="true">' +
-        '<svg class="settings-menu__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<circle cx="12" cy="12" r="3"/>' +
-        '<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>' +
+        '<button type="button" class="notif-bell__btn" data-notifications-toggle aria-label="الإشعارات">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/>' +
+        '<path d="M10 20a2 2 0 0 0 4 0"/>' +
         '</svg>' +
+        '<span class="settings-dropdown__badge" data-notifications-badge hidden>0</span>' +
         '</button>' +
-        '<div class="settings-dropdown" data-settings-panel hidden>' +
-        buildSettingsControlsHtml('settingsPushNotificationsToggle') +
-        '</div>' +
-        buildNotificationsPanelHtml();
+        buildNotificationsPanelHtml('settingsPushNotificationsToggle');
 
       var authSlot = actions.querySelector('[data-auth-slot]');
-      if (authSlot) {
-        actions.insertBefore(root, authSlot);
-      } else {
-        actions.appendChild(root);
+      var placeAfterAccount = function (node) {
+        if (authSlot && authSlot.nextSibling) actions.insertBefore(node, authSlot.nextSibling);
+        else actions.appendChild(node);
+      };
+      var existing = actions.querySelector('[data-notif-bell]');
+      if (existing) {
+        placeAfterAccount(existing);
+        return;
       }
+      placeAfterAccount(root);
     });
+  }
+
+  function mountHeaderSettingsMenu() {
+    mountHeaderBell();
   }
 
   function mountNavDrawerSettings(navEl) {
@@ -245,9 +266,9 @@
       '<div class="nav__drawer-settings" data-nav-drawer-settings>' +
       '<p class="nav__drawer-settings-title" data-i18n="settings.menu">الإعدادات</p>' +
       '<div class="settings-dropdown settings-dropdown--drawer" data-settings-panel>' +
-      buildSettingsControlsHtml('settingsPushNotificationsToggleDrawer') +
+      buildSettingsControlsHtml() +
       '</div>' +
-      buildNotificationsPanelHtml() +
+      buildNotificationsPanelHtml('settingsPushNotificationsToggleDrawer') +
       '</div>';
 
     var list = nav.querySelector('.nav__list');
@@ -259,25 +280,15 @@
   }
 
   function mountSettingsMenu() {
-    var isMobile = isMobileLayout();
-    var headerActions = document.querySelector('.header__actions');
-    var navDrawer = document.querySelector('#nav') || document.querySelector('.nav');
-
-    if (isMobile) {
-      removeHeaderSettingsMenu();
-      if (navDrawer) {
-        mountNavDrawerSettings(navDrawer);
-      }
-    } else {
-      removeNavDrawerSettings();
-      if (headerActions) {
-        mountHeaderSettingsMenu();
-      }
-    }
+    removeNavDrawerSettings();
+    mountHeaderBell();
 
     syncPanelControls();
     if (global.PlatformNotifications && typeof global.PlatformNotifications.renderBell === 'function') {
       global.PlatformNotifications.renderBell();
+    }
+    if (global.IFAFcm && typeof global.IFAFcm.bindToggles === 'function') {
+      global.IFAFcm.bindToggles();
     }
     try {
       global.dispatchEvent(new CustomEvent('ifa:settings-menu-mounted'));
@@ -297,6 +308,14 @@
       }
       if (e.target && e.target.matches && e.target.matches('[data-settings-lang-toggle]')) {
         applyLang(e.target.checked ? 'en' : 'ar');
+        return;
+      }
+      if (e.target && e.target.matches && e.target.matches('[data-settings-desktop-toggle]')) {
+        try {
+          if (e.target.checked) localStorage.setItem('ifa_desktop_site', '1');
+          else localStorage.removeItem('ifa_desktop_site');
+        } catch (errDesktop) { /* ignore */ }
+        global.location.reload();
       }
     });
 
